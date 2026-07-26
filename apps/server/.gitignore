@@ -2,3 +2,10 @@ dist/
 node_modules/
 .env
 *.tsbuildinfo
+
+/src/generated/prisma
+
+.claude/skills/
+.windsurf/skills/
+.agents/skills/
+skills-lock.json

@@ -1,5 +1,13 @@
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import express from "express";
 import cors from "cors";
+
+// Load environment variables from root .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config({ path: resolve(__dirname, "../../.env") });
 
 const app: express.Express = express();
 const PORT = process.env.PORT ?? 4000;

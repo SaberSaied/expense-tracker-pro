@@ -9,7 +9,13 @@
     "dev:server": "pnpm --filter server dev",
     "build": "pnpm -r build",
     "build:packages": "pnpm --filter \"./packages/*\" build",
+    "dev:migrate": "pnpm --filter server dev:migrate",
+    "dev:generate": "pnpm --filter server dev:generate",
+    "dev:seed": "pnpm --filter server dev:seed",
+    "dev:seed:reset": "pnpm --filter server dev:seed:reset",
     "lint": "pnpm -r lint",
+    "format": "pnpm -r format",
+    "format:check": "prettier --check .",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean"
@@ -18,5 +24,8 @@
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.33.2"
+  "packageManager": "pnpm@10.33.2",
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  }
 }
