@@ -3,7 +3,3 @@ dist/
 *.tsbuildinfo
 .env
 .env.local
-
-.github/
-docs/
-packages/
