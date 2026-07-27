@@ -20,18 +20,8 @@ All core product, requirement, and roadmap documents are located in the [`planni
 
 ---
 
-## 2. Design System & UI Specifications (`docs/design/`)
+## 2. Design System & UI Specifications (`docs/design/` & `docs/ui/`)
 
-All visual design, token systems, and UI component specifications are located in the [`docs/design/`](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design) directory:
-
-- [01-brand-identity.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/01-brand-identity.md) — Brand personality, aesthetics, glassmorphic styling, and moodboard.
-- [02-color-palette.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/02-color-palette.md) — Core brand colors, semantic states, light & dark theme tokens.
-- [03-typography.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/03-typography.md) — Font family standards, major-third scale, font weights, and line heights.
-- [04-spacing-system.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/04-spacing-system.md) — 8pt base grid spacing scale, container width standards, and grid gaps.
-- [05-elevation-system.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/05-elevation-system.md) — 5-tier shadow elevation scale, glass glow, dropdowns, and modal depth.
-- [06-border-system.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/06-border-system.md) — Border radius scale, border width standards, and card divider styles.
-- [07-icon-system.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/07-icon-system.md) — Lucide React icon library rules, stroke weight, icon sizes, and color states.
-- [08-motion-guidelines.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/08-motion-guidelines.md) — Animation duration scale, cubic-bezier easing, hover lifts, and modal reveals.
-- [09-design-tokens.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/09-design-tokens.md) — Master index of all CSS design tokens (Opacity, Z-Index, Breakpoints).
-- [10-responsive-guidelines.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/10-responsive-guidelines.md) — 6 breakpoint tiers, 4/8/12-column adaptive grid, and fluid typography.
-- [11-accessibility-guidelines.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/11-accessibility-guidelines.md) — WCAG 2.1 AA contrast ratios, focus rings, keyboard traps, and 44px touch targets.
+- [Design System Master Index](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/README.md)
+- [01-user-flow.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/01-user-flow.md) — Application flow, entry points, and sequence maps.
+- [02-wireframes.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/02-wireframes.md) — Low-fidelity wireframes for all 9 core screens.
