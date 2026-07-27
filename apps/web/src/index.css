@@ -41,6 +41,23 @@
   --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
 
+  /* Border Radius Tokens */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* Border Width Tokens */
+  --border-width-0: 0px;
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --border-width-4: 4px;
+
   /* Typography Family Tokens */
   --font-sans: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
