@@ -58,6 +58,14 @@
   --border-width-2: 2px;
   --border-width-4: 4px;
 
+  /* Icon Size Tokens */
+  --icon-xs: 12px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 32px;
+  --icon-2xl: 48px;
+
   /* Typography Family Tokens */
   --font-sans: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
