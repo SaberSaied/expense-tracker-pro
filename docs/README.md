@@ -30,4 +30,5 @@ All core product, requirement, and roadmap documents are located in the [`planni
 - [05-transactions-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/05-transactions-screen.md) — Transactions ledger UI specification.
 - [06-categories-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/06-categories-screen.md) — Categories management UI specification.
 - [07-budgets-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/07-budgets-screen.md) — Budgets module UI specification.
-- [08-reports-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/08-reports-screen.md) — Reports & Analytics UI specification (Summary Cards, Area/Line Charts, Date Filters, Export Modal).
+- [08-reports-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/08-reports-screen.md) — Reports & Analytics UI specification.
+- [09-profile-and-settings-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/09-profile-and-settings-screen.md) — Profile & Settings UI specification (Avatar, Password, Theme, Currency, Notifications).
