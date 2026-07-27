@@ -26,4 +26,5 @@ All core product, requirement, and roadmap documents are located in the [`planni
 - [01-user-flow.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/01-user-flow.md) — Application flow, entry points, and sequence maps.
 - [02-wireframes.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/02-wireframes.md) — Low-fidelity wireframes for all 9 core screens.
 - [03-auth-screens.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/03-auth-screens.md) — Authentication screens design specification.
-- [04-dashboard-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/04-dashboard-screen.md) — Primary dashboard UI specification (Statistics, Budgets, Recent Txns, Charts, Quick Actions).
+- [04-dashboard-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/04-dashboard-screen.md) — Primary dashboard UI specification.
+- [05-transactions-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/05-transactions-screen.md) — Transactions ledger UI specification (Data Table, Modals, Filters, Search, Empty States).
