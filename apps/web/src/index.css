@@ -66,6 +66,30 @@
   --icon-xl: 32px;
   --icon-2xl: 48px;
 
+  /* Opacity Tokens */
+  --opacity-disabled: 0.38;
+  --opacity-muted: 0.6;
+  --opacity-subtle: 0.85;
+  --opacity-opaque: 1;
+
+  /* Z-Index Tokens */
+  --z-deep: -1;
+  --z-base: 0;
+  --z-dock: 10;
+  --z-dropdown: 100;
+  --z-sticky: 500;
+  --z-overlay: 1000;
+  --z-modal: 1050;
+  --z-toast: 2000;
+
+  /* Breakpoint Tokens */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
   /* Animation Duration Tokens */
   --duration-fast: 0.15s;
   --duration-normal: 0.25s;
