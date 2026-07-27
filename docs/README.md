@@ -23,6 +23,7 @@ All core product, requirement, and roadmap documents are located in the [`planni
 ## 2. Design System & UI Specifications (`docs/design/` & `docs/ui/`)
 
 - [Design System Master Index](file:///home/eldgwy/Projects/expense-tracker-pro/docs/design/README.md)
+- [UI Specifications Master Index](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/README.md)
 - [01-user-flow.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/01-user-flow.md) — Application flow, entry points, and sequence maps.
 - [02-wireframes.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/02-wireframes.md) — Low-fidelity wireframes for all 9 core screens.
 - [03-auth-screens.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/03-auth-screens.md) — Authentication screens design specification.
@@ -31,4 +32,7 @@ All core product, requirement, and roadmap documents are located in the [`planni
 - [06-categories-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/06-categories-screen.md) — Categories management UI specification.
 - [07-budgets-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/07-budgets-screen.md) — Budgets module UI specification.
 - [08-reports-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/08-reports-screen.md) — Reports & Analytics UI specification.
-- [09-profile-and-settings-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/09-profile-and-settings-screen.md) — Profile & Settings UI specification (Avatar, Password, Theme, Currency, Notifications).
+- [09-profile-and-settings-screen.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/09-profile-and-settings-screen.md) — Profile & Settings UI specification.
+- [10-responsive-screen-layouts.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/10-responsive-screen-layouts.md) — Responsive screen adaptations.
+- [11-states-and-feedback.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/11-states-and-feedback.md) — UI states, skeletons, empty states, error handling, toasts & dialogs.
+- [12-interactive-prototype-and-review.md](file:///home/eldgwy/Projects/expense-tracker-pro/docs/ui/12-interactive-prototype-and-review.md) — Interactive prototype route map, view transitions, design review.
