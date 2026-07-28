@@ -1,3 +1,39 @@
+// ─── Enum Values ──────────────────────────────────────────────
+
+export const TRANSACTION_TYPES = ["INCOME", "EXPENSE", "TRANSFER"] as const;
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+
+export const BUDGET_PERIODS = ["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
+export type BudgetPeriod = (typeof BUDGET_PERIODS)[number];
+
+export const THEMES = ["LIGHT", "DARK", "SYSTEM"] as const;
+export type Theme = (typeof THEMES)[number];
+
+export const CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "EGP",
+  "CAD",
+  "AUD",
+  "JPY",
+  "CHF",
+  "CNY",
+  "INR",
+  "BRL",
+  "MXN",
+  "KRW",
+  "SEK",
+  "NOK",
+  "DKK",
+  "NZD",
+  "SGD",
+  "HKD",
+  "SAR",
+  "AED",
+] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
 // ─── Category Types ────────────────────────────────────────────
 
 export const EXPENSE_CATEGORIES = [

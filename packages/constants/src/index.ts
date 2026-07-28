@@ -1,5 +1,17 @@
-export { EXPENSE_CATEGORIES } from "@expense-tracker/types";
-export type { ExpenseCategory } from "@expense-tracker/types";
+export {
+  EXPENSE_CATEGORIES,
+  TRANSACTION_TYPES,
+  BUDGET_PERIODS,
+  THEMES,
+  CURRENCIES,
+} from "@expense-tracker/types";
+export type {
+  ExpenseCategory,
+  TransactionType,
+  BudgetPeriod,
+  Theme,
+  Currency,
+} from "@expense-tracker/types";
 
 export const API_ROUTES = {
   BASE: "/api",

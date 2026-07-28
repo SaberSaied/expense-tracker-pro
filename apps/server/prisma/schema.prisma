@@ -1,7 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// ─── Datasource & Generator ──────────────────────────────────
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +7,49 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  EGP
+  CAD
+  AUD
+  JPY
+  CHF
+  CNY
+  INR
+  BRL
+  MXN
+  KRW
+  SEK
+  NOK
+  DKK
+  NZD
+  SGD
+  HKD
+  SAR
+  AED
 }
