@@ -78,9 +78,9 @@ export function validate(schema: ZodSchema, source: ValidationTarget = "body") {
       if (source === "body") {
         req.body = parsed;
       } else if (source === "query") {
-        (req as any).query = parsed;
+        req.query = parsed;
       } else if (source === "params") {
-        (req as any).params = parsed;
+        req.params = parsed;
       }
       next();
     } catch (err) {
