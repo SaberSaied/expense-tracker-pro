@@ -134,7 +134,6 @@ export interface User {
   currency: Currency;
   language: string;
   dateFormat: string;
-  theme: Theme;
   notifications: NotificationPreferences;
   emailVerified: boolean;
   createdAt: string;
@@ -154,7 +153,6 @@ export interface UpdateUserInput {
   currency?: Currency;
   language?: string;
   dateFormat?: string;
-  theme?: Theme;
   notifications?: Partial<NotificationPreferences>;
 }
 

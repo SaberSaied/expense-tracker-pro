@@ -24,12 +24,6 @@ enum BudgetPeriod {
   YEARLY
 }
 
-enum Theme {
-  LIGHT
-  DARK
-  SYSTEM
-}
-
 enum Currency {
   USD
   EUR
@@ -84,9 +78,6 @@ model User {
 
   /// Preferred date format string (e.g. "YYYY-MM-DD", "MM/DD/YYYY").
   dateFormat String  @default("YYYY-MM-DD")
-
-  /// UI theme preference.
-  theme     Theme    @default(SYSTEM)
 
   /// JSON object storing notification preference flags:
   ///   { "budgetAlerts": bool, "emailWarnings": bool, "weeklyDigest": bool }
