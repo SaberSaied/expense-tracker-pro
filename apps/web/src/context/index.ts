@@ -1,5 +1,5 @@
 /**
- * React Context providers for application state management (e.g. AuthContext, ThemeContext).
+ * React Context providers for application state management.
  */
-
-export {};
+export { AuthProvider } from "./AuthContext";
+export { AuthContext } from "./AuthContext";

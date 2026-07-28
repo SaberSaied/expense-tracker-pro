@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { clsx } from "clsx";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   Receipt,
@@ -19,6 +20,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   path: string;
@@ -47,11 +49,28 @@ export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const currentPageTitle =
     [...navItems, ...bottomNavItems].find((item) =>
       location.pathname.startsWith(item.path),
     )?.label ?? "Dashboard";
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    await logout();
+    toast.success("Signed out successfully");
+    navigate("/login", { replace: true });
+  };
+
+  const userInitials =
+    user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) ?? "U";
 
   return (
     <div className="flex min-h-dvh bg-bg-app">
@@ -72,7 +91,6 @@ export const AppLayout: React.FC = () => {
           <span className="font-bold text-text-primary">
             Expense<span className="text-primary">Pro</span>
           </span>
-          {/* Mobile close */}
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden ml-auto p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5"
@@ -124,7 +142,10 @@ export const AppLayout: React.FC = () => {
               {item.label}
             </NavLink>
           ))}
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-error/80 hover:text-error hover:bg-error/5 transition-all duration-150 w-full">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-error/80 hover:text-error hover:bg-error/5 transition-all duration-150 w-full"
+          >
             <LogOut className="size-5 shrink-0" />
             Sign Out
           </button>
@@ -144,7 +165,6 @@ export const AppLayout: React.FC = () => {
       <div className="flex-1 flex flex-col lg:ml-64">
         {/* Top Header Bar */}
         <header className="sticky top-0 z-20 h-16 bg-bg-app/80 backdrop-blur-lg border-b border-border-card flex items-center gap-4 px-4 lg:px-6">
-          {/* Mobile menu toggle */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5"
@@ -153,12 +173,10 @@ export const AppLayout: React.FC = () => {
             <Menu className="size-5" />
           </button>
 
-          {/* Page title */}
           <h1 className="text-lg font-semibold text-text-primary hidden sm:block">
             {currentPageTitle}
           </h1>
 
-          {/* Search */}
           <div className="flex-1 max-w-md ml-auto relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-muted pointer-events-none" />
             <input
@@ -168,9 +186,7 @@ export const AppLayout: React.FC = () => {
             />
           </div>
 
-          {/* Header actions */}
           <div className="flex items-center gap-2">
-            {/* Quick add */}
             <NavLink
               to="/expenses?action=add"
               className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-text-inverse text-sm font-medium hover:bg-primary-hover transition-colors"
@@ -179,7 +195,6 @@ export const AppLayout: React.FC = () => {
               <span className="hidden md:inline">Add Expense</span>
             </NavLink>
 
-            {/* Notifications */}
             <button
               className="relative p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
               aria-label="Notifications"
@@ -195,7 +210,10 @@ export const AppLayout: React.FC = () => {
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors"
                 aria-label="User menu"
               >
-                <Avatar initials="AR" size="sm" />
+                <Avatar initials={userInitials} size="sm" />
+                <span className="hidden sm:block text-sm text-text-primary font-medium max-w-[100px] truncate">
+                  {user?.name ?? "User"}
+                </span>
                 <ChevronDown className="size-3.5 text-text-muted hidden sm:block" />
               </button>
 
@@ -206,7 +224,17 @@ export const AppLayout: React.FC = () => {
                     onClick={() => setUserMenuOpen(false)}
                     aria-hidden="true"
                   />
-                  <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-bg-card border border-border-card shadow-dropdown z-50 py-1.5">
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-bg-card border border-border-card shadow-dropdown z-50 py-1.5">
+                    {/* User info header */}
+                    <div className="px-4 py-2 border-b border-border-card mb-1.5">
+                      <p className="text-sm font-medium text-text-primary truncate">
+                        {user?.name ?? "User"}
+                      </p>
+                      <p className="text-xs text-text-muted truncate">
+                        {user?.email ?? ""}
+                      </p>
+                    </div>
+
                     <NavLink
                       to="/profile"
                       onClick={() => setUserMenuOpen(false)}
@@ -224,7 +252,10 @@ export const AppLayout: React.FC = () => {
                       Settings
                     </NavLink>
                     <hr className="my-1.5 border-border-card" />
-                    <button className="flex items-center gap-2 px-4 py-2.5 text-sm text-error/80 hover:text-error hover:bg-error/5 w-full">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-error/80 hover:text-error hover:bg-error/5 w-full"
+                    >
                       <LogOut className="size-4" />
                       Sign Out
                     </button>
@@ -251,9 +282,7 @@ export const AppLayout: React.FC = () => {
               className={({ isActive }) =>
                 clsx(
                   "flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors min-w-[56px]",
-                  isActive
-                    ? "text-primary"
-                    : "text-text-muted hover:text-text-secondary",
+                  isActive ? "text-primary" : "text-text-muted hover:text-text-secondary",
                 )
               }
             >
@@ -261,7 +290,6 @@ export const AppLayout: React.FC = () => {
               <span>{item.label}</span>
             </NavLink>
           ))}
-          {/* Mobile FAB for quick add */}
           <NavLink
             to="/expenses?action=add"
             className="flex items-center justify-center size-12 rounded-full bg-primary text-text-inverse shadow-lg -mt-6"

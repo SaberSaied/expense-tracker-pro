@@ -1,5 +1,4 @@
 /**
  * Custom React hooks for application state and side-effects.
  */
-
-export {};
+export { useAuth } from "./useAuth";
