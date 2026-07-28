@@ -53,3 +53,57 @@ enum Currency {
   SAR
   AED
 }
+
+// ─── Models ──────────────────────────────────────────────────
+
+/// Registered application user.
+model User {
+  /// Unique user identifier (UUID v4).
+  id        String   @id @default(uuid()) @db.Uuid
+
+  /// Unique email address used for login and communication.
+  email     String   @unique
+
+  /// Bcrypt-hashed password (never stored in plain text).
+  passwordHash String
+
+  /// Optional display name shown in profile and UI.
+  name      String?
+
+  /// Optional short biography.
+  bio       String?
+
+  /// Optional URL to the user's avatar image.
+  avatarUrl String?
+
+  /// Preferred currency for displaying monetary values.
+  currency  Currency @default(USD)
+
+  /// Preferred locale string (e.g. "en-US", "ar-EG").
+  language  String   @default("en-US")
+
+  /// Preferred date format string (e.g. "YYYY-MM-DD", "MM/DD/YYYY").
+  dateFormat String  @default("YYYY-MM-DD")
+
+  /// UI theme preference.
+  theme     Theme    @default(SYSTEM)
+
+  /// JSON object storing notification preference flags:
+  ///   { "budgetAlerts": bool, "emailWarnings": bool, "weeklyDigest": bool }
+  notifications Json  @default("{\"budgetAlerts\":true,\"emailWarnings\":true,\"weeklyDigest\":false}")
+
+  /// Whether the user's email address has been verified.
+  emailVerified Boolean @default(false)
+
+  /// Timestamp of account creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any user field.
+  updatedAt DateTime @updatedAt
+
+  /// Index for efficient querying and sorting by creation date.
+  @@index([createdAt])
+
+  /// Map the model to the "users" table in PostgreSQL.
+  @@map("users")
+}

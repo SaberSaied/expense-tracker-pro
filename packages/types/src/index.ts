@@ -115,6 +115,49 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// ─── Notification Preferences Type ────────────────────────────
+
+export interface NotificationPreferences {
+  budgetAlerts: boolean;
+  emailWarnings: boolean;
+  weeklyDigest: boolean;
+}
+
+// ─── User Types ──────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  currency: Currency;
+  language: string;
+  dateFormat: string;
+  theme: Theme;
+  notifications: NotificationPreferences;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserInput {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  bio?: string;
+  avatarUrl?: string;
+  currency?: Currency;
+  language?: string;
+  dateFormat?: string;
+  theme?: Theme;
+  notifications?: Partial<NotificationPreferences>;
+}
+
 // ─── API Response Types ───────────────────────────────────────
 
 export interface ApiResponse<T> {
