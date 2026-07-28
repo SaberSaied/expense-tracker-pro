@@ -320,7 +320,7 @@ export interface User {
   currency: Currency;
   language: string;
   dateFormat: string;
-  notifications: NotificationPreferences;
+  notificationPreferences: NotificationPreferences;
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
@@ -339,7 +339,7 @@ export interface UpdateUserInput {
   currency?: Currency;
   language?: string;
   dateFormat?: string;
-  notifications?: Partial<NotificationPreferences>;
+  notificationPreferences?: Partial<NotificationPreferences>;
 }
 
 // ─── API Response Types ───────────────────────────────────────

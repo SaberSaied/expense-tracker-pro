@@ -1,14 +1,7 @@
-import { config } from "dotenv";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
 import express from "express";
 import cors from "cors";
 
 // Load environment variables from root .env
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-config({ path: resolve(__dirname, "../../.env") });
-
 const app: express.Express = express();
 const PORT = process.env.PORT ?? 4000;
 
@@ -27,17 +20,6 @@ app.get("/api/v1/health", (_req, res) => {
       timestamp: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
     },
-  });
-});
-
-// ─── 404 Handler ──────────────────────────────────────────────
-
-app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    error: "Not Found",
-    message: "The requested resource does not exist",
-    statusCode: 404,
   });
 });
 

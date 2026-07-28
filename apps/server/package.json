@@ -14,7 +14,11 @@
     "dev:generate": "prisma generate",
     "dev:migrate": "prisma migrate dev",
     "dev:seed": "prisma seed",
-    "dev:seed:reset": "prisma seed --force"
+    "dev:seed:reset": "prisma seed --force",
+    "test:db": "tsx prisma/test.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.0",

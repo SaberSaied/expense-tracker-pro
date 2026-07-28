@@ -96,7 +96,7 @@ model User {
 
   /// JSON object storing notification preference flags:
   ///   { "budgetAlerts": bool, "emailWarnings": bool, "weeklyDigest": bool }
-  notifications Json  @default("{\"budgetAlerts\":true,\"emailWarnings\":true,\"weeklyDigest\":false}")
+  notificationPreferences Json  @default("{\"budgetAlerts\":true,\"emailWarnings\":true,\"weeklyDigest\":false}")
 
   /// Whether the user's email address has been verified.
   emailVerified Boolean @default(false)
