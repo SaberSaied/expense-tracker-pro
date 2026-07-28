@@ -92,9 +92,51 @@ model User {
   /// Timestamp of the last update to any user field.
   updatedAt DateTime @updatedAt
 
+  /// The user's custom spending categories.
+  categories Category[]
+
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
 
   /// Map the model to the "users" table in PostgreSQL.
   @@map("users")
+}
+
+/// Spending category associated with a user.
+model Category {
+  /// Unique category identifier (UUID v4).
+  id        String  @id @default(uuid()) @db.Uuid
+
+  /// Display name of the category (e.g. "Food & Dining", "Transportation").
+  name      String
+
+  /// Lucide icon identifier for the category.
+  icon      String  @default("Tag")
+
+  /// Hex color code for the category (e.g. "#F59E0B").
+  color     String  @default("#6366F1")
+
+  /// Whether this is a predefined system category (protected from deletion).
+  isSystem  Boolean @default(false)
+
+  /// Foreign key to the owning user.
+  userId    String  @db.Uuid
+
+  /// The user who owns this category.
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of category creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any category field.
+  updatedAt DateTime @updatedAt
+
+  /// Category names must be unique per user.
+  @@unique([name, userId])
+
+  /// Index for querying categories by user.
+  @@index([userId])
+
+  /// Map the model to the "categories" table in PostgreSQL.
+  @@map("categories")
 }
