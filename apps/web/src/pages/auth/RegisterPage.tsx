@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { clsx } from "clsx";
+import { useAuth } from "@/hooks/useAuth";
+import { ApiError } from "@/services/api";
 
 /**
  * Register page — onboards new users and creates a workspace account.
@@ -17,8 +20,10 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  /** Password strength calculation. */
   const passwordStrength = useMemo(() => {
     if (!password) return { level: 0, label: "", color: "" };
     let score = 0;
@@ -33,18 +38,38 @@ export const RegisterPage: React.FC = () => {
     return { level: score, label: "Strong", color: "bg-success" };
   }, [password]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Terms of Service");
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+
+    try {
+      await register(name, email, password);
+      toast.success("Account created successfully!");
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      toast.error("Registration failed", { description: message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" id="register-form">
       <div className="text-center mb-2">
-        <h2 className="text-lg font-semibold text-text-primary">
-          Create Your Pro Account
-        </h2>
+        <h2 className="text-lg font-semibold text-text-primary">Create Your Pro Account</h2>
         <p className="text-sm text-text-secondary mt-1">
           Start tracking your finances in seconds
         </p>
@@ -93,7 +118,6 @@ export const RegisterPage: React.FC = () => {
           autoComplete="new-password"
           required
         />
-        {/* Password strength meter */}
         {password && (
           <div className="space-y-1">
             <div className="flex gap-1">
@@ -111,7 +135,16 @@ export const RegisterPage: React.FC = () => {
             </div>
             <p className="text-xs text-text-muted">
               Strength:{" "}
-              <span className={clsx("font-medium", passwordStrength.level <= 2 ? "text-error" : passwordStrength.level <= 3 ? "text-warning" : "text-success")}>
+              <span
+                className={clsx(
+                  "font-medium",
+                  passwordStrength.level <= 2
+                    ? "text-error"
+                    : passwordStrength.level <= 3
+                      ? "text-warning"
+                      : "text-success",
+                )}
+              >
                 {passwordStrength.label}
               </span>
             </p>
@@ -135,14 +168,13 @@ export const RegisterPage: React.FC = () => {
         required
       />
 
-      <Checkbox label="I agree to the Terms of Service & Privacy Policy" />
+      <Checkbox
+        label="I agree to the Terms of Service & Privacy Policy"
+        checked={agreedToTerms}
+        onChange={setAgreedToTerms}
+      />
 
-      <Button
-        type="submit"
-        className="w-full"
-        size="lg"
-        isLoading={isLoading}
-      >
+      <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
         Create Account
       </Button>
 

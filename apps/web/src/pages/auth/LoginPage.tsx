@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { useAuth } from "@/hooks/useAuth";
+import { ApiError } from "@/services/api";
 
 /**
  * Login page — authenticates existing users via email and password.
@@ -14,20 +17,30 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 1500);
+
+    try {
+      await login(email, password);
+      toast.success("Welcome back!");
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      toast.error("Login failed", { description: message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" id="login-form">
       <div className="text-center mb-2">
-        <h2 className="text-lg font-semibold text-text-primary">
-          Welcome Back
-        </h2>
+        <h2 className="text-lg font-semibold text-text-primary">Welcome Back</h2>
         <p className="text-sm text-text-secondary mt-1">
           Sign in to continue tracking your expenses
         </p>
@@ -75,12 +88,7 @@ export const LoginPage: React.FC = () => {
         </Link>
       </div>
 
-      <Button
-        type="submit"
-        className="w-full"
-        size="lg"
-        isLoading={isLoading}
-      >
+      <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
         Sign In
       </Button>
 

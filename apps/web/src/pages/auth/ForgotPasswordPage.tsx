@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { authApi } from "@/services/auth";
+import { ApiError } from "@/services/api";
 
 /**
  * Forgot password page — initiates password recovery via email.
@@ -13,13 +16,21 @@ export const ForgotPasswordPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const result = await authApi.forgotPassword(email);
+      toast.success("Email sent", { description: result.message });
       setIsSuccess(true);
-    }, 1500);
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      toast.error("Request failed", { description: message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -28,9 +39,7 @@ export const ForgotPasswordPage: React.FC = () => {
         <div className="size-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
           <CheckCircle className="size-8 text-success" />
         </div>
-        <h2 className="text-lg font-semibold text-text-primary mb-2">
-          Check Your Inbox
-        </h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-2">Check Your Inbox</h2>
         <p className="text-sm text-text-secondary mb-6 max-w-xs">
           We&apos;ve sent a password reset link to{" "}
           <span className="font-medium text-text-primary">{email}</span>.
@@ -48,9 +57,7 @@ export const ForgotPasswordPage: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" id="forgot-password-form">
       <div className="text-center mb-2">
-        <h2 className="text-lg font-semibold text-text-primary">
-          Reset Your Password
-        </h2>
+        <h2 className="text-lg font-semibold text-text-primary">Reset Your Password</h2>
         <p className="text-sm text-text-secondary mt-1">
           Enter your email and we&apos;ll send a recovery link
         </p>
@@ -67,12 +74,7 @@ export const ForgotPasswordPage: React.FC = () => {
         required
       />
 
-      <Button
-        type="submit"
-        className="w-full"
-        size="lg"
-        isLoading={isLoading}
-      >
+      <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
         Send Reset Link
       </Button>
 
