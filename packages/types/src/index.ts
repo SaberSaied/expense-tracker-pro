@@ -132,6 +132,42 @@ export interface NotificationPreferences {
   weeklyDigest: boolean;
 }
 
+// ─── Transaction Types ───────────────────────────────────────
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  date: string;
+  notes: string | null;
+  categoryId: string;
+  paymentMethodId: string | null;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTransactionInput {
+  type: TransactionType;
+  amount: number;
+  description: string;
+  date: string;
+  notes?: string;
+  categoryId: string;
+  paymentMethodId?: string;
+}
+
+export interface UpdateTransactionInput {
+  type?: TransactionType;
+  amount?: number;
+  description?: string;
+  date?: string;
+  notes?: string;
+  categoryId?: string;
+  paymentMethodId?: string;
+}
+
 // ─── Category Types ──────────────────────────────────────────
 
 export interface Category {

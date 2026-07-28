@@ -106,6 +106,9 @@ model User {
   /// The user's saved payment methods.
   paymentMethods PaymentMethod[]
 
+  /// The user's financial transactions.
+  transactions Transaction[]
+
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
 
@@ -135,6 +138,9 @@ model Category {
 
   /// The user who owns this category.
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Transactions assigned to this category.
+  transactions Transaction[]
 
   /// Timestamp of category creation.
   createdAt DateTime @default(now())
@@ -175,6 +181,9 @@ model PaymentMethod {
   /// The user who owns this payment method.
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Transactions using this payment method.
+  transactions Transaction[]
+
   /// Timestamp of payment method creation.
   createdAt DateTime @default(now())
 
@@ -189,4 +198,64 @@ model PaymentMethod {
 
   /// Map the model to the "payment_methods" table in PostgreSQL.
   @@map("payment_methods")
+}
+
+/// Financial transaction record (income, expense, or transfer).
+model Transaction {
+  /// Unique transaction identifier (UUID v4).
+  id        String          @id @default(uuid()) @db.Uuid
+
+  /// Whether this is an income, expense, or transfer.
+  type      TransactionType
+
+  /// Monetary amount of the transaction (must be > 0).
+  amount    Float
+
+  /// Short description of the transaction (1–500 chars).
+  description String
+
+  /// The calendar date the transaction occurred (YYYY-MM-DD).
+  date      DateTime        @db.Date
+
+  /// Optional additional notes about the transaction.
+  notes     String?
+
+  /// Foreign key to the assigned category.
+  categoryId String          @db.Uuid
+
+  /// The category this transaction belongs to.
+  category  Category         @relation(fields: [categoryId], references: [id])
+
+  /// Foreign key to the payment method used (nullable for cash/unspecified).
+  paymentMethodId String?    @db.Uuid
+
+  /// The payment method used for this transaction.
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+
+  /// Foreign key to the owning user.
+  userId    String           @db.Uuid
+
+  /// The user who owns this transaction.
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of record creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any transaction field.
+  updatedAt DateTime @updatedAt
+
+  /// Primary query pattern: user's transactions ordered by date.
+  @@index([userId, date])
+
+  /// User's transactions filtered by category.
+  @@index([userId, categoryId])
+
+  /// Query transactions across users by category.
+  @@index([categoryId])
+
+  /// Date-range queries and sorting.
+  @@index([date])
+
+  /// Map the model to the "transactions" table in PostgreSQL.
+  @@map("transactions")
 }
