@@ -220,6 +220,36 @@ export interface UpdatePaymentMethodInput {
   lastFour?: string;
 }
 
+// ─── Budget Types ────────────────────────────────────────────
+
+export interface Budget {
+  id: string;
+  targetAmount: number;
+  alertThreshold: number;
+  period: BudgetPeriod;
+  startDate: string;
+  categoryId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBudgetInput {
+  targetAmount: number;
+  alertThreshold?: number;
+  period?: BudgetPeriod;
+  startDate: string;
+  categoryId: string;
+}
+
+export interface UpdateBudgetInput {
+  targetAmount?: number;
+  alertThreshold?: number;
+  period?: BudgetPeriod;
+  startDate?: string;
+  categoryId?: string;
+}
+
 // ─── User Types ──────────────────────────────────────────────
 
 export interface User {

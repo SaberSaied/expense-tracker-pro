@@ -109,6 +109,9 @@ model User {
   /// The user's financial transactions.
   transactions Transaction[]
 
+  /// The user's budget targets per category and period.
+  budgets Budget[]
+
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
 
@@ -141,6 +144,9 @@ model Category {
 
   /// Transactions assigned to this category.
   transactions Transaction[]
+
+  /// Budget targets set for this category.
+  budgets Budget[]
 
   /// Timestamp of category creation.
   createdAt DateTime @default(now())
@@ -258,4 +264,52 @@ model Transaction {
 
   /// Map the model to the "transactions" table in PostgreSQL.
   @@map("transactions")
+}
+
+/// Budget target for a specific category and time period.
+model Budget {
+  /// Unique budget identifier (UUID v4).
+  id        String       @id @default(uuid()) @db.Uuid
+
+  /// Spending limit for the period (must be >= 0).
+  targetAmount Float
+
+  /// Percentage threshold that triggers a warning alert (default 80%).
+  alertThreshold Int     @default(80)
+
+  /// The recurrence period of this budget (default: monthly).
+  period    BudgetPeriod @default(MONTHLY)
+
+  /// Start date of the budget period (e.g. first day of the month).
+  startDate DateTime     @db.Date
+
+  /// Foreign key to the category this budget targets.
+  categoryId String      @db.Uuid
+
+  /// The category this budget is set for.
+  category  Category     @relation(fields: [categoryId], references: [id])
+
+  /// Foreign key to the owning user.
+  userId    String       @db.Uuid
+
+  /// The user who owns this budget.
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of budget creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any budget field.
+  updatedAt DateTime @updatedAt
+
+  /// One budget per category per period per user.
+  @@unique([userId, categoryId, startDate])
+
+  /// Query budgets by user and period start date.
+  @@index([userId, startDate])
+
+  /// Query budgets by category.
+  @@index([categoryId])
+
+  /// Map the model to the "budgets" table in PostgreSQL.
+  @@map("budgets")
 }
