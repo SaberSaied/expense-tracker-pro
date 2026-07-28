@@ -9,8 +9,8 @@ import type { JwtPayload } from "@/common/types";
 
 // ─── Helpers ──────────────────────────────────────────────────
 
-function generateTokens(payload: { id: string; email: string }): AuthTokens {
-  const jwtPayload = { sub: payload.id, email: payload.email };
+function generateTokens(payload: { id: string; email: string; tokenVersion: number }): AuthTokens {
+  const jwtPayload = { sub: payload.id, email: payload.email, tokenVersion: payload.tokenVersion };
 
   const accessToken = jwt.sign(
     jwtPayload,
@@ -36,8 +36,9 @@ function toAuthResponse(user: {
   email: string;
   name: string | null;
   avatarUrl: string | null;
+  tokenVersion: number;
 }): AuthResponse {
-  const tokens = generateTokens({ id: user.id, email: user.email });
+  const tokens = generateTokens({ id: user.id, email: user.email, tokenVersion: user.tokenVersion });
   return {
     user: {
       id: user.id,
@@ -89,6 +90,13 @@ export const authService = {
       throw new UnauthorizedError("Invalid email or password");
     }
 
+    // Reject login for deactivated accounts
+    if (!user.isActive) {
+      throw new UnauthorizedError(
+        "This account has been deactivated. Please contact support to reactivate your account."
+      );
+    }
+
     const isValid = await authService.comparePassword(password, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedError("Invalid email or password");
@@ -105,8 +113,20 @@ export const authService = {
       throw new UnauthorizedError("Invalid refresh token");
     }
 
+    // Reject refresh for deactivated accounts
+    if (!user.isActive) {
+      throw new UnauthorizedError(
+        "This account has been deactivated. Please contact support to reactivate your account."
+      );
+    }
+
+    // Verify token version matches — invalid if password was changed after this token was issued
+    if (decoded.tokenVersion !== user.tokenVersion) {
+      throw new UnauthorizedError("Refresh token has been invalidated. Please log in again.");
+    }
+
     // Generate new token pair (rotation)
-    return generateTokens({ id: user.id, email: user.email });
+    return generateTokens({ id: user.id, email: user.email, tokenVersion: user.tokenVersion });
   },
 
   // ─── Logout (Step 7.10) ──────────────────────────────────
@@ -158,8 +178,9 @@ export const authService = {
     const passwordHash = await authService.hashPassword(newPassword);
     await authRepository.updatePassword(user.id, passwordHash);
 
-    // Clear the reset token
+    // Clear the reset token and invalidate all existing refresh tokens
     await authRepository.clearResetToken(user.id);
+    await authRepository.incrementTokenVersion(user.id);
 
     return { message: "Password has been reset successfully." };
   },

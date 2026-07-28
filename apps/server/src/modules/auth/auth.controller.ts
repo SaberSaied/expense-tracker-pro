@@ -4,23 +4,10 @@ import { sendSuccess, sendCreated, sendMessage } from "@/common/responses";
 import type { AuthenticatedRequest } from "@/common/types";
 import { env } from "@/config/env";
 
-// Helper to exclude sensitive fields
-function sanitizeUser(user: {
-  id: string;
-  email: string;
-  name: string | null;
-  avatarUrl: string | null;
-  bio?: string | null;
-  currency?: string;
-  language?: string;
-  dateFormat?: string;
-  emailVerified?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-  passwordHash?: string;
-  notificationPreferences?: unknown;
-}) {
-  const { passwordHash: _, notificationPreferences: __, ...safe } = user;
+// Helper to exclude sensitive fields only (password hash, reset tokens)
+// notificationPreferences is a user preference and should be included.
+function sanitizeUser(user: Record<string, unknown>) {
+  const { passwordHash, resetTokenHash, resetTokenExpiresAt, ...safe } = user;
   return safe;
 }
 
