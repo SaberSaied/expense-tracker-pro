@@ -79,6 +79,15 @@ model User {
   /// Optional display name shown in profile and UI.
   name      String?
 
+  /// Optional unique username for the profile.
+  username  String? @unique
+
+  /// Optional first name of the user.
+  firstName String?
+
+  /// Optional last name of the user.
+  lastName  String?
+
   /// Optional short biography.
   bio       String?
 
@@ -94,12 +103,33 @@ model User {
   /// Preferred date format string (e.g. "YYYY-MM-DD", "MM/DD/YYYY").
   dateFormat String  @default("YYYY-MM-DD")
 
+  /// Preferred UI theme ("light", "dark", or "system").
+  theme     String  @default("dark")
+
+  /// IANA time zone identifier (e.g. "America/New_York", "Europe/London").
+  timeZone  String  @default("UTC")
+
   /// JSON object storing notification preference flags:
   ///   { "budgetAlerts": bool, "emailWarnings": bool, "weeklyDigest": bool }
   notificationPreferences Json  @default("{\"budgetAlerts\":true,\"emailWarnings\":true,\"weeklyDigest\":false}")
 
+  /// Token version incremented on password change to invalidate all existing refresh tokens.
+  tokenVersion Int     @default(0)
+
   /// Whether the user's email address has been verified.
   emailVerified Boolean @default(false)
+
+  /// Bcrypt-hashed reset token (null if no reset in progress).
+  resetTokenHash String?
+
+  /// Expiration timestamp for the reset token (null if no reset in progress).
+  resetTokenExpiresAt DateTime?
+
+  /// Whether the account is active (false means deactivated/soft-deleted).
+  isActive      Boolean   @default(true)
+
+  /// Timestamp when the account was deactivated (null if active).
+  deactivatedAt DateTime?
 
   /// Timestamp of account creation.
   createdAt DateTime @default(now())
