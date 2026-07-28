@@ -15,6 +15,14 @@ export const PAYMENT_METHOD_TYPES = [
 ] as const;
 export type PaymentMethodType = (typeof PAYMENT_METHOD_TYPES)[number];
 
+export const NOTIFICATION_TYPES = [
+  "BUDGET_WARNING",
+  "BUDGET_CRITICAL",
+  "EXPORT_COMPLETE",
+  "WEEKLY_DIGEST",
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
 export const THEMES = ["LIGHT", "DARK", "SYSTEM"] as const;
 export type Theme = (typeof THEMES)[number];
 
@@ -248,6 +256,57 @@ export interface UpdateBudgetInput {
   period?: BudgetPeriod;
   startDate?: string;
   categoryId?: string;
+}
+
+// ─── Notification Types ──────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  userId: string;
+  createdAt: string;
+}
+
+export interface CreateNotificationInput {
+  type: NotificationType;
+  title: string;
+  message: string;
+}
+
+// ─── Savings Goal Types ───────────────────────────────────────
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string | null;
+  icon: string;
+  color: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSavingsGoalInput {
+  name: string;
+  targetAmount: number;
+  currentAmount?: number;
+  deadline?: string;
+  icon?: string;
+  color?: string;
+}
+
+export interface UpdateSavingsGoalInput {
+  name?: string;
+  targetAmount?: number;
+  currentAmount?: number;
+  deadline?: string;
+  icon?: string;
+  color?: string;
 }
 
 // ─── User Types ──────────────────────────────────────────────

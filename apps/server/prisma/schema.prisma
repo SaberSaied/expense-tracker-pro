@@ -32,6 +32,13 @@ enum PaymentMethodType {
   DIGITAL_WALLET
 }
 
+enum NotificationType {
+  BUDGET_WARNING
+  BUDGET_CRITICAL
+  EXPORT_COMPLETE
+  WEEKLY_DIGEST
+}
+
 enum Currency {
   USD
   EUR
@@ -111,6 +118,12 @@ model User {
 
   /// The user's budget targets per category and period.
   budgets Budget[]
+
+  /// The user's in-app notifications.
+  notifications Notification[]
+
+  /// The user's savings goals.
+  savingsGoals SavingsGoal[]
 
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
@@ -312,4 +325,82 @@ model Budget {
 
   /// Map the model to the "budgets" table in PostgreSQL.
   @@map("budgets")
+}
+
+/// In-app notification record for a user.
+model Notification {
+  /// Unique notification identifier (UUID v4).
+  id        String           @id @default(uuid()) @db.Uuid
+
+  /// The category of notification.
+  type      NotificationType
+
+  /// Short notification title (e.g. "Budget Alert", "Export Ready").
+  title     String
+
+  /// Full notification body text.
+  message   String
+
+  /// Whether the user has read/dismissed this notification.
+  read      Boolean          @default(false)
+
+  /// Foreign key to the owning user.
+  userId    String           @db.Uuid
+
+  /// The user who owns this notification.
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of notification creation.
+  createdAt DateTime @default(now())
+
+  /// Query unread notifications for a user.
+  @@index([userId, read])
+
+  /// Query notifications in chronological order.
+  @@index([userId, createdAt])
+
+  /// Map the model to the "notifications" table in PostgreSQL.
+  @@map("notifications")
+}
+
+/// User-defined savings goal tracking progress toward a financial target.
+model SavingsGoal {
+  /// Unique savings goal identifier (UUID v4).
+  id            String   @id @default(uuid()) @db.Uuid
+
+  /// Goal name (e.g. "Emergency Fund", "New Laptop").
+  name          String
+
+  /// Target amount to save.
+  targetAmount  Float
+
+  /// Current amount saved so far.
+  currentAmount Float    @default(0)
+
+  /// Optional target date to reach the goal.
+  deadline      DateTime? @db.Date
+
+  /// Lucide icon identifier for the goal.
+  icon          String   @default("PiggyBank")
+
+  /// Hex color code for the goal (e.g. "#10B981").
+  color         String   @default("#10B981")
+
+  /// Foreign key to the owning user.
+  userId        String   @db.Uuid
+
+  /// The user who owns this savings goal.
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of goal creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any goal field.
+  updatedAt DateTime @updatedAt
+
+  /// Query savings goals by user.
+  @@index([userId])
+
+  /// Map the model to the "savings_goals" table in PostgreSQL.
+  @@map("savings_goals")
 }
