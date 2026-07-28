@@ -24,6 +24,14 @@ enum BudgetPeriod {
   YEARLY
 }
 
+enum PaymentMethodType {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
+  DIGITAL_WALLET
+}
+
 enum Currency {
   USD
   EUR
@@ -95,6 +103,9 @@ model User {
   /// The user's custom spending categories.
   categories Category[]
 
+  /// The user's saved payment methods.
+  paymentMethods PaymentMethod[]
+
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
 
@@ -139,4 +150,43 @@ model Category {
 
   /// Map the model to the "categories" table in PostgreSQL.
   @@map("categories")
+}
+
+/// Saved payment method associated with a user.
+model PaymentMethod {
+  /// Unique payment method identifier (UUID v4).
+  id        String           @id @default(uuid()) @db.Uuid
+
+  /// The type of payment method.
+  type      PaymentMethodType
+
+  /// User-friendly label (e.g. "My Chase Credit Card", "Personal Checking").
+  name      String
+
+  /// Whether this is the user's default payment method.
+  isDefault Boolean          @default(false)
+
+  /// Optional last 4 digits of the card or account number for display.
+  lastFour  String?
+
+  /// Foreign key to the owning user.
+  userId    String           @db.Uuid
+
+  /// The user who owns this payment method.
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of payment method creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update to any payment method field.
+  updatedAt DateTime @updatedAt
+
+  /// Index for querying payment methods by user.
+  @@index([userId])
+
+  /// Composite index for efficiently finding the default payment method per user.
+  @@index([userId, isDefault])
+
+  /// Map the model to the "payment_methods" table in PostgreSQL.
+  @@map("payment_methods")
 }

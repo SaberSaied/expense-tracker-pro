@@ -6,6 +6,15 @@ export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 export const BUDGET_PERIODS = ["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
 export type BudgetPeriod = (typeof BUDGET_PERIODS)[number];
 
+export const PAYMENT_METHOD_TYPES = [
+  "CREDIT_CARD",
+  "DEBIT_CARD",
+  "CASH",
+  "BANK_TRANSFER",
+  "DIGITAL_WALLET",
+] as const;
+export type PaymentMethodType = (typeof PAYMENT_METHOD_TYPES)[number];
+
 export const THEMES = ["LIGHT", "DARK", "SYSTEM"] as const;
 export type Theme = (typeof THEMES)[number];
 
@@ -146,6 +155,33 @@ export interface UpdateCategoryInput {
   name?: string;
   icon?: string;
   color?: string;
+}
+
+// ─── Payment Method Types ───────────────────────────────────
+
+export interface PaymentMethod {
+  id: string;
+  type: PaymentMethodType;
+  name: string;
+  isDefault: boolean;
+  lastFour: string | null;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePaymentMethodInput {
+  type: PaymentMethodType;
+  name: string;
+  isDefault?: boolean;
+  lastFour?: string;
+}
+
+export interface UpdatePaymentMethodInput {
+  type?: PaymentMethodType;
+  name?: string;
+  isDefault?: boolean;
+  lastFour?: string;
 }
 
 // ─── User Types ──────────────────────────────────────────────

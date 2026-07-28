@@ -2,6 +2,7 @@ export {
   EXPENSE_CATEGORIES,
   TRANSACTION_TYPES,
   BUDGET_PERIODS,
+  PAYMENT_METHOD_TYPES,
   THEMES,
   CURRENCIES,
 } from "@expense-tracker/types";
@@ -9,6 +10,7 @@ export type {
   ExpenseCategory,
   TransactionType,
   BudgetPeriod,
+  PaymentMethodType,
   Theme,
   Currency,
 } from "@expense-tracker/types";
