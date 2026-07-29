@@ -3,9 +3,10 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import crypto from "node:crypto";
 import { authRepository } from "./auth.repository";
 import { categoryRepository } from "@/modules/categories/categories.repository";
+import { paymentMethodRepository } from "@/modules/payment-methods/payment-methods.repository";
 import { UnauthorizedError, ConflictError, ValidationError } from "@/common/errors";
 import { env } from "@/config/env";
-import { DEFAULT_CATEGORIES } from "@/common/constants";
+import { DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS } from "@/common/constants";
 import type { AuthResponse, AuthTokens } from "./auth.types";
 import type { JwtPayload } from "@/common/types";
 
@@ -84,6 +85,9 @@ export const authService = {
 
     // Create default starter categories for the new user
     await categoryRepository.createDefaultCategories(user.id, DEFAULT_CATEGORIES);
+
+    // Create default starter payment methods for the new user
+    await paymentMethodRepository.createDefaultPaymentMethods(user.id, DEFAULT_PAYMENT_METHODS);
 
     return toAuthResponse(user);
   },

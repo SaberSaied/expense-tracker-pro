@@ -78,7 +78,12 @@ export function validate(schema: ZodSchema, source: ValidationTarget = "body") {
       if (source === "body") {
         req.body = parsed;
       } else if (source === "query") {
-        req.query = parsed;
+        // Express v5 makes req.query a getter-only property — redefine it
+        Object.defineProperty(req, "query", {
+          value: parsed,
+          writable: true,
+          configurable: true,
+        });
       } else if (source === "params") {
         req.params = parsed;
       }

@@ -5,6 +5,7 @@ import type { Request } from "express";
 export interface JwtPayload {
   sub: string;
   email: string;
+  tokenVersion: number;
   iat?: number;
   exp?: number;
 }
@@ -33,4 +34,20 @@ export interface PaginationParams {
 export interface DateRange {
   startDate: string;
   endDate: string;
+}
+
+/** Date range preset identifiers for chart filtering. */
+export type DateRangePreset =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "last_month"
+  | "this_year"
+  | "custom";
+
+/** Query params for date-range-filtered endpoints. */
+export interface DateRangeFilter {
+  range: DateRangePreset;
+  startDate?: string;
+  endDate?: string;
 }

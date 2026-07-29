@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load .env from project root (two levels up from src/config/)
-config({ path: resolve(__dirname, "../../../.env") });
+// Load .env from project root (four levels up from src/config/ -> apps/server -> apps -> project root)
+config({ path: resolve(__dirname, "../../../../.env") });
 
 const envSchema = z.object({
   // ─── Server ────────────────────────────────────────────────
