@@ -269,6 +269,9 @@ model Transaction {
   /// Optional additional notes about the transaction.
   notes     String?
 
+  /// URL path to an uploaded receipt image (JPEG, PNG, WebP, or GIF).
+  receiptUrl String?
+
   /// Foreign key to the assigned category.
   categoryId String          @db.Uuid
 
