@@ -218,6 +218,12 @@ model PaymentMethod {
   /// User-friendly label (e.g. "My Chase Credit Card", "Personal Checking").
   name      String
 
+  /// Lucide icon identifier for the payment method.
+  icon      String           @default("CreditCard")
+
+  /// Hex color code for the payment method (e.g. "#3B82F6").
+  color     String           @default("#3B82F6")
+
   /// Whether this is the user's default payment method.
   isDefault Boolean          @default(false)
 
@@ -298,6 +304,9 @@ model Transaction {
 
   /// Primary query pattern: user's transactions ordered by date.
   @@index([userId, date])
+
+  /// Chart queries: user's transactions by type and date range.
+  @@index([userId, type, date])
 
   /// User's transactions filtered by category.
   @@index([userId, categoryId])
