@@ -91,6 +91,7 @@ export const TransactionsPage: React.FC = () => {
   const [formDate, setFormDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [formDescription, setFormDescription] = useState("");
   const [formNotes, setFormNotes] = useState("");
+  const [formPaymentMethodId, setFormPaymentMethodId] = useState("");
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   // ─── Edit state ──────────────────────────────────────────
@@ -176,9 +177,7 @@ export const TransactionsPage: React.FC = () => {
 
   const clearSelection = () => setSelectedIds(new Set());
 
-  // ─── Receipt state ───────────────────────────────────────
   const [uploadingReceiptId, setUploadingReceiptId] = useState<string | null>(null);
-  const receiptInputRef = useRef<HTMLInputElement | null>(null);
 
   // ─── Row action dropdown ─────────────────────────────────
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -296,6 +295,7 @@ export const TransactionsPage: React.FC = () => {
     setFormDate(new Date().toISOString().split("T")[0]);
     setFormDescription("");
     setFormNotes("");
+    setFormPaymentMethodId("");
     setShowAddModal(true);
   };
 
@@ -324,6 +324,7 @@ export const TransactionsPage: React.FC = () => {
         date: formDate,
         notes: formNotes.trim() || undefined,
         categoryId: formCategoryId,
+        paymentMethodId: formPaymentMethodId || null,
       });
       toast.success("Transaction created");
       setShowAddModal(false);
@@ -345,6 +346,7 @@ export const TransactionsPage: React.FC = () => {
     setFormDate(txn.date.split("T")[0]);
     setFormDescription(txn.description);
     setFormNotes(txn.notes ?? "");
+    setFormPaymentMethodId(txn.paymentMethodId ?? "");
     setOpenDropdownId(null);
     setShowEditModal(true);
   };
@@ -375,6 +377,7 @@ export const TransactionsPage: React.FC = () => {
         date: formDate,
         notes: formNotes.trim() || undefined,
         categoryId: formCategoryId,
+        paymentMethodId: formPaymentMethodId || null,
       });
       toast.success("Transaction updated");
       setShowEditModal(false);
@@ -987,6 +990,14 @@ export const TransactionsPage: React.FC = () => {
             required
           />
 
+          <Select
+            label="Payment Method (Optional)"
+            options={paymentMethodOptions}
+            placeholder="Select a payment method"
+            value={formPaymentMethodId}
+            onChange={(e) => setFormPaymentMethodId(e.target.value)}
+          />
+
           <Input
             label="Date"
             type="date"
@@ -1070,6 +1081,14 @@ export const TransactionsPage: React.FC = () => {
             value={formCategoryId}
             onChange={(e) => setFormCategoryId(e.target.value)}
             required
+          />
+
+          <Select
+            label="Payment Method (Optional)"
+            options={paymentMethodOptions}
+            placeholder="Select a payment method"
+            value={formPaymentMethodId}
+            onChange={(e) => setFormPaymentMethodId(e.target.value)}
           />
 
           <Input

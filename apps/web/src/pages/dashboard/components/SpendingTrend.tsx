@@ -60,7 +60,7 @@ export const SpendingTrend: React.FC<SpendingTrendProps> = ({ data }) => {
                 fontSize: "13px",
                 padding: "8px 12px",
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
+              formatter={(value: any) => [`$${Number(value ?? 0).toFixed(2)}`, "Spent"]}
             />
             <Area
               type="monotone"

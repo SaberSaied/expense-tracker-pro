@@ -279,17 +279,17 @@ export const SettingsPage: React.FC = () => {
           <Checkbox
             label="Budget Threshold Alerts (toast when category budget hits 80%)"
             checked={budgetAlerts}
-            onChange={setBudgetAlerts}
+            onChange={(e) => setBudgetAlerts(e.target.checked)}
           />
           <Checkbox
             label="Email Over-Budget Warnings (email on 100% budget cap)"
             checked={emailWarnings}
-            onChange={setEmailWarnings}
+            onChange={(e) => setEmailWarnings(e.target.checked)}
           />
           <Checkbox
             label="Weekly Spending Summary Digest"
             checked={weeklyDigest}
-            onChange={setWeeklyDigest}
+            onChange={(e) => setWeeklyDigest(e.target.checked)}
           />
         </div>
       </div>

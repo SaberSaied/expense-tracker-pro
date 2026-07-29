@@ -135,7 +135,7 @@ export const ReportsPage: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(215,16%,47%)" }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 11, fill: "hsl(215,16%,47%)" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v}`} width={50} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(217,33%,17%)", border: "1px solid hsl(215,25%,27%)", borderRadius: "12px", color: "hsl(210,40%,98%)", fontSize: "13px", padding: "8px 12px" }} formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(217,33%,17%)", border: "1px solid hsl(215,25%,27%)", borderRadius: "12px", color: "hsl(210,40%,98%)", fontSize: "13px", padding: "8px 12px" }} formatter={(value: any) => [`$${Number(value ?? 0).toFixed(2)}`, "Spent"]} />
                 <Area type="monotone" dataKey="value" stroke="#10B981" strokeWidth={2} fill="url(#reportGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -155,7 +155,7 @@ export const ReportsPage: React.FC = () => {
                     <Cell key={`c-${i}`} fill={entry.color ?? "#6366F1"} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "hsl(217,33%,17%)", border: "1px solid hsl(215,25%,27%)", borderRadius: "12px", color: "hsl(210,40%,98%)", fontSize: "13px" }} formatter={(value: number) => [`$${value.toFixed(2)}`, ""]} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(217,33%,17%)", border: "1px solid hsl(215,25%,27%)", borderRadius: "12px", color: "hsl(210,40%,98%)", fontSize: "13px" }} formatter={(value: any) => [`$${Number(value ?? 0).toFixed(2)}`, ""]} />
               </RechartsPie>
             </ResponsiveContainer>
           </div>

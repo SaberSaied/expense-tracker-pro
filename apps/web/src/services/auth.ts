@@ -3,6 +3,7 @@
  * All functions call the backend auth endpoints.
  */
 import { api, tokenStorage } from "./api";
+export { tokenStorage };
 
 // ─── Types ────────────────────────────────────────────────────
 

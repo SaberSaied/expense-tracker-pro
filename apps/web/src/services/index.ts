@@ -8,7 +8,9 @@ export { transactionsApi } from "./transactions";
 export type { User, AuthTokens, AuthResponse, LoginInput, RegisterInput } from "./auth";
 export type { ApiCategory, CreateCategoryInput, UpdateCategoryInput } from "./categories";
 export { paymentMethodsApi } from "./payment-methods";
-export type { ApiPaymentMethod } from "./payment-methods";
+export type { ApiPaymentMethod, CreatePaymentMethodInput, UpdatePaymentMethodInput } from "./payment-methods";
+export { dashboardApi } from "./dashboard";
+export type { DashboardOverview, BudgetStatus, SavingsSummary, CategorySpending, PaymentMethodSpending, MostUsedPaymentMethod } from "./dashboard";
 export type {
   ApiTransaction,
   CreateTransactionInput,

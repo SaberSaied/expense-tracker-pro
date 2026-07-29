@@ -53,7 +53,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
                 fontSize: "13px",
                 padding: "8px 12px",
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, ""]}
+              formatter={(value: any) => [`$${Number(value ?? 0).toFixed(2)}`, ""]}
             />
           </PieChart>
         </ResponsiveContainer>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef } from "react";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
 
@@ -31,11 +31,21 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -44,6 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
         const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
+        if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
 
@@ -55,31 +66,29 @@ export const Modal: React.FC<ModalProps> = ({
           first?.focus();
         }
       }
-    },
-    [onClose],
-  );
+    };
 
-  useEffect(() => {
-    if (isOpen) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
 
-      // Auto-focus first focusable element
-      requestAnimationFrame(() => {
-        const focusable = dialogRef.current?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        focusable?.focus();
-      });
+    // Auto-focus first input or focusable element on open if focus is outside the modal
+    const frameId = requestAnimationFrame(() => {
+      if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) {
+        const focusTarget =
+          dialogRef.current.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea") ??
+          dialogRef.current.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          );
+        focusTarget?.focus();
+      }
+    });
 
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-        document.body.style.overflow = "";
-        previousFocusRef.current?.focus();
-      };
-    }
-  }, [isOpen, handleKeyDown]);
+    return () => {
+      cancelAnimationFrame(frameId);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

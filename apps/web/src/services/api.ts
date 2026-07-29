@@ -35,14 +35,21 @@ export const tokenStorage = {
 // ─── API Error ────────────────────────────────────────────────
 
 export class ApiError extends Error {
+  statusCode: number;
+  error: string;
+  details?: Record<string, string[]>;
+
   constructor(
-    public statusCode: number,
-    public error: string,
+    statusCode: number,
+    error: string,
     message: string,
-    public details?: Record<string, string[]>
+    details?: Record<string, string[]>
   ) {
     super(message);
     this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.error = error;
+    this.details = details;
   }
 }
 

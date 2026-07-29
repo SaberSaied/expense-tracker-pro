@@ -171,7 +171,7 @@ export const RegisterPage: React.FC = () => {
       <Checkbox
         label="I agree to the Terms of Service & Privacy Policy"
         checked={agreedToTerms}
-        onChange={setAgreedToTerms}
+        onChange={(e) => setAgreedToTerms(e.target.checked)}
       />
 
       <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>

@@ -5,15 +5,25 @@ import { Check } from "lucide-react";
 export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   /** Label text rendered next to the checkbox. */
-  label: string;
+  label?: string;
+  indeterminate?: boolean;
 }
 
 /**
  * Custom accessible checkbox with emerald accent.
  */
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, className, id, ...props }, ref) => {
-    const checkboxId = id ?? label.toLowerCase().replace(/\s+/g, "-");
+  ({ label, className, id, indeterminate, ...props }, ref) => {
+    const checkboxId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+    React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
+    React.useEffect(() => {
+      if (inputRef.current) {
+        inputRef.current.indeterminate = Boolean(indeterminate);
+      }
+    }, [indeterminate]);
 
     return (
       <label
@@ -26,7 +36,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       >
         <div className="relative flex items-center justify-center">
           <input
-            ref={ref}
+            ref={inputRef}
             type="checkbox"
             id={checkboxId}
             className="peer sr-only"
@@ -45,9 +55,11 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           {/* Overlay checkmark that responds to peer-checked */}
           <Check className="size-3.5 text-text-inverse absolute opacity-0 pointer-events-none transition-opacity peer-checked:opacity-100" />
         </div>
-        <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-          {label}
-        </span>
+        {label && (
+          <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+            {label}
+          </span>
+        )}
       </label>
     );
   },

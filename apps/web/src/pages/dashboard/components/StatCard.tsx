@@ -50,8 +50,8 @@ export const StatCard: React.FC<StatCardProps> = ({
       <p
         className={clsx(
           "text-xs font-medium",
-          trend === "up" && "text-warning",
-          trend === "down" && "text-success",
+          trend === "up" && "text-success",
+          trend === "down" && "text-error",
           trend === "neutral" && "text-text-muted",
         )}
       >

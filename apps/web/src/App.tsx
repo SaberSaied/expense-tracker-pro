@@ -16,6 +16,7 @@ import {
   ReportsPage,
   ProfilePage,
   SettingsPage,
+  PaymentMethodsPage,
 } from "@/pages";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -100,6 +101,7 @@ function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/payment-methods" element={<PaymentMethodsPage />} />
           </Route>
 
           {/* Default redirect */}

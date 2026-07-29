@@ -9,3 +9,4 @@ export { BudgetsPage } from "./budgets";
 export { ReportsPage } from "./reports";
 export { ProfilePage } from "./profile";
 export { SettingsPage } from "./settings";
+export { PaymentMethodsPage } from "./payment-methods";
