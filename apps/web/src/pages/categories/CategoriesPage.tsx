@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { toast } from "sonner";
-import { Plus, FolderPlus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, FolderPlus, Pencil, Trash2, Search, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { categoriesApi } from "@/services/categories";
 import { ApiError } from "@/services/api";
 import type { ApiCategory } from "@/services/categories";
@@ -15,25 +16,33 @@ import type { ApiCategory } from "@/services/categories";
 const COLOR_PALETTE = [
   "#10B981", "#F59E0B", "#06B6D4", "#8B5CF6", "#F43F5E", "#EC4899",
   "#6366F1", "#D946EF", "#14B8A6", "#EAB308", "#3B82F6", "#EF4444",
+  "#F97316", "#A855F7", "#E879F9", "#22C55E", "#64748B", "#94A3B8",
 ];
 
 const ICON_OPTIONS = [
-  { value: "Tag", label: "\uD83C\uDFF7\uFE0F Tag" },
-  { value: "UtensilsCrossed", label: "\uD83C\uDF74 Dining" },
-  { value: "Car", label: "\uD83D\uDE97 Car" },
-  { value: "Home", label: "\uD83C\uDFE0 Home" },
-  { value: "Zap", label: "\u26A1 Utilities" },
-  { value: "Film", label: "\uD83C\uDFAC Film" },
-  { value: "Heart", label: "\u2764\uFE0F Health" },
-  { value: "Cloud", label: "\u2601\uFE0F Cloud" },
-  { value: "Wine", label: "\uD83C\uDF77 Wine" },
-  { value: "ShoppingBag", label: "\uD83D\uDED2 Shopping" },
-  { value: "Briefcase", label: "\uD83D\uDCBC Work" },
-  { value: "GraduationCap", label: "\uD83C\uDF93 Education" },
-  { value: "Plane", label: "\u2708\uFE0F Travel" },
-  { value: "Gift", label: "\uD83C\uDF81 Gift" },
-  { value: "PawPrint", label: "\uD83D\uDC3E Pets" },
-  { value: "Dumbbell", label: "\uD83D\uDCAA Fitness" },
+  { value: "Tag", label: "Default" },
+  { value: "UtensilsCrossed", label: "Dining" },
+  { value: "Car", label: "Car" },
+  { value: "Home", label: "Home" },
+  { value: "Zap", label: "Utilities" },
+  { value: "Film", label: "Entertainment" },
+  { value: "Heart", label: "Health" },
+  { value: "Cloud", label: "Cloud" },
+  { value: "Wine", label: "Wine" },
+  { value: "ShoppingBag", label: "Shopping" },
+  { value: "Briefcase", label: "Work" },
+  { value: "GraduationCap", label: "Education" },
+  { value: "Plane", label: "Travel" },
+  { value: "Gift", label: "Gift" },
+  { value: "PawPrint", label: "Pets" },
+  { value: "Dumbbell", label: "Fitness" },
+  { value: "BookOpen", label: "Books" },
+  { value: "Sparkles", label: "Spa" },
+  { value: "Apple", label: "Groceries" },
+  { value: "Repeat", label: "Subscriptions" },
+  { value: "Shield", label: "Insurance" },
+  { value: "TrendingUp", label: "Investments" },
+  { value: "MoreHorizontal", label: "Other" },
 ];
 
 export const CategoriesPage: React.FC = () => {
@@ -273,38 +282,90 @@ export const CategoriesPage: React.FC = () => {
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-secondary">Color</label>
+
+            {/* Hex input with live color preview */}
+            <div className="flex items-center gap-3">
+              <div
+                className="size-9 rounded-lg shrink-0 border border-border-card"
+                style={{ backgroundColor: formColor }}
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                value={formColor}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormColor(val);
+                }}
+                placeholder="#6366F1"
+                pattern="^#[0-9a-fA-F]{6}$"
+                maxLength={7}
+                className={clsx(
+                  "flex-1 rounded-lg border bg-bg-app px-3 py-2 text-sm font-mono tabular-nums",
+                  "text-text-primary placeholder:text-text-muted/50",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all",
+                  /^#[0-9a-fA-F]{6}$/.test(formColor)
+                    ? "border-border-card"
+                    : "border-error/50 ring-1 ring-error/30",
+                )}
+              />
+            </div>
+
+            {/* Suggested palette */}
+            <p className="text-xs text-text-muted mt-2 mb-2">Suggested palette</p>
             <div className="flex flex-wrap gap-2">
-              {COLOR_PALETTE.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setFormColor(color)}
-                  className={clsx(
-                    "size-8 rounded-full transition-all",
-                    formColor === color
-                      ? "ring-2 ring-offset-2 ring-offset-bg-app ring-primary scale-110"
-                      : "hover:scale-110",
-                  )}
-                  style={{ backgroundColor: color }}
-                  aria-label={"Select color " + color}
-                />
-              ))}
+              {COLOR_PALETTE.map((color) => {
+                const isSelected = formColor.toUpperCase() === color.toUpperCase();
+                return (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setFormColor(color)}
+                    className={clsx(
+                      "size-8 rounded-full transition-all",
+                      isSelected
+                        ? "ring-2 ring-offset-2 ring-offset-bg-app ring-primary scale-110"
+                        : "hover:scale-110",
+                    )}
+                    style={{ backgroundColor: color }}
+                    aria-label={"Select color " + color}
+                  />
+                );
+              })}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-secondary">Icon</label>
-            <select
-              value={formIcon}
-              onChange={(e) => setFormIcon(e.target.value)}
-              className="w-full rounded-lg border border-border-card bg-bg-app px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
-            >
-              {ICON_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+              {ICON_OPTIONS.map((opt) => {
+                const isSelected = formIcon === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setFormIcon(opt.value)}
+                    className={clsx(
+                      "flex flex-col items-center gap-1 rounded-xl p-2.5 transition-all",
+                      isSelected
+                        ? "bg-primary/15 ring-2 ring-primary ring-offset-1 ring-offset-bg-app scale-105"
+                        : "hover:bg-white/5 hover:scale-105",
+                    )}
+                    title={opt.label}
+                    aria-label={`Select icon: ${opt.label}`}
+                  >
+                    <CategoryIcon
+                      name={opt.value}
+                      size={22}
+                      className={isSelected ? "text-primary" : "text-text-secondary"}
+                    />
+                    {isSelected && (
+                      <Check className="size-3 text-primary" aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -343,9 +404,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onEdit, onDelete 
         className="size-11 rounded-xl flex items-center justify-center"
         style={{ backgroundColor: category.color + "20" }}
       >
-        <span className="text-lg font-bold" style={{ color: category.color }}>
-          {category.name.charAt(0).toUpperCase()}
-        </span>
+        <CategoryIcon name={category.icon} size={22} style={{ color: category.color }} />
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="text-sm font-semibold text-text-primary truncate">
