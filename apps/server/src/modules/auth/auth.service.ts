@@ -2,8 +2,10 @@ import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import crypto from "node:crypto";
 import { authRepository } from "./auth.repository";
+import { categoryRepository } from "@/modules/categories/categories.repository";
 import { UnauthorizedError, ConflictError, ValidationError } from "@/common/errors";
 import { env } from "@/config/env";
+import { DEFAULT_CATEGORIES } from "@/common/constants";
 import type { AuthResponse, AuthTokens } from "./auth.types";
 import type { JwtPayload } from "@/common/types";
 
@@ -79,6 +81,9 @@ export const authService = {
       passwordHash,
       name: input.name ?? null,
     });
+
+    // Create default starter categories for the new user
+    await categoryRepository.createDefaultCategories(user.id, DEFAULT_CATEGORIES);
 
     return toAuthResponse(user);
   },

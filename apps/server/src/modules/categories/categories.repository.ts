@@ -122,4 +122,23 @@ export const categoryRepository = {
   async delete(id: string) {
     return prisma.category.delete({ where: { id } });
   },
+
+  /**
+   * Bulk-create default starter categories for a newly registered user.
+   * Each category is marked as system-owned to prevent accidental deletion.
+   */
+  async createDefaultCategories(
+    userId: string,
+    defaults: readonly { name: string; icon: string; color: string }[]
+  ) {
+    return prisma.category.createMany({
+      data: defaults.map((cat) => ({
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        isSystem: true,
+        userId,
+      })),
+    });
+  },
 };
