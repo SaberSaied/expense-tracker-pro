@@ -178,6 +178,65 @@ export interface UpdateTransactionInput {
 
 // ─── Category Types ──────────────────────────────────────────
 
+/**
+ * Canonical palette of suggested hex color codes for expense categories.
+ * These colors are used for the color picker UI and system category defaults.
+ */
+export const CATEGORY_COLORS = [
+  "#10B981",
+  "#F59E0B",
+  "#06B6D4",
+  "#8B5CF6",
+  "#F43F5E",
+  "#EC4899",
+  "#6366F1",
+  "#D946EF",
+  "#14B8A6",
+  "#EAB308",
+  "#3B82F6",
+  "#EF4444",
+  "#F97316",
+  "#A855F7",
+  "#E879F9",
+  "#22C55E",
+  "#64748B",
+  "#94A3B8",
+] as const;
+
+export type CategoryColor = (typeof CATEGORY_COLORS)[number];
+
+/**
+ * Canonical list of valid Lucide icon names for expense categories.
+ * Matches the icons used in SYSTEM_CATEGORIES and the category picker UI.
+ */
+export const CATEGORY_ICONS = [
+  "Tag",
+  "UtensilsCrossed",
+  "Car",
+  "Home",
+  "Zap",
+  "Film",
+  "Heart",
+  "Cloud",
+  "Wine",
+  "ShoppingBag",
+  "Briefcase",
+  "GraduationCap",
+  "Plane",
+  "Gift",
+  "PawPrint",
+  "Dumbbell",
+  "BookOpen",
+  "Sparkles",
+  "Apple",
+  "Repeat",
+  "Shield",
+  "TrendingUp",
+  "MoreHorizontal",
+] as const;
+
+export type CategoryIcon = (typeof CATEGORY_ICONS)[number];
+
 export interface Category {
   id: string;
   name: string;
