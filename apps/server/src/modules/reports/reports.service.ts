@@ -1,5 +1,6 @@
 import { reportRepository } from "./reports.repository";
 import { reportMapper } from "./reports.mapper";
+import { computePeriodEnd } from "../budgets/budgets.repository";
 
 export const reportService = {
   async getCategorySummary(userId: string, startDate: string, endDate: string) {
@@ -137,6 +138,181 @@ export const reportService = {
       dailyBreakdown,
       transactions: mappedTransactions,
       spendingByCategory,
+    };
+  },
+
+  async getMonthlyReport(userId: string, year: number, month: number) {
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // Fetch transactions, budgets, and payment methods in parallel
+    const [transactions, budgets, paymentMethods] = await Promise.all([
+      reportRepository.findTransactionsInMonth(userId, startOfMonth, endOfMonth),
+      reportRepository.findBudgetsForUser(userId),
+      reportRepository.findPaymentMethodsForUser(userId),
+    ]);
+
+    const MONTH_NAMES = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    const label = `${MONTH_NAMES[month - 1]} ${year}`;
+    const monthStr = `${year}-${String(month).padStart(2, "0")}`;
+
+    // ─── Income, Expenses, Net Savings ───
+    let totalIncome = 0;
+    let totalExpenses = 0;
+
+    // ─── Category Summary ───
+    const categoryMap = new Map<
+      string,
+      {
+        categoryId: string;
+        categoryName: string;
+        categoryColor: string;
+        categoryIcon: string;
+        total: number;
+        count: number;
+      }
+    >();
+
+    // ─── Payment Method Summary ───
+    const pmMap = new Map<
+      string,
+      {
+        paymentMethodId: string;
+        paymentMethodName: string;
+        paymentMethodType: string;
+        paymentMethodIcon: string;
+        paymentMethodColor: string;
+        totalExpense: number;
+        totalIncome: number;
+        transactionCount: number;
+      }
+    >();
+
+    // Build lookup map for payment method names
+    const pmLookup = new Map(paymentMethods.map((pm) => [pm.id, pm]));
+
+    for (const tx of transactions) {
+      if (tx.type === "INCOME") totalIncome += tx.amount;
+      else if (tx.type === "EXPENSE") totalExpenses += tx.amount;
+
+      // Category aggregation
+      const catKey = tx.categoryId;
+      if (!categoryMap.has(catKey)) {
+        categoryMap.set(catKey, {
+          categoryId: tx.categoryId,
+          categoryName: tx.category.name,
+          categoryColor: tx.category.color,
+          categoryIcon: tx.category.icon,
+          total: 0,
+          count: 0,
+        });
+      }
+      const catEntry = categoryMap.get(catKey)!;
+      catEntry.total += tx.amount;
+      catEntry.count += 1;
+
+      // Payment method aggregation
+      if (tx.paymentMethodId) {
+        const pmKey = tx.paymentMethodId;
+        if (!pmMap.has(pmKey)) {
+          const pm = pmLookup.get(pmKey);
+          pmMap.set(pmKey, {
+            paymentMethodId: pmKey,
+            paymentMethodName: pm?.name ?? "Unknown",
+            paymentMethodType: pm?.type ?? "OTHER",
+            paymentMethodIcon: pm?.icon ?? "CreditCard",
+            paymentMethodColor: pm?.color ?? "#6366F1",
+            totalExpense: 0,
+            totalIncome: 0,
+            transactionCount: 0,
+          });
+        }
+        const pmEntry = pmMap.get(pmKey)!;
+        if (tx.type === "EXPENSE") pmEntry.totalExpense += tx.amount;
+        else if (tx.type === "INCOME") pmEntry.totalIncome += tx.amount;
+        pmEntry.transactionCount += 1;
+      }
+    }
+
+    // ─── Category Summary with percentages ───
+    const categorySummary = Array.from(categoryMap.values())
+      .map((cat) => ({
+        ...cat,
+        percentage:
+          totalExpenses > 0
+            ? Math.round((cat.total / totalExpenses) * 100)
+            : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    // ─── Payment Method Summary ───
+    const paymentMethodSummary = Array.from(pmMap.values())
+      .map((pm) => ({
+        ...pm,
+        netAmount: pm.totalIncome - pm.totalExpense,
+      }))
+      .sort((a, b) => b.transactionCount - a.transactionCount);
+
+    // ─── Budget Performance ───
+    // Filter budgets whose period overlaps with the requested month
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const scopedBudgets = budgets.filter((budget) => {
+      const periodEnd = computePeriodEnd(budget.startDate, budget.period);
+      // Budget overlaps with month if: budget.startDate <= monthEnd AND periodEnd >= monthStart
+      return budget.startDate <= monthEnd && periodEnd >= monthStart;
+    });
+
+    // Get spending by category for this month using the already-fetched data
+    const spendingByCategory = new Map<string, number>();
+    for (const tx of transactions) {
+      if (tx.type === "EXPENSE") {
+        spendingByCategory.set(
+          tx.categoryId,
+          (spendingByCategory.get(tx.categoryId) ?? 0) + tx.amount
+        );
+      }
+    }
+
+    const budgetPerformance = scopedBudgets.map((budget) => {
+      const spent = spendingByCategory.get(budget.categoryId) ?? 0;
+      const percentage = budget.targetAmount > 0
+        ? Math.round((spent / budget.targetAmount) * 100)
+        : 0;
+
+      let status: "on_track" | "warning" | "critical" = "on_track";
+      if (percentage >= 100) {
+        status = "critical";
+      } else if (percentage >= budget.alertThreshold) {
+        status = "warning";
+      }
+
+      return {
+        budgetId: budget.id,
+        categoryId: budget.categoryId,
+        categoryName: budget.category.name,
+        budgeted: budget.targetAmount,
+        spent: Math.round(spent * 100) / 100,
+        remaining: Math.round((budget.targetAmount - spent) * 100) / 100,
+        percentage,
+        status,
+      };
+    });
+
+    return {
+      month: monthStr,
+      label,
+      income: totalIncome,
+      expenses: totalExpenses,
+      netSavings: totalIncome - totalExpenses,
+      transactionCount: transactions.length,
+      budgetPerformance,
+      categorySummary,
+      paymentMethodSummary,
     };
   },
 

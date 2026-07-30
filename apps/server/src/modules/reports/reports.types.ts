@@ -99,3 +99,48 @@ export interface WeeklyReport {
   transactions: DailyReportTransaction[];
   spendingByCategory: DailyCategoryBreakdown[];
 }
+
+export interface MonthlyCategorySummary {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  total: number;
+  count: number;
+  percentage: number;
+}
+
+export interface MonthlyPaymentMethodSummary {
+  paymentMethodId: string;
+  paymentMethodName: string;
+  paymentMethodType: string;
+  paymentMethodIcon: string;
+  paymentMethodColor: string;
+  totalExpense: number;
+  totalIncome: number;
+  netAmount: number;
+  transactionCount: number;
+}
+
+export interface MonthlyBudgetPerformance {
+  budgetId: string;
+  categoryId: string;
+  categoryName: string;
+  budgeted: number;
+  spent: number;
+  remaining: number;
+  percentage: number;
+  status: "on_track" | "warning" | "critical";
+}
+
+export interface MonthlyReport {
+  month: string;
+  label: string;
+  income: number;
+  expenses: number;
+  netSavings: number;
+  transactionCount: number;
+  budgetPerformance: MonthlyBudgetPerformance[];
+  categorySummary: MonthlyCategorySummary[];
+  paymentMethodSummary: MonthlyPaymentMethodSummary[];
+}

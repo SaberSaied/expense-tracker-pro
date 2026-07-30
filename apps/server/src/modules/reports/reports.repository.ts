@@ -42,4 +42,32 @@ export const reportRepository = {
       orderBy: { date: "desc" },
     });
   },
+
+  async findTransactionsInMonth(
+    userId: string,
+    startOfMonth: Date,
+    endOfMonth: Date
+  ) {
+    return prisma.transaction.findMany({
+      where: {
+        userId,
+        date: { gte: startOfMonth, lte: endOfMonth },
+      },
+      include: { category: true, paymentMethod: true },
+      orderBy: { date: "asc" },
+    });
+  },
+
+  async findBudgetsForUser(userId: string) {
+    return prisma.budget.findMany({
+      where: { userId },
+      include: { category: true },
+    });
+  },
+
+  async findPaymentMethodsForUser(userId: string) {
+    return prisma.paymentMethod.findMany({
+      where: { userId },
+    });
+  },
 };

@@ -52,4 +52,16 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getMonthlyReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const now = new Date();
+      const year = req.query.year ? Number(req.query.year) : now.getFullYear();
+      const month = req.query.month ? Number(req.query.month) : now.getMonth() + 1;
+      const result = await reportService.getMonthlyReport(req.user.id, year, month);
+      sendSuccess(res, { report: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
