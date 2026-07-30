@@ -112,4 +112,15 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getBreakdown(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const result = await reportService.getBreakdown(req.user.id, startDate, endDate);
+      sendSuccess(res, { breakdown: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

@@ -206,3 +206,53 @@ export interface ReportSummary {
   averageIncome: number;
   averageExpense: number;
 }
+
+export interface BreakdownCategoryItem {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  total: number;
+  count: number;
+  percentage: number;
+}
+
+export interface BreakdownPaymentMethodItem {
+  paymentMethodId: string;
+  paymentMethodName: string;
+  paymentMethodType: string;
+  paymentMethodIcon: string;
+  paymentMethodColor: string;
+  totalExpense: number;
+  totalIncome: number;
+  netAmount: number;
+  transactionCount: number;
+}
+
+export interface BreakdownTransaction {
+  id: string;
+  amount: number;
+  description: string;
+  type: string;
+  date: Date;
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+}
+
+export interface ReportBreakdown {
+  categoryBreakdown: BreakdownCategoryItem[];
+  paymentMethodBreakdown: BreakdownPaymentMethodItem[];
+  incomeVsExpense: {
+    income: number;
+    expenses: number;
+    net: number;
+    incomeCount: number;
+    expenseCount: number;
+    incomePercentage: number;
+    expensePercentage: number;
+  };
+  largestTransaction: BreakdownTransaction | null;
+  smallestTransaction: BreakdownTransaction | null;
+}

@@ -470,6 +470,126 @@ export const reportService = {
     };
   },
 
+  async getBreakdown(userId: string, startDate?: string, endDate?: string) {
+    const dbStartDate = startDate ? new Date(startDate) : undefined;
+    const dbEndDate = endDate ? new Date(endDate) : undefined;
+
+    const {
+      categoryGroup,
+      paymentMethodGroup,
+      incomeExpenseGroup,
+      largestTx,
+      smallestTx,
+      paymentMethods,
+      userCategories,
+    } = await reportRepository.getBreakdown(userId, dbStartDate, dbEndDate);
+
+    const pmLookup = new Map(paymentMethods.map((pm) => [pm.id, pm]));
+    const catLookup = new Map(userCategories.map((c) => [c.id, c]));
+
+    // ─── Category breakdown ───
+    const totalExpenses = categoryGroup.reduce(
+      (sum, g) => sum + (g._sum.amount ?? 0),
+      0
+    );
+
+    const categoryBreakdown = categoryGroup
+      .map((g) => {
+        const cat = catLookup.get(g.categoryId);
+        return {
+          categoryId: g.categoryId,
+          categoryName: cat?.name ?? "Unknown",
+          categoryColor: cat?.color ?? "#6366F1",
+          categoryIcon: cat?.icon ?? "Tag",
+          total: g._sum.amount ?? 0,
+          count: g._count,
+          percentage: totalExpenses > 0
+            ? Math.round(((g._sum.amount ?? 0) / totalExpenses) * 100)
+            : 0,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+
+    // ─── Payment method breakdown ───
+    const pmMap = new Map<
+      string,
+      {
+        paymentMethodId: string;
+        paymentMethodName: string;
+        paymentMethodType: string;
+        paymentMethodIcon: string;
+        paymentMethodColor: string;
+        totalExpense: number;
+        totalIncome: number;
+        transactionCount: number;
+      }
+    >();
+
+    for (const g of paymentMethodGroup) {
+      const id = g.paymentMethodId!;
+      const pm = pmLookup.get(id);
+      const prev = pmMap.get(id) ?? {
+        paymentMethodId: id,
+        paymentMethodName: pm?.name ?? "Unknown",
+        paymentMethodType: pm?.type ?? "OTHER",
+        paymentMethodIcon: pm?.icon ?? "CreditCard",
+        paymentMethodColor: pm?.color ?? "#6366F1",
+        totalExpense: 0,
+        totalIncome: 0,
+        transactionCount: 0,
+      };
+      if (g.type === "EXPENSE") prev.totalExpense += g._sum.amount ?? 0;
+      else if (g.type === "INCOME") prev.totalIncome += g._sum.amount ?? 0;
+      prev.transactionCount += g._count;
+      pmMap.set(id, prev);
+    }
+
+    const paymentMethodBreakdown = Array.from(pmMap.values())
+      .map((pm) => ({ ...pm, netAmount: pm.totalIncome - pm.totalExpense }))
+      .sort((a, b) => b.transactionCount - a.transactionCount);
+
+    // ─── Income vs Expense comparison ───
+    const incomeRow = incomeExpenseGroup.find((g) => g.type === "INCOME");
+    const expenseRow = incomeExpenseGroup.find((g) => g.type === "EXPENSE");
+    const incomeTotal = incomeRow?._sum.amount ?? 0;
+    const expenseTotal = expenseRow?._sum.amount ?? 0;
+    const combined = incomeTotal + expenseTotal;
+
+    const incomeVsExpense = {
+      income: incomeTotal,
+      expenses: expenseTotal,
+      net: incomeTotal - expenseTotal,
+      incomeCount: incomeRow?._count ?? 0,
+      expenseCount: expenseRow?._count ?? 0,
+      incomePercentage: combined > 0 ? Math.round((incomeTotal / combined) * 100) : 0,
+      expensePercentage: combined > 0 ? Math.round((expenseTotal / combined) * 100) : 0,
+    };
+
+    // ─── Largest / Smallest transaction ───
+    const mapTx = (tx: typeof largestTx) =>
+      tx
+        ? {
+            id: tx.id,
+            amount: tx.amount,
+            description: tx.description,
+            type: tx.type,
+            date: tx.date,
+            categoryId: tx.categoryId,
+            categoryName: tx.category.name,
+            categoryColor: tx.category.color,
+            categoryIcon: tx.category.icon,
+          }
+        : null;
+
+    return {
+      categoryBreakdown,
+      paymentMethodBreakdown,
+      incomeVsExpense,
+      largestTransaction: mapTx(largestTx),
+      smallestTransaction: mapTx(smallestTx),
+    };
+  },
+
   async getSummary(userId: string, startDate?: string, endDate?: string) {
     const dbStartDate = startDate ? new Date(startDate) : undefined;
     const dbEndDate = endDate ? new Date(endDate) : undefined;

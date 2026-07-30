@@ -110,6 +110,68 @@ export const reportRepository = {
     return aggregation;
   },
 
+  async getBreakdown(
+    userId: string,
+    startDate?: Date,
+    endDate?: Date
+  ) {
+    const buildWhere = () => {
+      const w: Record<string, unknown> = { userId };
+      if (startDate || endDate) {
+        const dateFilter: Record<string, Date> = {};
+        if (startDate) dateFilter.gte = startDate;
+        if (endDate) dateFilter.lte = endDate;
+        w.date = dateFilter;
+      }
+      return w;
+    };
+
+    const where = buildWhere();
+
+    const [
+      categoryGroup,
+      paymentMethodGroup,
+      incomeExpenseGroup,
+      largestTx,
+      smallestTx,
+      paymentMethods,
+      userCategories,
+    ] = await Promise.all([
+      prisma.transaction.groupBy({
+        where: where as any,
+        by: ["categoryId"],
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.transaction.groupBy({
+        where: { ...where, paymentMethodId: { not: null } } as any,
+        by: ["paymentMethodId", "type"],
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.transaction.groupBy({
+        where: where as any,
+        by: ["type"],
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.transaction.findFirst({
+        where: where as any,
+        orderBy: { amount: "desc" },
+        include: { category: true },
+      }),
+      prisma.transaction.findFirst({
+        where: where as any,
+        orderBy: { amount: "asc" },
+        include: { category: true },
+      }),
+      prisma.paymentMethod.findMany({ where: { userId } }),
+      prisma.category.findMany({ where: { userId }, select: { id: true, name: true, color: true, icon: true } }),
+    ]);
+
+    return { categoryGroup, paymentMethodGroup, incomeExpenseGroup, largestTx, smallestTx, paymentMethods, userCategories };
+  },
+
   async findCustomTransactions(
     userId: string,
     filters: {
