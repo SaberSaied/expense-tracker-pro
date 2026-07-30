@@ -159,44 +159,41 @@ export const reportService = {
     const label = `${MONTH_NAMES[month - 1]} ${year}`;
     const monthStr = `${year}-${String(month).padStart(2, "0")}`;
 
-    // ─── Income, Expenses, Net Savings ───
+    // ─── Combined aggregation (single pass through transactions) ───
     let totalIncome = 0;
     let totalExpenses = 0;
+    const categoryMap = new Map<string, {
+      categoryId: string;
+      categoryName: string;
+      categoryColor: string;
+      categoryIcon: string;
+      total: number;
+      count: number;
+    }>();
+    const pmMap = new Map<string, {
+      paymentMethodId: string;
+      paymentMethodName: string;
+      paymentMethodType: string;
+      paymentMethodIcon: string;
+      paymentMethodColor: string;
+      totalExpense: number;
+      totalIncome: number;
+      transactionCount: number;
+    }>();
+    // Track spending by category for budget performance (eliminates second pass)
+    const budgetSpendingMap = new Map<string, number>();
 
-    // ─── Category Summary ───
-    const categoryMap = new Map<
-      string,
-      {
-        categoryId: string;
-        categoryName: string;
-        categoryColor: string;
-        categoryIcon: string;
-        total: number;
-        count: number;
-      }
-    >();
-
-    // ─── Payment Method Summary ───
-    const pmMap = new Map<
-      string,
-      {
-        paymentMethodId: string;
-        paymentMethodName: string;
-        paymentMethodType: string;
-        paymentMethodIcon: string;
-        paymentMethodColor: string;
-        totalExpense: number;
-        totalIncome: number;
-        transactionCount: number;
-      }
-    >();
-
-    // Build lookup map for payment method names
     const pmLookup = new Map(paymentMethods.map((pm) => [pm.id, pm]));
 
     for (const tx of transactions) {
       if (tx.type === "INCOME") totalIncome += tx.amount;
-      else if (tx.type === "EXPENSE") totalExpenses += tx.amount;
+      else if (tx.type === "EXPENSE") {
+        totalExpenses += tx.amount;
+        budgetSpendingMap.set(
+          tx.categoryId,
+          (budgetSpendingMap.get(tx.categoryId) ?? 0) + tx.amount
+        );
+      }
 
       // Category aggregation
       const catKey = tx.categoryId;
@@ -214,7 +211,7 @@ export const reportService = {
       catEntry.total += tx.amount;
       catEntry.count += 1;
 
-      // Payment method aggregation
+      // Payment method aggregation (use lookup instead of include)
       if (tx.paymentMethodId) {
         const pmKey = tx.paymentMethodId;
         if (!pmMap.has(pmKey)) {
@@ -267,19 +264,9 @@ export const reportService = {
       return budget.startDate <= monthEnd && periodEnd >= monthStart;
     });
 
-    // Get spending by category for this month using the already-fetched data
-    const spendingByCategory = new Map<string, number>();
-    for (const tx of transactions) {
-      if (tx.type === "EXPENSE") {
-        spendingByCategory.set(
-          tx.categoryId,
-          (spendingByCategory.get(tx.categoryId) ?? 0) + tx.amount
-        );
-      }
-    }
-
+    // Use budgetSpendingMap from the single pass (eliminates redundant second pass)
     const budgetPerformance = scopedBudgets.map((budget) => {
-      const spent = spendingByCategory.get(budget.categoryId) ?? 0;
+      const spent = budgetSpendingMap.get(budget.categoryId) ?? 0;
       const percentage = budget.targetAmount > 0
         ? Math.round((spent / budget.targetAmount) * 100)
         : 0;
@@ -360,11 +347,18 @@ export const reportService = {
       }
     >();
 
+    // Track expense spending by category for budget performance (single pass, eliminates second loop)
+    const yearlyExpensesByCategory = new Map<string, number>();
+
     for (const tx of transactions) {
       if (tx.type === "INCOME") {
         totalIncome += tx.amount;
       } else if (tx.type === "EXPENSE") {
         totalExpenses += tx.amount;
+        yearlyExpensesByCategory.set(
+          tx.categoryId,
+          (yearlyExpensesByCategory.get(tx.categoryId) ?? 0) + tx.amount
+        );
       }
 
       // Monthly aggregation
@@ -421,17 +415,6 @@ export const reportService = {
       const periodEnd = computePeriodEnd(budget.startDate, budget.period);
       return budget.startDate <= yearEnd && periodEnd >= yearStart;
     });
-
-    // Total expense spending by category for the year
-    const yearlyExpensesByCategory = new Map<string, number>();
-    for (const tx of transactions) {
-      if (tx.type === "EXPENSE") {
-        yearlyExpensesByCategory.set(
-          tx.categoryId,
-          (yearlyExpensesByCategory.get(tx.categoryId) ?? 0) + tx.amount
-        );
-      }
-    }
 
     const budgetPerformance = scopedBudgets.map((budget) => {
       const spent = yearlyExpensesByCategory.get(budget.categoryId) ?? 0;

@@ -53,7 +53,7 @@ export const reportRepository = {
         userId,
         date: { gte: startOfMonth, lte: endOfMonth },
       },
-      include: { category: true, paymentMethod: true },
+      include: { category: true },
       orderBy: { date: "asc" },
     });
   },
