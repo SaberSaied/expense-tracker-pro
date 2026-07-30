@@ -6,11 +6,16 @@ import type { AuthenticatedRequest } from "@/common/types";
 export const reportController = {
   async getCategorySummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { startDate, endDate } = req.query;
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const startDate = (req.query.startDate as string) ?? firstDayOfMonth.toISOString().slice(0, 10);
+      const endDate = (req.query.endDate as string) ?? now.toISOString().slice(0, 10);
+
       const result = await reportService.getCategorySummary(
         req.user.id,
-        startDate as string,
-        endDate as string
+        startDate,
+        endDate
       );
       sendSuccess(res, { report: result });
     } catch (err) {
