@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { nameSchema, hexColorSchema } from "@/common/validators";
 
+const goalPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
+
 export const createSavingsGoalSchema = z.object({
   name: nameSchema,
   targetAmount: z.number().positive("Target amount must be positive"),
   currentAmount: z.number().min(0).optional(),
   deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
+  priority: goalPrioritySchema.optional(),
   icon: z.string().min(1).max(50).optional(),
   color: hexColorSchema.optional(),
 });

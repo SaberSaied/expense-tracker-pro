@@ -17,11 +17,12 @@ export const savingsGoalRepository = {
     targetAmount: number;
     currentAmount?: number;
     deadline?: Date;
+    priority?: string;
     icon?: string;
     color?: string;
   }) {
     return prisma.savingsGoal.create({
-      data: { ...data, userId },
+      data: { ...data, userId } as any,
     });
   },
 
@@ -30,6 +31,7 @@ export const savingsGoalRepository = {
     targetAmount?: number;
     currentAmount?: number;
     deadline?: Date | null;
+    priority?: string;
     icon?: string;
     color?: string;
   }) {

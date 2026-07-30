@@ -19,6 +19,7 @@ export const savingsGoalService = {
     targetAmount: number;
     currentAmount?: number;
     deadline?: string;
+    priority?: string;
     icon?: string;
     color?: string;
   }) {

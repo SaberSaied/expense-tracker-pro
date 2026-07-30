@@ -24,6 +24,13 @@ enum BudgetPeriod {
   YEARLY
 }
 
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 enum PaymentMethodType {
   CREDIT_CARD
   DEBIT_CARD
@@ -408,7 +415,7 @@ model Notification {
 /// User-defined savings goal tracking progress toward a financial target.
 model SavingsGoal {
   /// Unique savings goal identifier (UUID v4).
-  id            String   @id @default(uuid()) @db.Uuid
+  id            String       @id @default(uuid()) @db.Uuid
 
   /// Goal name (e.g. "Emergency Fund", "New Laptop").
   name          String
@@ -417,22 +424,25 @@ model SavingsGoal {
   targetAmount  Float
 
   /// Current amount saved so far.
-  currentAmount Float    @default(0)
+  currentAmount Float        @default(0)
 
   /// Optional target date to reach the goal.
-  deadline      DateTime? @db.Date
+  deadline      DateTime?    @db.Date
+
+  /// Priority level of the goal (LOW, MEDIUM, HIGH, CRITICAL).
+  priority      GoalPriority @default(MEDIUM)
 
   /// Lucide icon identifier for the goal.
-  icon          String   @default("PiggyBank")
+  icon          String       @default("PiggyBank")
 
   /// Hex color code for the goal (e.g. "#10B981").
-  color         String   @default("#10B981")
+  color         String       @default("#10B981")
 
   /// Foreign key to the owning user.
-  userId        String   @db.Uuid
+  userId        String       @db.Uuid
 
   /// The user who owns this savings goal.
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// Timestamp of goal creation.
   createdAt DateTime @default(now())
