@@ -70,6 +70,98 @@ export async function computeSpending(
   return result._sum.amount ?? 0;
 }
 
+// ─── Shared Enrichment ────────────────────────────────────────
+
+interface EnrichedBudget {
+  id: string;
+  category: { id: string; name: string; icon: string; color: string };
+  targetAmount: number;
+  alertThreshold: number;
+  period: string;
+  startDate: Date;
+  periodEnd: Date;
+  spent: number;
+  remaining: number;
+  progress: number;
+  isActive: boolean;
+  daysRemaining: number;
+  totalDays: number;
+  daysElapsed: number;
+  isOverBudget: boolean;
+  isAlertTriggered: boolean;
+}
+
+/**
+ * Enrich an array of budget rows with computed spending, progress, and time-based fields.
+ * Uses a single batch query for all spending data instead of N+1 queries.
+ */
+async function enrichBudgets(
+  userId: string,
+  budgets: Array<{
+    id: string;
+    targetAmount: number;
+    alertThreshold: number;
+    period: string;
+    startDate: Date;
+    categoryId: string;
+    category: { id: string; name: string; icon: string; color: string };
+  }>
+): Promise<EnrichedBudget[]> {
+  if (budgets.length === 0) return [];
+
+  const now = new Date();
+
+  // Pre-compute period ends and fetch spending in parallel
+  const spendingResults = await Promise.all(
+    budgets.map(async (budget) => {
+      const end = computePeriodEnd(budget.startDate, budget.period);
+      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
+      return { id: budget.id, end, spent };
+    })
+  );
+
+  const spendingMap = new Map(spendingResults.map((r) => [r.id, { end: r.end, spent: r.spent }]));
+
+  return budgets.map((budget) => {
+    const { end, spent } = spendingMap.get(budget.id) ?? {
+      end: computePeriodEnd(budget.startDate, budget.period),
+      spent: 0,
+    };
+
+    const isActive = now >= budget.startDate && now <= end;
+    const progress = budget.targetAmount > 0
+      ? Math.round((spent / budget.targetAmount) * 100)
+      : 0;
+    const daysRemaining = computeDaysRemaining(budget.startDate, end);
+    const totalDays = Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const daysElapsed = Math.max(0, totalDays - daysRemaining);
+
+    return {
+      id: budget.id,
+      category: {
+        id: budget.category.id,
+        name: budget.category.name,
+        icon: budget.category.icon,
+        color: budget.category.color,
+      },
+      targetAmount: budget.targetAmount,
+      alertThreshold: budget.alertThreshold,
+      period: budget.period,
+      startDate: budget.startDate,
+      periodEnd: end,
+      spent,
+      remaining: budget.targetAmount - spent,
+      progress,
+      isActive,
+      daysRemaining,
+      totalDays,
+      daysElapsed,
+      isOverBudget: spent > budget.targetAmount,
+      isAlertTriggered: progress >= budget.alertThreshold,
+    };
+  });
+}
+
 // ─── Repository ───────────────────────────────────────────────
 
 export const budgetRepository = {
@@ -199,40 +291,17 @@ export const budgetRepository = {
       };
     }
 
-    const now = new Date();
+    const enriched = await enrichBudgets(userId, budgets);
+
     let totalBudgeted = 0;
     let totalSpent = 0;
     let activeCount = 0;
 
-    const enriched = await Promise.all(
-      budgets.map(async (budget) => {
-        const end = computePeriodEnd(budget.startDate, budget.period);
-        const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
-        const isActive = now >= budget.startDate && now <= end;
-        const progress = budget.targetAmount > 0
-          ? Math.round((spent / budget.targetAmount) * 100)
-          : 0;
-        const daysRemaining = computeDaysRemaining(budget.startDate, end);
-
-        if (isActive) activeCount++;
-        totalBudgeted += budget.targetAmount;
-        totalSpent += spent;
-
-        return {
-          id: budget.id,
-          category: budget.category,
-          targetAmount: budget.targetAmount,
-          period: budget.period,
-          startDate: budget.startDate,
-          spent,
-          remaining: Math.max(0, budget.targetAmount - spent),
-          progress,
-          isActive,
-          daysRemaining,
-          periodEnd: end,
-        };
-      })
-    );
+    for (const b of enriched) {
+      if (b.isActive) activeCount++;
+      totalBudgeted += b.targetAmount;
+      totalSpent += b.spent;
+    }
 
     return {
       totalBudgets: budgets.length,
@@ -243,7 +312,19 @@ export const budgetRepository = {
       overallProgress: totalBudgeted > 0
         ? Math.round((totalSpent / totalBudgeted) * 100)
         : 0,
-      budgets: enriched,
+      budgets: enriched.map((b) => ({
+        id: b.id,
+        category: b.category,
+        targetAmount: b.targetAmount,
+        period: b.period,
+        startDate: b.startDate,
+        spent: b.spent,
+        remaining: Math.max(0, b.remaining),
+        progress: b.progress,
+        isActive: b.isActive,
+        daysRemaining: b.daysRemaining,
+        periodEnd: b.periodEnd,
+      })),
     };
   },
 
@@ -266,41 +347,32 @@ export const budgetRepository = {
       };
     }
 
-    const now = new Date();
+    const enriched = await enrichBudgets(userId, budgets);
+
     const alerts: Array<Record<string, unknown>> = [];
     let warningCount = 0;
     let criticalCount = 0;
     let overBudgetCount = 0;
     let safeCount = 0;
 
-    for (const budget of budgets) {
-      const end = computePeriodEnd(budget.startDate, budget.period);
-      const isActive = now >= budget.startDate && now <= end;
-      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
-      const progress = budget.targetAmount > 0
-        ? Math.round((spent / budget.targetAmount) * 100)
-        : 0;
-      // Use actual remaining (allow negative to show overspend amount)
-      const remaining = budget.targetAmount - spent;
-      const overBy = spent > budget.targetAmount ? spent - budget.targetAmount : 0;
+    for (const b of enriched) {
+      const overBy = b.isOverBudget ? b.spent - b.targetAmount : 0;
 
       // Determine alert severity
-      const isOverBudget = spent > budget.targetAmount;
-      const isAtWarning = progress >= budget.alertThreshold && progress < 100;
-      const isAtCritical = progress >= 100;
+      const isAtWarning = b.progress >= b.alertThreshold && b.progress < 100;
 
       // Only include budgets that have an active alert condition
-      if (!isOverBudget && !isAtWarning && !isAtCritical) {
+      if (!b.isOverBudget && !isAtWarning && !(b.progress >= 100)) {
         safeCount++;
         continue;
       }
 
       // Categorize severity (prioritize: over_budget > critical > warning)
       let severity: "over_budget" | "critical" | "warning";
-      if (isOverBudget) {
+      if (b.isOverBudget) {
         severity = "over_budget";
         overBudgetCount++;
-      } else if (isAtCritical) {
+      } else if (b.progress >= 100) {
         severity = "critical";
         criticalCount++;
       } else {
@@ -309,20 +381,20 @@ export const budgetRepository = {
       }
 
       alerts.push({
-        id: budget.id,
-        category: budget.category,
-        targetAmount: budget.targetAmount,
-        alertThreshold: budget.alertThreshold,
-        period: budget.period,
-        startDate: budget.startDate,
-        periodEnd: end,
-        isActive,
-        spent,
-        remaining,
+        id: b.id,
+        category: b.category,
+        targetAmount: b.targetAmount,
+        alertThreshold: b.alertThreshold,
+        period: b.period,
+        startDate: b.startDate,
+        periodEnd: b.periodEnd,
+        isActive: b.isActive,
+        spent: b.spent,
+        remaining: b.remaining,
         overBy,
-        progress,
+        progress: b.progress,
         severity,
-        daysRemaining: computeDaysRemaining(budget.startDate, end),
+        daysRemaining: b.daysRemaining,
       });
     }
 
@@ -369,55 +441,18 @@ export const budgetRepository = {
       };
     }
 
-    const now = new Date();
+    const enriched = await enrichBudgets(userId, budgets);
+
     let totalBudgeted = 0;
     let totalSpent = 0;
     let activeCount = 0;
     let progressSum = 0;
 
-    const enriched: Array<{
-      id: string;
-      category: { id: string; name: string; icon: string; color: string };
-      targetAmount: number;
-      period: string;
-      spent: number;
-      remaining: number;
-      progress: number;
-      isActive: boolean;
-      daysRemaining: number;
-    }> = [];
-
-    for (const budget of budgets) {
-      const end = computePeriodEnd(budget.startDate, budget.period);
-      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
-      const isActive = now >= budget.startDate && now <= end;
-      const progress = budget.targetAmount > 0
-        ? Math.round((spent / budget.targetAmount) * 100)
-        : 0;
-      const remaining = budget.targetAmount - spent; // allow negative
-      const daysRemaining = computeDaysRemaining(budget.startDate, end);
-
-      if (isActive) activeCount++;
-      totalBudgeted += budget.targetAmount;
-      totalSpent += spent;
-      progressSum += progress;
-
-      enriched.push({
-        id: budget.id,
-        category: {
-          id: budget.category.id,
-          name: budget.category.name,
-          icon: budget.category.icon,
-          color: budget.category.color,
-        },
-        targetAmount: budget.targetAmount,
-        period: budget.period,
-        spent,
-        remaining,
-        progress,
-        isActive,
-        daysRemaining,
-      });
+    for (const b of enriched) {
+      if (b.isActive) activeCount++;
+      totalBudgeted += b.targetAmount;
+      totalSpent += b.spent;
+      progressSum += b.progress;
     }
 
     // 1. Highest spending budget
@@ -428,7 +463,7 @@ export const budgetRepository = {
     const pool = candidates.length > 0 ? candidates : enriched;
     const lowestSpending = pool.reduce((min, b) => (b.spent < min.spent ? b : min), pool[0]);
 
-    // 3. Closest budget to limit (highest progress, excluding overspent which is 100%+)
+    // 3. Closest budget to limit (highest progress)
     const closestToLimit = enriched.reduce(
       (closest, b) => (b.progress > closest.progress ? b : closest),
       enriched[0]
@@ -441,15 +476,37 @@ export const budgetRepository = {
 
     return {
       highestSpending: {
-        ...highestSpending,
+        id: highestSpending.id,
+        category: highestSpending.category,
+        targetAmount: highestSpending.targetAmount,
+        period: highestSpending.period,
+        spent: highestSpending.spent,
+        remaining: highestSpending.remaining,
+        progress: highestSpending.progress,
+        isActive: highestSpending.isActive,
         isHighest: true,
       },
       lowestSpending: {
-        ...lowestSpending,
+        id: lowestSpending.id,
+        category: lowestSpending.category,
+        targetAmount: lowestSpending.targetAmount,
+        period: lowestSpending.period,
+        spent: lowestSpending.spent,
+        remaining: lowestSpending.remaining,
+        progress: lowestSpending.progress,
+        isActive: lowestSpending.isActive,
         isLowest: true,
       },
       closestToLimit: {
-        ...closestToLimit,
+        id: closestToLimit.id,
+        category: closestToLimit.category,
+        targetAmount: closestToLimit.targetAmount,
+        period: closestToLimit.period,
+        spent: closestToLimit.spent,
+        remaining: closestToLimit.remaining,
+        progress: closestToLimit.progress,
+        isActive: closestToLimit.isActive,
+        daysRemaining: closestToLimit.daysRemaining,
         isClosestToLimit: true,
       },
       overall: {
