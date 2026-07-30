@@ -1,10 +1,21 @@
 import { budgetRepository } from "./budgets.repository";
 import { categoryRepository } from "@/modules/categories/categories.repository";
 import { NotFoundError, ConflictError, ValidationError } from "@/common/errors";
+import type { BudgetQueryFilters } from "./budgets.types";
 
 export const budgetService = {
-  async findAll(userId: string) {
-    return budgetRepository.findAllByUser(userId);
+  async findAll(
+    userId: string,
+    filters: BudgetQueryFilters = {}
+  ) {
+    return budgetRepository.findAllByUser(userId, {
+      period: filters.period,
+      status: filters.status,
+      startDate: filters.startDate ? new Date(filters.startDate) : undefined,
+      endDate: filters.endDate ? new Date(filters.endDate) : undefined,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+    });
   },
 
   async findById(userId: string, id: string) {
@@ -13,6 +24,14 @@ export const budgetService = {
       throw new NotFoundError("Budget not found");
     }
     return budget;
+  },
+
+  async getProgress(userId: string, id: string) {
+    const budgetWithProgress = await budgetRepository.getBudgetWithProgress(userId, id);
+    if (!budgetWithProgress) {
+      throw new NotFoundError("Budget not found");
+    }
+    return budgetWithProgress;
   },
 
   async create(userId: string, data: {

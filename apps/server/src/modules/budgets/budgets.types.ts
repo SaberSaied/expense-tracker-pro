@@ -12,3 +12,12 @@ export interface UpdateBudgetInput {
   period?: string;
   startDate?: string;
 }
+
+export interface BudgetQueryFilters {
+  period?: string;
+  status?: "active" | "inactive";
+  startDate?: string;
+  endDate?: string;
+  sortBy?: "startDate" | "targetAmount" | "period" | "createdAt";
+  sortOrder?: "asc" | "desc";
+}

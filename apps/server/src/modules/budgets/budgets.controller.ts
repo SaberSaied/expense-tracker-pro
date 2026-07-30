@@ -2,11 +2,25 @@ import type { Response, NextFunction } from "express";
 import { budgetService } from "./budgets.service";
 import { sendSuccess, sendCreated, sendNoContent } from "@/common/responses";
 import type { AuthenticatedRequest } from "@/common/types";
+import type { BudgetQueryFilters } from "./budgets.types";
 
 export const budgetController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const budgets = await budgetService.findAll(req.user.id);
+      // Query params are validated & parsed by the validate(budgetQuerySchema) middleware
+      const { period, status, startDate, endDate, sortBy, sortOrder } =
+        req.query as Record<string, string | undefined>;
+
+      const filters: BudgetQueryFilters = {
+        period,
+        status: status as "active" | "inactive" | undefined,
+        startDate,
+        endDate,
+        sortBy: sortBy as "startDate" | "targetAmount" | "period" | "createdAt" | undefined,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+      };
+
+      const budgets = await budgetService.findAll(req.user.id, filters);
       sendSuccess(res, { budgets });
     } catch (err) {
       next(err);
@@ -17,6 +31,18 @@ export const budgetController = {
     try {
       const budget = await budgetService.findById(req.user.id, req.params.id as string);
       sendSuccess(res, { budget });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async getProgress(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const budgetWithProgress = await budgetService.getProgress(
+        req.user.id,
+        req.params.id as string
+      );
+      sendSuccess(res, { budget: budgetWithProgress });
     } catch (err) {
       next(err);
     }
