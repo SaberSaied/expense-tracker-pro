@@ -35,10 +35,18 @@ export const savingsGoalService = {
     if (data.currentAmount && data.currentAmount > data.targetAmount) {
       throw new ValidationError("Current amount cannot exceed target amount");
     }
-    return savingsGoalRepository.create(userId, {
+    const goal = await savingsGoalRepository.create(userId, {
       ...data,
       deadline: data.deadline ? new Date(data.deadline) : undefined,
     });
+
+    // Auto-complete if target is reached immediately
+    const effectiveCurrent = data.currentAmount ?? 0;
+    if (effectiveCurrent >= data.targetAmount) {
+      await savingsGoalRepository.markAsCompleted(goal.id);
+    }
+
+    return savingsGoalRepository.getGoalWithDetails(userId, goal.id);
   },
 
   async update(
@@ -66,6 +74,13 @@ export const savingsGoalService = {
       throw new ValidationError("Current amount cannot exceed target amount");
     }
 
+    // Block updates on completed goals (archived state)
+    if (existing.completedAt) {
+      throw new ValidationError(
+        "Cannot update a completed savings goal. The goal is archived."
+      );
+    }
+
     // Build update payload with proper date conversion
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
@@ -77,6 +92,11 @@ export const savingsGoalService = {
     if (data.color !== undefined) updateData.color = data.color;
 
     await savingsGoalRepository.update(id, updateData as any);
+
+    // Auto-complete if new currentAmount reaches target
+    if (effectiveCurrent >= effectiveTarget) {
+      await savingsGoalRepository.markAsCompleted(id);
+    }
 
     // Return enriched goal with progress details
     return savingsGoalRepository.getGoalWithDetails(userId, id);
@@ -98,14 +118,61 @@ export const savingsGoalService = {
     return savingsGoalRepository.delete(id);
   },
 
-  async addProgress(userId: string, id: string, amount: number) {
+  async addProgress(
+    userId: string,
+    id: string,
+    data: { amount: number; allowExceed?: boolean }
+  ) {
+    const goal = await savingsGoalRepository.findById(id);
+    if (!goal || goal.userId !== userId) {
+      throw new NotFoundError("Savings goal not found");
+    }
+    if (data.amount <= 0) {
+      throw new ValidationError("Progress amount must be positive");
+    }
+
+    // Prevent exceeding target unless explicitly allowed
+    const newAmount = goal.currentAmount + data.amount;
+    if (!data.allowExceed && newAmount > goal.targetAmount) {
+      throw new ValidationError(
+        `This addition would exceed the target. You can add at most $${(goal.targetAmount - goal.currentAmount).toFixed(2)}. Use allowExceed to override.`
+      );
+    }
+
+    await savingsGoalRepository.addProgress(id, data.amount);
+
+    // Auto-complete if target is now reached
+    if (newAmount >= goal.targetAmount) {
+      await savingsGoalRepository.markAsCompleted(id);
+    }
+
+    return savingsGoalRepository.getGoalWithDetails(userId, id);
+  },
+
+  async withdrawProgress(userId: string, id: string, amount: number) {
     const goal = await savingsGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) {
       throw new NotFoundError("Savings goal not found");
     }
     if (amount <= 0) {
-      throw new ValidationError("Progress amount must be positive");
+      throw new ValidationError("Withdrawal amount must be positive");
     }
-    return savingsGoalRepository.addProgress(id, amount);
+
+    // Prevent negative balance
+    if (amount > goal.currentAmount) {
+      throw new ValidationError(
+        `Insufficient funds. Current balance is $${goal.currentAmount.toFixed(2)}, but you tried to withdraw $${amount.toFixed(2)}.`
+      );
+    }
+
+    await savingsGoalRepository.withdrawProgress(id, amount);
+
+    // Clear completion if goal drops below target
+    const newAmount = goal.currentAmount - amount;
+    if (newAmount < goal.targetAmount && goal.completedAt) {
+      await savingsGoalRepository.clearCompletedAt(id);
+    }
+
+    return savingsGoalRepository.getGoalWithDetails(userId, id);
   },
 };

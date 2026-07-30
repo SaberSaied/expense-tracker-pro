@@ -62,8 +62,26 @@ export const savingsGoalController = {
 
   async addProgress(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
+      const { amount, allowExceed } = req.body;
+      const savingsGoal = await savingsGoalService.addProgress(
+        req.user.id,
+        req.params.id as string,
+        { amount, allowExceed }
+      );
+      sendSuccess(res, { savingsGoal });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async withdrawProgress(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
       const { amount } = req.body;
-      const savingsGoal = await savingsGoalService.addProgress(req.user.id, req.params.id as string, amount);
+      const savingsGoal = await savingsGoalService.withdrawProgress(
+        req.user.id,
+        req.params.id as string,
+        amount
+      );
       sendSuccess(res, { savingsGoal });
     } catch (err) {
       next(err);

@@ -444,6 +444,9 @@ model SavingsGoal {
   /// The user who owns this savings goal.
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Timestamp when the goal was reached (null if not yet completed).
+  completedAt DateTime?
+
   /// Timestamp of goal creation.
   createdAt DateTime @default(now())
 

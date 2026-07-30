@@ -97,8 +97,22 @@ export const savingsGoalRepository = {
       progress,
       remaining,
       daysRemaining,
-      isCompleted: goal.currentAmount >= goal.targetAmount,
+      isCompleted: goal.completedAt !== null || goal.currentAmount >= goal.targetAmount,
     };
+  },
+
+  async markAsCompleted(id: string) {
+    return prisma.savingsGoal.update({
+      where: { id },
+      data: { completedAt: new Date() },
+    });
+  },
+
+  async clearCompletedAt(id: string) {
+    return prisma.savingsGoal.update({
+      where: { id },
+      data: { completedAt: null },
+    });
   },
 
   async create(userId: string, data: {
@@ -135,6 +149,13 @@ export const savingsGoalRepository = {
     return prisma.savingsGoal.update({
       where: { id },
       data: { currentAmount: { increment: amount } },
+    });
+  },
+
+  async withdrawProgress(id: string, amount: number) {
+    return prisma.savingsGoal.update({
+      where: { id },
+      data: { currentAmount: { decrement: amount } },
     });
   },
 };

@@ -24,4 +24,9 @@ export const savingsGoalQuerySchema = z.object({
 
 export const addProgressSchema = z.object({
   amount: z.number().positive("Progress amount must be positive"),
+  allowExceed: z.boolean().optional(),
+});
+
+export const withdrawProgressSchema = z.object({
+  amount: z.number().positive("Withdrawal amount must be positive"),
 });
