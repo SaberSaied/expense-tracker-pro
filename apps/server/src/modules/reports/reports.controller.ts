@@ -32,4 +32,14 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getDailyReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const date = (req.query.date as string) ?? new Date().toISOString().slice(0, 10);
+      const result = await reportService.getDailyReport(req.user.id, date);
+      sendSuccess(res, { report: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

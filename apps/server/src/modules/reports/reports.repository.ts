@@ -28,4 +28,18 @@ export const reportRepository = {
       orderBy: { date: "asc" },
     });
   },
+
+  async findTransactionsByDate(userId: string, date: Date) {
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
+    return prisma.transaction.findMany({
+      where: {
+        userId,
+        date: { gte: startOfDay, lte: endOfDay },
+      },
+      include: { category: true },
+      orderBy: { date: "desc" },
+    });
+  },
 };

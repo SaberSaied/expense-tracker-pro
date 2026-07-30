@@ -46,3 +46,34 @@ export interface MonthlyTrend {
   year: number;
   months: MonthlyTrendMonth[];
 }
+
+export interface DailyReportTransaction {
+  id: string;
+  amount: number;
+  description: string;
+  type: string;
+  date: Date;
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+}
+
+export interface DailyCategoryBreakdown {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  total: number;
+  count: number;
+}
+
+export interface DailyReport {
+  date: string;
+  income: number;
+  expenses: number;
+  balance: number;
+  transactionCount: number;
+  transactions: DailyReportTransaction[];
+  spendingByCategory: DailyCategoryBreakdown[];
+}
