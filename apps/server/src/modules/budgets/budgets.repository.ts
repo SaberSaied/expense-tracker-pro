@@ -247,6 +247,105 @@ export const budgetRepository = {
     };
   },
 
+  async getAlerts(userId: string) {
+    const budgets = await prisma.budget.findMany({
+      where: { userId },
+      include: { category: true },
+    });
+
+    if (budgets.length === 0) {
+      return {
+        alerts: [],
+        summary: {
+          totalBudgets: 0,
+          warning: 0,
+          critical: 0,
+          overBudget: 0,
+          safe: 0,
+        },
+      };
+    }
+
+    const now = new Date();
+    const alerts: Array<Record<string, unknown>> = [];
+    let warningCount = 0;
+    let criticalCount = 0;
+    let overBudgetCount = 0;
+    let safeCount = 0;
+
+    for (const budget of budgets) {
+      const end = computePeriodEnd(budget.startDate, budget.period);
+      const isActive = now >= budget.startDate && now <= end;
+      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
+      const progress = budget.targetAmount > 0
+        ? Math.round((spent / budget.targetAmount) * 100)
+        : 0;
+      // Use actual remaining (allow negative to show overspend amount)
+      const remaining = budget.targetAmount - spent;
+      const overBy = spent > budget.targetAmount ? spent - budget.targetAmount : 0;
+
+      // Determine alert severity
+      const isOverBudget = spent > budget.targetAmount;
+      const isAtWarning = progress >= budget.alertThreshold && progress < 100;
+      const isAtCritical = progress >= 100;
+
+      // Only include budgets that have an active alert condition
+      if (!isOverBudget && !isAtWarning && !isAtCritical) {
+        safeCount++;
+        continue;
+      }
+
+      // Categorize severity (prioritize: over_budget > critical > warning)
+      let severity: "over_budget" | "critical" | "warning";
+      if (isOverBudget) {
+        severity = "over_budget";
+        overBudgetCount++;
+      } else if (isAtCritical) {
+        severity = "critical";
+        criticalCount++;
+      } else {
+        severity = "warning";
+        warningCount++;
+      }
+
+      alerts.push({
+        id: budget.id,
+        category: budget.category,
+        targetAmount: budget.targetAmount,
+        alertThreshold: budget.alertThreshold,
+        period: budget.period,
+        startDate: budget.startDate,
+        periodEnd: end,
+        isActive,
+        spent,
+        remaining,
+        overBy,
+        progress,
+        severity,
+        daysRemaining: computeDaysRemaining(budget.startDate, end),
+      });
+    }
+
+    // Sort: most severe first, then by progress descending
+    const severityOrder = { over_budget: 0, critical: 1, warning: 2 };
+    alerts.sort((a, b) => {
+      const sevDiff = severityOrder[a.severity as keyof typeof severityOrder] - severityOrder[b.severity as keyof typeof severityOrder];
+      if (sevDiff !== 0) return sevDiff;
+      return (b.progress as number) - (a.progress as number);
+    });
+
+    return {
+      alerts,
+      summary: {
+        totalBudgets: budgets.length,
+        warning: warningCount,
+        critical: criticalCount,
+        overBudget: overBudgetCount,
+        safe: safeCount,
+      },
+    };
+  },
+
   async create(userId: string, data: {
     targetAmount: number;
     alertThreshold?: number;

@@ -57,6 +57,15 @@ export const budgetController = {
     }
   },
 
+  async getAlerts(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const alerts = await budgetService.getAlerts(req.user.id);
+      sendSuccess(res, alerts);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const budget = await budgetService.create(req.user.id, req.body);

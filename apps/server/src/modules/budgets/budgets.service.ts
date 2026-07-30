@@ -38,6 +38,10 @@ export const budgetService = {
     return budgetRepository.getProgressSummary(userId);
   },
 
+  async getAlerts(userId: string) {
+    return budgetRepository.getAlerts(userId);
+  },
+
   async create(userId: string, data: {
     targetAmount: number;
     alertThreshold?: number;
