@@ -34,6 +34,10 @@ export const budgetService = {
     return budgetWithProgress;
   },
 
+  async getProgressSummary(userId: string) {
+    return budgetRepository.getProgressSummary(userId);
+  },
+
   async create(userId: string, data: {
     targetAmount: number;
     alertThreshold?: number;

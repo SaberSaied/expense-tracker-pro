@@ -10,7 +10,8 @@ const router: Router = Router();
 // ─── Static routes (must come before :id routes) ────────
 router.get("/", validate(budgetQuerySchema, "query"), authMiddleware, asyncHandler(budgetController.findAll));
 
-// ─── Parameterized routes ───────────────────────────────
+// ─── Progress routes (must come before :id routes) ──────
+router.get("/progress/summary", authMiddleware, asyncHandler(budgetController.getProgressSummary));
 router.get("/:id/progress", validate(uuidParamSchema, "params"), authMiddleware, asyncHandler(budgetController.getProgress));
 router.get("/:id", validate(uuidParamSchema, "params"), authMiddleware, asyncHandler(budgetController.findById));
 router.post("/", validate(createBudgetSchema), authMiddleware, asyncHandler(budgetController.create));

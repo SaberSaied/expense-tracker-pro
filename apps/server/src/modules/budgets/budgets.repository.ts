@@ -29,6 +29,27 @@ function computePeriodEnd(startDate: Date, period: string): Date {
 }
 
 /**
+ * Compute the number of full days remaining until the period end date.
+ * Returns 0 if the period has already ended.
+ * The end date is inclusive, so we add 1 to account for the full range.
+ */
+function computeDaysRemaining(startDate: Date, endDate: Date): number {
+  const now = new Date();
+  const msPerDay = 1000 * 60 * 60 * 24;
+
+  // Not started yet → total days in the period
+  if (now < startDate) {
+    return Math.ceil((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+  }
+  // Already ended → 0
+  if (now > endDate) {
+    return 0;
+  }
+  // In progress → days remaining (excluding today, counting from tomorrow to end inclusive)
+  return Math.ceil((endDate.getTime() - now.getTime()) / msPerDay);
+}
+
+/**
  * Compute how much has been spent so far for a given budget category and date range.
  */
 async function computeSpending(
@@ -141,6 +162,9 @@ export const budgetRepository = {
     const progress = budget.targetAmount > 0
       ? Math.round((spent / budget.targetAmount) * 100)
       : 0;
+    const daysRemaining = computeDaysRemaining(budget.startDate, end);
+    const totalDays = Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const daysElapsed = Math.max(0, totalDays - daysRemaining);
 
     return {
       ...budget,
@@ -149,8 +173,77 @@ export const budgetRepository = {
       progress,
       isActive,
       periodEnd: end,
+      daysRemaining,
+      daysElapsed,
+      totalDays,
       isOverBudget: spent > budget.targetAmount,
       isAlertTriggered: progress >= budget.alertThreshold,
+    };
+  },
+
+  async getProgressSummary(userId: string) {
+    const budgets = await prisma.budget.findMany({
+      where: { userId },
+      include: { category: true },
+    });
+
+    if (budgets.length === 0) {
+      return {
+        totalBudgets: 0,
+        activeBudgets: 0,
+        totalBudgeted: 0,
+        totalSpent: 0,
+        totalRemaining: 0,
+        overallProgress: 0,
+        budgets: [],
+      };
+    }
+
+    const now = new Date();
+    let totalBudgeted = 0;
+    let totalSpent = 0;
+    let activeCount = 0;
+
+    const enriched = await Promise.all(
+      budgets.map(async (budget) => {
+        const end = computePeriodEnd(budget.startDate, budget.period);
+        const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
+        const isActive = now >= budget.startDate && now <= end;
+        const progress = budget.targetAmount > 0
+          ? Math.round((spent / budget.targetAmount) * 100)
+          : 0;
+        const daysRemaining = computeDaysRemaining(budget.startDate, end);
+
+        if (isActive) activeCount++;
+        totalBudgeted += budget.targetAmount;
+        totalSpent += spent;
+
+        return {
+          id: budget.id,
+          category: budget.category,
+          targetAmount: budget.targetAmount,
+          period: budget.period,
+          startDate: budget.startDate,
+          spent,
+          remaining: Math.max(0, budget.targetAmount - spent),
+          progress,
+          isActive,
+          daysRemaining,
+          periodEnd: end,
+        };
+      })
+    );
+
+    return {
+      totalBudgets: budgets.length,
+      activeBudgets: activeCount,
+      totalBudgeted,
+      totalSpent,
+      totalRemaining: Math.max(0, totalBudgeted - totalSpent),
+      overallProgress: totalBudgeted > 0
+        ? Math.round((totalSpent / totalBudgeted) * 100)
+        : 0,
+      budgets: enriched,
     };
   },
 

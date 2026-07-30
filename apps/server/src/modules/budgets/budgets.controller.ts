@@ -48,6 +48,15 @@ export const budgetController = {
     }
   },
 
+  async getProgressSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const summary = await budgetService.getProgressSummary(req.user.id);
+      sendSuccess(res, summary);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const budget = await budgetService.create(req.user.id, req.body);
