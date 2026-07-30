@@ -1,7 +1,16 @@
-import { budgetRepository } from "./budgets.repository";
+import { budgetRepository, computePeriodEnd, computeSpending, computeDaysRemaining } from "./budgets.repository";
 import { categoryRepository } from "@/modules/categories/categories.repository";
+import { notificationRepository } from "@/modules/notifications/notifications.repository";
 import { NotFoundError, ConflictError, ValidationError } from "@/common/errors";
 import type { BudgetQueryFilters } from "./budgets.types";
+
+// ─── Constants ────────────────────────────────────────────────
+
+/** Number of days before expiry to trigger an upcoming-expiration alert. */
+const EXPIRATION_WARNING_DAYS = 3;
+
+/** Hours within which duplicate notifications of the same type are suppressed. */
+const DEDUP_WINDOW_HOURS = 24;
 
 export const budgetService = {
   async findAll(
@@ -40,6 +49,96 @@ export const budgetService = {
 
   async getAlerts(userId: string) {
     return budgetRepository.getAlerts(userId);
+  },
+
+  /**
+   * Scan all user budgets and generate persistent notification records
+   * for budget almost-exhausted, exceeded, expired, and upcoming-expiration events.
+   * Duplicate notifications within DEDUP_WINDOW_HOURS are suppressed.
+   */
+  async generateAlerts(userId: string) {
+    const budgets = await budgetRepository.findAllByUser(userId);
+    if (budgets.length === 0) {
+      return { generated: 0, alerts: [] };
+    }
+
+    const now = new Date();
+    const generated: Array<{ type: string; budgetId: string; categoryName: string }> = [];
+    const existingNotifications = await notificationRepository.findRecentByTypes(
+      userId,
+      ["BUDGET_WARNING", "BUDGET_CRITICAL"],
+      new Date(now.getTime() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000)
+    );
+    const recentAlertTypes = new Set(existingNotifications.map((n) => n.type));
+
+    for (const budget of budgets) {
+      const category = budget.category;
+      const categoryName = category?.name ?? "Unknown";
+      const end = computePeriodEnd(budget.startDate, budget.period);
+      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
+      const progress = budget.targetAmount > 0
+        ? Math.round((spent / budget.targetAmount) * 100)
+        : 0;
+      const daysRemaining = computeDaysRemaining(budget.startDate, end);
+      const isExpired = now > end;
+      const isActive = now >= budget.startDate && now <= end;
+
+      // 1. Budget almost exhausted (warning threshold reached, < 100%)
+      if (isActive && progress >= budget.alertThreshold && progress < 100) {
+        if (!recentAlertTypes.has("BUDGET_WARNING")) {
+          await notificationRepository.create(userId, {
+            type: "BUDGET_WARNING",
+            title: `Budget Almost Exhausted: ${categoryName}`,
+            message: `You've used ${progress}% of your $${budget.targetAmount} budget for ${categoryName}. $${Math.max(0, budget.targetAmount - spent)} remaining (${daysRemaining} days left).`,
+          });
+          generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
+          recentAlertTypes.add("BUDGET_WARNING");
+        }
+      }
+
+      // 2. Budget exceeded (spent > targetAmount)
+      if (spent > budget.targetAmount) {
+        const overBy = spent - budget.targetAmount;
+        if (!recentAlertTypes.has("BUDGET_CRITICAL")) {
+          await notificationRepository.create(userId, {
+            type: "BUDGET_CRITICAL",
+            title: `Budget Exceeded: ${categoryName}`,
+            message: `You've exceeded your $${budget.targetAmount} budget for ${categoryName} by $${overBy.toFixed(2)} (${progress}% of limit used).`,
+          });
+          generated.push({ type: "BUDGET_CRITICAL", budgetId: budget.id, categoryName });
+          recentAlertTypes.add("BUDGET_CRITICAL");
+        }
+      }
+
+      // 3. Budget expired (period ended)
+      if (isExpired && !isActive) {
+        if (!recentAlertTypes.has("BUDGET_WARNING")) {
+          const totalSpent = spent;
+          await notificationRepository.create(userId, {
+            type: "BUDGET_WARNING",
+            title: `Budget Period Ended: ${categoryName}`,
+            message: `The budget period for ${categoryName} has ended. You spent $${totalSpent.toFixed(2)} of your $${budget.targetAmount} limit (${progress}%).`,
+          });
+          generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
+          recentAlertTypes.add("BUDGET_WARNING");
+        }
+      }
+
+      // 4. Upcoming budget expiration (3 days or fewer remaining)
+      if (isActive && daysRemaining > 0 && daysRemaining <= EXPIRATION_WARNING_DAYS) {
+        if (!recentAlertTypes.has("BUDGET_WARNING")) {
+          await notificationRepository.create(userId, {
+            type: "BUDGET_WARNING",
+            title: `Budget Expiring Soon: ${categoryName}`,
+            message: `Your ${categoryName} budget ends in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""}. You've used ${progress}% of your $${budget.targetAmount} limit.`,
+          });
+          generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
+          recentAlertTypes.add("BUDGET_WARNING");
+        }
+      }
+    }
+
+    return { generated: generated.length, alerts: generated };
   },
 
   async create(userId: string, data: {

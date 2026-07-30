@@ -57,4 +57,19 @@ export const notificationRepository = {
       where: { userId, read: false },
     });
   },
+
+  /**
+   * Find recent notifications for a user matching given types within a time window.
+   * Used for deduplication of auto-generated alerts.
+   */
+  async findRecentByTypes(userId: string, types: string[], since: Date) {
+    return prisma.notification.findMany({
+      where: {
+        userId,
+        type: { in: types as any },
+        createdAt: { gte: since },
+      },
+      select: { type: true },
+    });
+  },
 };

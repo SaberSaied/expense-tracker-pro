@@ -12,6 +12,7 @@ router.get("/", validate(budgetQuerySchema, "query"), authMiddleware, asyncHandl
 
 // ─── Alert / Progress routes (must come before :id routes) ─
 router.get("/alerts", authMiddleware, asyncHandler(budgetController.getAlerts));
+router.post("/alerts/generate", authMiddleware, asyncHandler(budgetController.generateAlerts));
 router.get("/progress/summary", authMiddleware, asyncHandler(budgetController.getProgressSummary));
 router.get("/:id/progress", validate(uuidParamSchema, "params"), authMiddleware, asyncHandler(budgetController.getProgress));
 router.get("/:id", validate(uuidParamSchema, "params"), authMiddleware, asyncHandler(budgetController.findById));

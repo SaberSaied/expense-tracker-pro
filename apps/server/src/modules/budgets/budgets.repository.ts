@@ -6,7 +6,7 @@ import type { Prisma, BudgetPeriod } from "@/generated/prisma/client";
 /**
  * Compute the end date of a budget period given its start date and period type.
  */
-function computePeriodEnd(startDate: Date, period: string): Date {
+export function computePeriodEnd(startDate: Date, period: string): Date {
   const end = new Date(startDate);
   switch (period) {
     case "WEEKLY":
@@ -33,7 +33,7 @@ function computePeriodEnd(startDate: Date, period: string): Date {
  * Returns 0 if the period has already ended.
  * The end date is inclusive, so we add 1 to account for the full range.
  */
-function computeDaysRemaining(startDate: Date, endDate: Date): number {
+export function computeDaysRemaining(startDate: Date, endDate: Date): number {
   const now = new Date();
   const msPerDay = 1000 * 60 * 60 * 24;
 
@@ -52,7 +52,7 @@ function computeDaysRemaining(startDate: Date, endDate: Date): number {
 /**
  * Compute how much has been spent so far for a given budget category and date range.
  */
-async function computeSpending(
+export async function computeSpending(
   userId: string,
   categoryId: string,
   startDate: Date,
