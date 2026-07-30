@@ -158,4 +158,65 @@ export const savingsGoalRepository = {
       data: { currentAmount: { decrement: amount } },
     });
   },
+
+  async getStats(userId: string) {
+    const goals = await prisma.savingsGoal.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const totalGoals = goals.length;
+    const completedGoals = goals.filter(
+      (g) => g.currentAmount >= g.targetAmount
+    ).length;
+    const activeGoals = totalGoals - completedGoals;
+    const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
+    const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0);
+    const overallPercentage =
+      totalTarget > 0
+        ? Math.round((totalSaved / totalTarget) * 100)
+        : 0;
+
+    // Closest goal to completion among active goals
+    const activeGoalList = goals.filter(
+      (g) => g.currentAmount < g.targetAmount
+    );
+    let closestGoal: {
+      id: string;
+      name: string;
+      targetAmount: number;
+      currentAmount: number;
+      progress: number;
+      remaining: number;
+      deadline: Date | null;
+    } | null = null;
+
+    if (activeGoalList.length > 0) {
+      const best = activeGoalList.reduce((prev, curr) => {
+        const prevProgress = prev.currentAmount / prev.targetAmount;
+        const currProgress = curr.currentAmount / curr.targetAmount;
+        return currProgress > prevProgress ? curr : prev;
+      });
+
+      closestGoal = {
+        id: best.id,
+        name: best.name,
+        targetAmount: best.targetAmount,
+        currentAmount: best.currentAmount,
+        progress: Math.round((best.currentAmount / best.targetAmount) * 100),
+        remaining: Math.max(0, best.targetAmount - best.currentAmount),
+        deadline: best.deadline,
+      };
+    }
+
+    return {
+      totalGoals,
+      activeGoals,
+      completedGoals,
+      totalTarget,
+      totalSaved,
+      overallPercentage,
+      closestGoal,
+    };
+  },
 };

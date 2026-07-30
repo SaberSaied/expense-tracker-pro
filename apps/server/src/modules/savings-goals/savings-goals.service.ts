@@ -149,6 +149,10 @@ export const savingsGoalService = {
     return savingsGoalRepository.getGoalWithDetails(userId, id);
   },
 
+  async getStats(userId: string) {
+    return savingsGoalRepository.getStats(userId);
+  },
+
   async withdrawProgress(userId: string, id: string, amount: number) {
     const goal = await savingsGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) {
