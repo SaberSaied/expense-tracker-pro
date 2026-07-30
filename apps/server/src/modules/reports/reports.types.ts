@@ -193,3 +193,16 @@ export interface CustomReport {
   transactions: DailyReportTransaction[];
   spendingByCategory: DailyCategoryBreakdown[];
 }
+
+export interface ReportSummary {
+  income: number;
+  expenses: number;
+  netBalance: number;
+  savingsRate: number;
+  transactionCount: number;
+  incomeCount: number;
+  expenseCount: number;
+  averageTransactionAmount: number;
+  averageIncome: number;
+  averageExpense: number;
+}

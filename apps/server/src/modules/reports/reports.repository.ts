@@ -85,6 +85,31 @@ export const reportRepository = {
     });
   },
 
+  async getSummary(
+    userId: string,
+    startDate?: Date,
+    endDate?: Date
+  ) {
+    const where: Record<string, unknown> = { userId };
+
+    if (startDate || endDate) {
+      const dateFilter: Record<string, Date> = {};
+      if (startDate) dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+      where.date = dateFilter;
+    }
+
+    const aggregation = await prisma.transaction.groupBy({
+      where: where as any,
+      by: ["type"],
+      _sum: { amount: true },
+      _avg: { amount: true },
+      _count: true,
+    });
+
+    return aggregation;
+  },
+
   async findCustomTransactions(
     userId: string,
     filters: {

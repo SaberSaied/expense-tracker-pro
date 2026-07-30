@@ -101,4 +101,15 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const result = await reportService.getSummary(req.user.id, startDate, endDate);
+      sendSuccess(res, { summary: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

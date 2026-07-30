@@ -2,10 +2,16 @@ import { Router } from "express";
 import { reportController } from "./reports.controller";
 import { validate, asyncHandler } from "@/common/middleware";
 import { authMiddleware } from "@/common/middleware/auth";
-import { categorySummaryQuerySchema, monthlyTrendQuerySchema, dailyReportQuerySchema, weeklyReportQuerySchema, monthlyReportQuerySchema, yearlyReportQuerySchema, customReportQuerySchema } from "./reports.validation";
+import { categorySummaryQuerySchema, monthlyTrendQuerySchema, dailyReportQuerySchema, weeklyReportQuerySchema, monthlyReportQuerySchema, yearlyReportQuerySchema, customReportQuerySchema, reportSummaryQuerySchema } from "./reports.validation";
 
 const router: Router = Router();
 
+router.get(
+  "/summary",
+  validate(reportSummaryQuerySchema, "query"),
+  authMiddleware,
+  asyncHandler(reportController.getSummary)
+);
 router.get(
   "/custom",
   validate(customReportQuerySchema, "query"),

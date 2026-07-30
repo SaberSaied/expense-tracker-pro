@@ -470,6 +470,39 @@ export const reportService = {
     };
   },
 
+  async getSummary(userId: string, startDate?: string, endDate?: string) {
+    const dbStartDate = startDate ? new Date(startDate) : undefined;
+    const dbEndDate = endDate ? new Date(endDate) : undefined;
+
+    const aggregation = await reportRepository.getSummary(userId, dbStartDate, dbEndDate);
+
+    const incomeRow = aggregation.find((a) => a.type === "INCOME");
+    const expenseRow = aggregation.find((a) => a.type === "EXPENSE");
+
+    const totalIncome = incomeRow?._sum.amount ?? 0;
+    const totalExpenses = expenseRow?._sum.amount ?? 0;
+    const netBalance = totalIncome - totalExpenses;
+    const incomeCount = incomeRow?._count ?? 0;
+    const expenseCount = expenseRow?._count ?? 0;
+    const totalCount = incomeCount + expenseCount;
+
+    return {
+      income: totalIncome,
+      expenses: totalExpenses,
+      netBalance,
+      savingsRate: totalIncome > 0 ? Math.round((netBalance / totalIncome) * 10000) / 100 : 0,
+      transactionCount: totalCount,
+      incomeCount,
+      expenseCount,
+      averageTransactionAmount:
+        totalCount > 0
+          ? Math.round(((totalIncome + totalExpenses) / totalCount) * 100) / 100
+          : 0,
+      averageIncome: incomeCount > 0 ? Math.round((totalIncome / incomeCount) * 100) / 100 : 0,
+      averageExpense: expenseCount > 0 ? Math.round((totalExpenses / expenseCount) * 100) / 100 : 0,
+    };
+  },
+
   async getCustomReport(
     userId: string,
     filters: {
