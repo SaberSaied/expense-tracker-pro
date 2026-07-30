@@ -68,12 +68,66 @@ export const budgetService = {
     });
   },
 
-  async update(userId: string, id: string, data: Record<string, unknown>) {
-    const budget = await budgetRepository.findById(id);
-    if (!budget || budget.userId !== userId) {
+  async update(
+    userId: string,
+    id: string,
+    data: {
+      targetAmount?: number;
+      alertThreshold?: number;
+      period?: string;
+      startDate?: string;
+      categoryId?: string;
+    }
+  ) {
+    // Fetch existing budget and verify ownership
+    const existing = await budgetRepository.findById(id);
+    if (!existing || existing.userId !== userId) {
       throw new NotFoundError("Budget not found");
     }
-    return budgetRepository.update(id, data as any);
+
+    // If categoryId is being updated, validate ownership
+    if (data.categoryId) {
+      const category = await categoryRepository.findById(data.categoryId);
+      if (!category) {
+        throw new ValidationError("Category not found");
+      }
+      if (category.userId !== userId) {
+        throw new ValidationError("Category does not belong to this user");
+      }
+    }
+
+    // If categoryId or startDate changed, check for duplicate budgets
+    const effectiveCategoryId = data.categoryId ?? existing.categoryId;
+    const effectiveStartDate = data.startDate
+      ? new Date(data.startDate)
+      : existing.startDate;
+
+    if (
+      data.categoryId ||
+      (data.startDate && new Date(data.startDate).getTime() !== existing.startDate.getTime())
+    ) {
+      const duplicate = await budgetRepository.findByCategoryAndPeriod(
+        userId,
+        effectiveCategoryId,
+        effectiveStartDate
+      );
+      if (duplicate && duplicate.id !== id) {
+        throw new ConflictError("A budget already exists for this category and period");
+      }
+    }
+
+    // Prepare update payload
+    const updateData: Record<string, unknown> = {};
+    if (data.targetAmount !== undefined) updateData.targetAmount = data.targetAmount;
+    if (data.alertThreshold !== undefined) updateData.alertThreshold = data.alertThreshold;
+    if (data.period !== undefined) updateData.period = data.period;
+    if (data.startDate !== undefined) updateData.startDate = new Date(data.startDate);
+    if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+
+    await budgetRepository.update(id, updateData);
+
+    // Return enriched budget with progress
+    return budgetRepository.getBudgetWithProgress(userId, id);
   },
 
   async delete(userId: string, id: string) {
