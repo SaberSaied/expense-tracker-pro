@@ -1,6 +1,9 @@
 import { z } from "zod";
 
+export const formatSchema = z.enum(["csv", "pdf"]).optional().default("csv");
+
 export const exportTransactionsQuerySchema = z.object({
+  format: formatSchema,
   startDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
@@ -23,6 +26,7 @@ export const exportTransactionsQuerySchema = z.object({
 });
 
 export const exportReportQuerySchema = z.object({
+  format: formatSchema,
   type: z.enum(["daily", "weekly", "monthly", "yearly", "summary", "breakdown"]),
   year: z.string().regex(/^\d{4}$/, "Invalid year format (YYYY)").optional(),
   month: z.string().regex(/^(0[1-9]|1[0-2])$/, "Invalid month format (01-12)").optional(),
@@ -40,5 +44,6 @@ export const exportReportQuerySchema = z.object({
     .optional(),
 });
 
+export type FormatType = z.infer<typeof formatSchema>;
 export type ExportTransactionsQueryInput = z.infer<typeof exportTransactionsQuerySchema>;
 export type ExportReportQueryInput = z.infer<typeof exportReportQuerySchema>;
