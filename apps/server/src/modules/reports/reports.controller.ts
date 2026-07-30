@@ -42,4 +42,14 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getWeeklyReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const date = (req.query.date as string) ?? new Date().toISOString().slice(0, 10);
+      const result = await reportService.getWeeklyReport(req.user.id, date);
+      sendSuccess(res, { report: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

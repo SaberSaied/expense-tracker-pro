@@ -77,3 +77,25 @@ export interface DailyReport {
   transactions: DailyReportTransaction[];
   spendingByCategory: DailyCategoryBreakdown[];
 }
+
+export interface WeeklyDaySummary {
+  date: string;
+  dayName: string;
+  income: number;
+  expenses: number;
+  balance: number;
+  transactionCount: number;
+}
+
+export interface WeeklyReport {
+  startDate: string;
+  endDate: string;
+  weekLabel: string;
+  income: number;
+  expenses: number;
+  balance: number;
+  transactionCount: number;
+  dailyBreakdown: WeeklyDaySummary[];
+  transactions: DailyReportTransaction[];
+  spendingByCategory: DailyCategoryBreakdown[];
+}
