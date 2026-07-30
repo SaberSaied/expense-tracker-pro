@@ -72,6 +72,35 @@ export const savingsGoalRepository = {
     return prisma.savingsGoal.findUnique({ where: { id } });
   },
 
+  /**
+   * Fetch a single goal enriched with computed fields:
+   * progress, remaining, daysRemaining, isCompleted.
+   */
+  async getGoalWithDetails(userId: string, id: string) {
+    const goal = await prisma.savingsGoal.findUnique({ where: { id } });
+    if (!goal || goal.userId !== userId) return null;
+
+    const progress = goal.targetAmount > 0
+      ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
+      : 0;
+    const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
+    let daysRemaining: number | null = null;
+
+    if (goal.deadline) {
+      const now = new Date();
+      const timeDiff = goal.deadline.getTime() - now.getTime();
+      daysRemaining = timeDiff > 0 ? Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) : 0;
+    }
+
+    return {
+      ...goal,
+      progress,
+      remaining,
+      daysRemaining,
+      isCompleted: goal.currentAmount >= goal.targetAmount,
+    };
+  },
+
   async create(userId: string, data: {
     name: string;
     targetAmount: number;
