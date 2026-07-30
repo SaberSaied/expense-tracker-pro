@@ -38,8 +38,13 @@ export const monthlyReportQuerySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
 });
 
+export const yearlyReportQuerySchema = z.object({
+  year: z.string().regex(/^\d{4}$/, "Invalid year format (YYYY)").optional(),
+});
+
 export type CategorySummaryQueryInput = z.infer<typeof categorySummaryQuerySchema>;
 export type MonthlyTrendQueryInput = z.infer<typeof monthlyTrendQuerySchema>;
 export type DailyReportQueryInput = z.infer<typeof dailyReportQuerySchema>;
 export type WeeklyReportQueryInput = z.infer<typeof weeklyReportQuerySchema>;
 export type MonthlyReportQueryInput = z.infer<typeof monthlyReportQuerySchema>;
+export type YearlyReportQueryInput = z.infer<typeof yearlyReportQuerySchema>;

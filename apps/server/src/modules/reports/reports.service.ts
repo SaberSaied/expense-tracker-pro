@@ -316,6 +316,160 @@ export const reportService = {
     };
   },
 
+  async getYearlyReport(userId: string, year: number) {
+    const MONTH_NAMES = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    // Fetch transactions and budgets in parallel
+    const [transactions, budgets] = await Promise.all([
+      reportRepository.findTransactionsInYearWithDetails(userId, year),
+      reportRepository.findBudgetsForUser(userId),
+    ]);
+
+    // ─── Monthly comparison ───
+    const monthData = new Map<
+      string,
+      { month: string; label: string; income: number; expenses: number }
+    >();
+
+    for (let i = 0; i < 12; i++) {
+      const key = `${year}-${String(i + 1).padStart(2, "0")}`;
+      monthData.set(key, {
+        month: key,
+        label: `${MONTH_NAMES[i]} ${year}`,
+        income: 0,
+        expenses: 0,
+      });
+    }
+
+    let totalIncome = 0;
+    let totalExpenses = 0;
+
+    // ─── Top categories ───
+    const categoryMap = new Map<
+      string,
+      {
+        categoryId: string;
+        categoryName: string;
+        categoryColor: string;
+        categoryIcon: string;
+        total: number;
+        count: number;
+      }
+    >();
+
+    for (const tx of transactions) {
+      if (tx.type === "INCOME") {
+        totalIncome += tx.amount;
+      } else if (tx.type === "EXPENSE") {
+        totalExpenses += tx.amount;
+      }
+
+      // Monthly aggregation
+      const d = new Date(tx.date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const mEntry = monthData.get(key);
+      if (mEntry) {
+        if (tx.type === "INCOME") mEntry.income += tx.amount;
+        else if (tx.type === "EXPENSE") mEntry.expenses += tx.amount;
+      }
+
+      // Category aggregation (all types)
+      const catKey = tx.categoryId;
+      if (!categoryMap.has(catKey)) {
+        categoryMap.set(catKey, {
+          categoryId: tx.categoryId,
+          categoryName: tx.category.name,
+          categoryColor: tx.category.color,
+          categoryIcon: tx.category.icon,
+          total: 0,
+          count: 0,
+        });
+      }
+      const cEntry = categoryMap.get(catKey)!;
+      cEntry.total += tx.amount;
+      cEntry.count += 1;
+    }
+
+    // Monthly comparison (sorted chronologically)
+    const monthlyComparison = Array.from(monthData.values())
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .map((m) => ({
+        ...m,
+        net: m.income - m.expenses,
+      }));
+
+    // Top spending categories (sorted by total descending, limited to top 10)
+    const topCategories = Array.from(categoryMap.values())
+      .map((cat) => ({
+        ...cat,
+        percentage:
+          totalExpenses > 0
+            ? Math.round((cat.total / totalExpenses) * 100)
+            : 0,
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
+    // ─── Budget performance ───
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+
+    const scopedBudgets = budgets.filter((budget) => {
+      const periodEnd = computePeriodEnd(budget.startDate, budget.period);
+      return budget.startDate <= yearEnd && periodEnd >= yearStart;
+    });
+
+    // Total expense spending by category for the year
+    const yearlyExpensesByCategory = new Map<string, number>();
+    for (const tx of transactions) {
+      if (tx.type === "EXPENSE") {
+        yearlyExpensesByCategory.set(
+          tx.categoryId,
+          (yearlyExpensesByCategory.get(tx.categoryId) ?? 0) + tx.amount
+        );
+      }
+    }
+
+    const budgetPerformance = scopedBudgets.map((budget) => {
+      const spent = yearlyExpensesByCategory.get(budget.categoryId) ?? 0;
+      const percentage = budget.targetAmount > 0
+        ? Math.round((spent / budget.targetAmount) * 100)
+        : 0;
+
+      let status: "on_track" | "warning" | "critical" = "on_track";
+      if (percentage >= 100) {
+        status = "critical";
+      } else if (percentage >= budget.alertThreshold) {
+        status = "warning";
+      }
+
+      return {
+        budgetId: budget.id,
+        categoryId: budget.categoryId,
+        categoryName: budget.category.name,
+        budgeted: budget.targetAmount,
+        spent: Math.round(spent * 100) / 100,
+        remaining: Math.round((budget.targetAmount - spent) * 100) / 100,
+        percentage,
+        status,
+      };
+    });
+
+    return {
+      year,
+      income: totalIncome,
+      expenses: totalExpenses,
+      netSavings: totalIncome - totalExpenses,
+      transactionCount: transactions.length,
+      monthlyComparison,
+      topCategories,
+      budgetPerformance,
+    };
+  },
+
   async getDailyReport(userId: string, dateStr: string) {
     const date = new Date(dateStr);
     const transactions = await reportRepository.findTransactionsByDate(userId, date);

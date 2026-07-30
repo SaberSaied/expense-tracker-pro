@@ -144,3 +144,32 @@ export interface MonthlyReport {
   categorySummary: MonthlyCategorySummary[];
   paymentMethodSummary: MonthlyPaymentMethodSummary[];
 }
+
+export interface YearlyMonthComparison {
+  month: string;
+  label: string;
+  income: number;
+  expenses: number;
+  net: number;
+}
+
+export interface YearlyTopCategory {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  total: number;
+  count: number;
+  percentage: number;
+}
+
+export interface YearlyReport {
+  year: number;
+  income: number;
+  expenses: number;
+  netSavings: number;
+  transactionCount: number;
+  monthlyComparison: YearlyMonthComparison[];
+  topCategories: YearlyTopCategory[];
+  budgetPerformance: MonthlyBudgetPerformance[];
+}

@@ -64,4 +64,14 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getYearlyReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const year = req.query.year ? Number(req.query.year) : new Date().getFullYear();
+      const result = await reportService.getYearlyReport(req.user.id, year);
+      sendSuccess(res, { report: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
