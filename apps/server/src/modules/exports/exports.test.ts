@@ -49,7 +49,7 @@ async function request(
   path: string,
   reqBody?: unknown,
   token?: string | null
-): Promise<{ status: number; text: string; contentType: string }> {
+): Promise<{ status: number; text: string; contentType: string; disposition?: string }> {
   const headers: Record<string, string> = {};
   // Set Content-Type for requests with a body (POST, PATCH)
   if (reqBody !== undefined) headers["Content-Type"] = "application/json";
@@ -64,8 +64,9 @@ async function request(
   const status = response.status;
   const text = await response.text();
   const contentType = response.headers.get("content-type") ?? "";
+  const disposition = response.headers.get("content-disposition") ?? undefined;
 
-  return { status, text, contentType };
+  return { status, text, contentType, disposition };
 }
 
 function assert(condition: unknown, label: string) {
@@ -672,7 +673,140 @@ async function runTests() {
   const noAuthReport = await request("GET", "/exports/reports?type=summary");
   assert(noAuthReport.status === 401, "Export report without auth returns 401");
 
-  // ─── Summary ──────────────────────────────────────────────
+  // ─── 18. File Naming ──────────────────────────────────────────
+  console.log("\n─── 18. File Naming (Content-Disposition header) ───");
+
+  const fToday = new Date().toISOString().slice(0, 10);
+  const fYear = new Date().getFullYear();
+  const fMonth = new Date().getMonth() + 1;
+  const fMonthName = [
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+  ][fMonth - 1];
+
+  // ── Transaction file naming ──
+
+  // Default: transactions-{date}.csv
+  const fnTx = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
+  assert(fnTx.disposition?.includes(`transactions-${fToday}.csv`),
+    `Filename is transactions-${fToday}.csv (got: ${fnTx.disposition})`);
+
+  // Filtered by type=EXPENSE: expenses-{date}.csv
+  const fnExpenses = await request("GET", "/exports/transactions?type=EXPENSE", undefined, userTokens?.accessToken);
+  assert(fnExpenses.disposition?.includes(`expenses-${fToday}.csv`),
+    `Filename is expenses-${fToday}.csv (got: ${fnExpenses.disposition})`);
+
+  // Filtered by type=INCOME: income-{date}.csv
+  const fnIncome = await request("GET", "/exports/transactions?type=INCOME", undefined, userTokens?.accessToken);
+  assert(fnIncome.disposition?.includes(`income-${fToday}.csv`),
+    `Filename is income-${fToday}.csv (got: ${fnIncome.disposition})`);
+
+  // ── Report file naming ──
+
+  // Daily report: daily-report-{date}.csv
+  const fnDaily = await request("GET", `/exports/reports?type=daily&date=${fToday}`, undefined, userTokens?.accessToken);
+  assert(fnDaily.disposition?.includes(`daily-report-${fToday}.csv`),
+    `Filename is daily-report-${fToday}.csv (got: ${fnDaily.disposition})`);
+
+  // Weekly report: weekly-report-{date}.csv
+  const fnWeekly = await request("GET", `/exports/reports?type=weekly&date=${fToday}`, undefined, userTokens?.accessToken);
+  assert(fnWeekly.disposition?.includes(`weekly-report-${fToday}.csv`),
+    `Filename is weekly-report-${fToday}.csv (got: ${fnWeekly.disposition})`);
+
+  // Monthly report: monthly-report-{monthName}-{year}.csv
+  const fnMonthly = await request(
+    "GET",
+    `/exports/reports?type=monthly&year=${fYear}&month=${String(fMonth).padStart(2, "0")}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(
+    fnMonthly.disposition?.includes(`monthly-report-${fMonthName}-${fYear}.csv`),
+    `Filename is monthly-report-${fMonthName}-${fYear}.csv (got: ${fnMonthly.disposition})`
+  );
+
+  // Yearly report: yearly-report-{year}.csv
+  const fnYearly = await request("GET", `/exports/reports?type=yearly&year=${fYear}`, undefined, userTokens?.accessToken);
+  assert(fnYearly.disposition?.includes(`yearly-report-${fYear}.csv`),
+    `Filename is yearly-report-${fYear}.csv (got: ${fnYearly.disposition})`);
+
+  // Summary report: summary-report-{date}.csv
+  const fnSummary = await request("GET", "/exports/reports?type=summary", undefined, userTokens?.accessToken);
+  assert(fnSummary.disposition?.includes(`summary-report-${fToday}.csv`),
+    `Filename is summary-report-${fToday}.csv (got: ${fnSummary.disposition})`);
+
+  // Breakdown report: breakdown-report-{date}.csv
+  const fnBreakdown = await request("GET", "/exports/reports?type=breakdown", undefined, userTokens?.accessToken);
+  assert(fnBreakdown.disposition?.includes(`breakdown-report-${fToday}.csv`),
+    `Filename is breakdown-report-${fToday}.csv (got: ${fnBreakdown.disposition})`);
+
+  // ── PDF file naming ──
+
+  // Daily report as PDF: daily-report-{date}.pdf
+  const fnDailyPdf = await request("GET", `/exports/reports?type=daily&format=pdf&date=${fToday}`, undefined, userTokens?.accessToken);
+  assert(fnDailyPdf.disposition?.includes(`daily-report-${fToday}.pdf`),
+    `PDF filename is daily-report-${fToday}.pdf (got: ${fnDailyPdf.disposition})`);
+
+  // Monthly report as PDF: monthly-report-{monthName}-{year}.pdf
+  const fnMonthlyPdf = await request(
+    "GET",
+    `/exports/reports?type=monthly&format=pdf&year=${fYear}&month=${String(fMonth).padStart(2, "0")}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(
+    fnMonthlyPdf.disposition?.includes(`monthly-report-${fMonthName}-${fYear}.pdf`),
+    `PDF filename is monthly-report-${fMonthName}-${fYear}.pdf (got: ${fnMonthlyPdf.disposition})`
+  );
+
+  // Transaction export as PDF: transactions-{date}.pdf
+  const fnTxPdf = await request("GET", "/exports/transactions?format=pdf", undefined, userTokens?.accessToken);
+  assert(fnTxPdf.disposition?.includes(`transactions-${fToday}.pdf`),
+    `Transaction PDF filename is transactions-${fToday}.pdf (got: ${fnTxPdf.disposition})`);
+
+  // Expenses as PDF: expenses-{date}.pdf
+  const fnExpPdf = await request("GET", "/exports/transactions?type=EXPENSE&format=pdf", undefined, userTokens?.accessToken);
+  assert(fnExpPdf.disposition?.includes(`expenses-${fToday}.pdf`),
+    `Expense PDF filename is expenses-${fToday}.pdf (got: ${fnExpPdf.disposition})`);
+
+  // ── Edge: date range in filename ──
+
+  const fnDateRange = await request(
+    "GET",
+    `/exports/transactions?startDate=2026-01-01&endDate=2026-12-31`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(
+    fnDateRange.disposition?.includes("transactions-2026-01-01-to-2026-12-31.csv"),
+    `Date range filename: transactions-2026-01-01-to-2026-12-31.csv (got: ${fnDateRange.disposition})`
+  );
+
+  // Filtered expenses with date range: expenses-{startDate}-to-{endDate}.csv
+  const fnExpRange = await request(
+    "GET",
+    "/exports/transactions?type=EXPENSE&startDate=2026-01-01&endDate=2026-12-31",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(
+    fnExpRange.disposition?.includes("expenses-2026-01-01-to-2026-12-31.csv"),
+    `Expense range filename: expenses-2026-01-01-to-2026-12-31.csv (got: ${fnExpRange.disposition})`
+  );
+
+  // Summary report with date range
+  const fnSummaryRange = await request(
+    "GET",
+    "/exports/reports?type=summary&startDate=2026-01-01&endDate=2026-06-30",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(
+    fnSummaryRange.disposition?.includes("summary-report-2026-01-01-to-2026-06-30.csv"),
+    `Summary range filename: summary-report-2026-01-01-to-2026-06-30.csv (got: ${fnSummaryRange.disposition})`
+  );
+
+  // ── Summary ──────────────────────────────────────────────
   const total = passed + failed;
   console.log(`\n${"=".repeat(55)}`);
   console.log(`📊 Results: ${passed}/${total} passed, ${failed}/${total} failed`);
