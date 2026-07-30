@@ -1,5 +1,6 @@
 import { budgetRepository } from "./budgets.repository";
-import { NotFoundError, ConflictError } from "@/common/errors";
+import { categoryRepository } from "@/modules/categories/categories.repository";
+import { NotFoundError, ConflictError, ValidationError } from "@/common/errors";
 
 export const budgetService = {
   async findAll(userId: string) {
@@ -23,7 +24,16 @@ export const budgetService = {
   }) {
     const startDate = new Date(data.startDate);
 
-    // Check for duplicates
+    // Validate category exists and belongs to the user
+    const category = await categoryRepository.findById(data.categoryId);
+    if (!category) {
+      throw new ValidationError("Category not found");
+    }
+    if (category.userId !== userId) {
+      throw new ValidationError("Category does not belong to this user");
+    }
+
+    // Check for duplicates — one budget per category per period per user
     const existing = await budgetRepository.findByCategoryAndPeriod(
       userId,
       data.categoryId,
