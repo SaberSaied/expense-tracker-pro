@@ -9,6 +9,7 @@ import { savingsGoalRoutes } from "@/modules/savings-goals/savings-goals.routes"
 import { reportRoutes } from "@/modules/reports/reports.routes";
 import { dashboardRoutes } from "@/modules/dashboard/dashboard.routes";
 import { notificationRoutes } from "@/modules/notifications/notifications.routes";
+import { exportRoutes } from "@/modules/exports/exports.routes";
 
 const router: Router = Router();
 
@@ -22,5 +23,6 @@ router.use("/savings-goals", savingsGoalRoutes);
 router.use("/reports", reportRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/exports", exportRoutes);
 
 export { router as routes };

@@ -214,7 +214,7 @@ export const reportRepository = {
 
     return prisma.transaction.findMany({
       where: where as any,
-      include: { category: true },
+      include: { category: true, paymentMethod: true },
       orderBy: { date: "desc" },
     });
   },
