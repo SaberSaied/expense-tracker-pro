@@ -17,3 +17,10 @@ export interface UpdateSavingsGoalInput {
   icon?: string;
   color?: string;
 }
+
+export interface SavingsGoalQueryFilters {
+  status?: "active" | "completed";
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  sortBy?: "deadline" | "targetAmount" | "priority" | "createdAt" | "currentAmount";
+  sortOrder?: "asc" | "desc";
+}

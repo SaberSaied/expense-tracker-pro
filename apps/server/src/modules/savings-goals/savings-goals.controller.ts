@@ -2,11 +2,22 @@ import type { Response, NextFunction } from "express";
 import { savingsGoalService } from "./savings-goals.service";
 import { sendSuccess, sendCreated, sendNoContent } from "@/common/responses";
 import type { AuthenticatedRequest } from "@/common/types";
+import type { SavingsGoalQueryFilters } from "./savings-goals.types";
 
 export const savingsGoalController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const savingsGoals = await savingsGoalService.findAll(req.user.id);
+      const { status, priority, sortBy, sortOrder } =
+        req.query as Record<string, string | undefined>;
+
+      const filters: SavingsGoalQueryFilters = {
+        status: status as "active" | "completed" | undefined,
+        priority: priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined,
+        sortBy: sortBy as "deadline" | "targetAmount" | "priority" | "createdAt" | "currentAmount" | undefined,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+      };
+
+      const savingsGoals = await savingsGoalService.findAll(req.user.id, filters);
       sendSuccess(res, { savingsGoals });
     } catch (err) {
       next(err);

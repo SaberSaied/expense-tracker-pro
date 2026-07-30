@@ -1,9 +1,18 @@
 import { savingsGoalRepository } from "./savings-goals.repository";
 import { NotFoundError, ValidationError } from "@/common/errors";
+import type { SavingsGoalQueryFilters } from "./savings-goals.types";
 
 export const savingsGoalService = {
-  async findAll(userId: string) {
-    return savingsGoalRepository.findAllByUser(userId);
+  async findAll(
+    userId: string,
+    filters: SavingsGoalQueryFilters = {}
+  ) {
+    return savingsGoalRepository.findAllByUser(userId, {
+      status: filters.status,
+      priority: filters.priority,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+    });
   },
 
   async findById(userId: string, id: string) {

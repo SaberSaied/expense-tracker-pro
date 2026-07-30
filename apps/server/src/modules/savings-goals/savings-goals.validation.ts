@@ -15,6 +15,13 @@ export const createSavingsGoalSchema = z.object({
 
 export const updateSavingsGoalSchema = createSavingsGoalSchema.partial();
 
+export const savingsGoalQuerySchema = z.object({
+  status: z.enum(["active", "completed"]).optional(),
+  priority: goalPrioritySchema.optional(),
+  sortBy: z.enum(["deadline", "targetAmount", "priority", "createdAt", "currentAmount"]).optional().default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+});
+
 export const addProgressSchema = z.object({
   amount: z.number().positive("Progress amount must be positive"),
 });
