@@ -56,6 +56,10 @@ export const budgetService = {
    * for budget almost-exhausted, exceeded, expired, and upcoming-expiration events.
    * Duplicate notifications within DEDUP_WINDOW_HOURS are suppressed.
    */
+  async getInsights(userId: string) {
+    return budgetRepository.getInsights(userId);
+  },
+
   async generateAlerts(userId: string) {
     const budgets = await budgetRepository.findAllByUser(userId);
     if (budgets.length === 0) {

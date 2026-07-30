@@ -75,6 +75,15 @@ export const budgetController = {
     }
   },
 
+  async getInsights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const insights = await budgetService.getInsights(req.user.id);
+      sendSuccess(res, insights);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const budget = await budgetService.create(req.user.id, req.body);

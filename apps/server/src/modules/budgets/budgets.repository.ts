@@ -346,6 +346,124 @@ export const budgetRepository = {
     };
   },
 
+  async getInsights(userId: string) {
+    const budgets = await prisma.budget.findMany({
+      where: { userId },
+      include: { category: true },
+    });
+
+    if (budgets.length === 0) {
+      return {
+        highestSpending: null,
+        lowestSpending: null,
+        closestToLimit: null,
+        overall: {
+          totalBudgeted: 0,
+          totalSpent: 0,
+          totalRemaining: 0,
+          utilizationRate: 0,
+          averageProgress: 0,
+          budgetCount: 0,
+          activeBudgetCount: 0,
+        },
+      };
+    }
+
+    const now = new Date();
+    let totalBudgeted = 0;
+    let totalSpent = 0;
+    let activeCount = 0;
+    let progressSum = 0;
+
+    const enriched: Array<{
+      id: string;
+      category: { id: string; name: string; icon: string; color: string };
+      targetAmount: number;
+      period: string;
+      spent: number;
+      remaining: number;
+      progress: number;
+      isActive: boolean;
+      daysRemaining: number;
+    }> = [];
+
+    for (const budget of budgets) {
+      const end = computePeriodEnd(budget.startDate, budget.period);
+      const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
+      const isActive = now >= budget.startDate && now <= end;
+      const progress = budget.targetAmount > 0
+        ? Math.round((spent / budget.targetAmount) * 100)
+        : 0;
+      const remaining = budget.targetAmount - spent; // allow negative
+      const daysRemaining = computeDaysRemaining(budget.startDate, end);
+
+      if (isActive) activeCount++;
+      totalBudgeted += budget.targetAmount;
+      totalSpent += spent;
+      progressSum += progress;
+
+      enriched.push({
+        id: budget.id,
+        category: {
+          id: budget.category.id,
+          name: budget.category.name,
+          icon: budget.category.icon,
+          color: budget.category.color,
+        },
+        targetAmount: budget.targetAmount,
+        period: budget.period,
+        spent,
+        remaining,
+        progress,
+        isActive,
+        daysRemaining,
+      });
+    }
+
+    // 1. Highest spending budget
+    const highestSpending = enriched.reduce((max, b) => (b.spent > max.spent ? b : max), enriched[0]);
+
+    // 2. Lowest spending budget (among active budgets, or all if none active)
+    const candidates = enriched.filter((b) => b.isActive);
+    const pool = candidates.length > 0 ? candidates : enriched;
+    const lowestSpending = pool.reduce((min, b) => (b.spent < min.spent ? b : min), pool[0]);
+
+    // 3. Closest budget to limit (highest progress, excluding overspent which is 100%+)
+    const closestToLimit = enriched.reduce(
+      (closest, b) => (b.progress > closest.progress ? b : closest),
+      enriched[0]
+    );
+
+    // 4. Overall utilization
+    const utilizationRate = totalBudgeted > 0
+      ? Math.round((totalSpent / totalBudgeted) * 100)
+      : 0;
+
+    return {
+      highestSpending: {
+        ...highestSpending,
+        isHighest: true,
+      },
+      lowestSpending: {
+        ...lowestSpending,
+        isLowest: true,
+      },
+      closestToLimit: {
+        ...closestToLimit,
+        isClosestToLimit: true,
+      },
+      overall: {
+        totalBudgeted,
+        totalSpent,
+        totalRemaining: Math.max(0, totalBudgeted - totalSpent),
+        utilizationRate,
+        averageProgress: budgets.length > 0 ? Math.round(progressSum / budgets.length) : 0,
+        budgetCount: budgets.length,
+        activeBudgetCount: activeCount,
+      },
+    };
+  },
+
   async create(userId: string, data: {
     targetAmount: number;
     alertThreshold?: number;

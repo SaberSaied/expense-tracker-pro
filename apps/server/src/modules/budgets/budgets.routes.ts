@@ -10,7 +10,8 @@ const router: Router = Router();
 // ─── Static routes (must come before :id routes) ────────
 router.get("/", validate(budgetQuerySchema, "query"), authMiddleware, asyncHandler(budgetController.findAll));
 
-// ─── Alert / Progress routes (must come before :id routes) ─
+// ─── Insights / Alert / Progress routes (must come before :id routes) ─
+router.get("/insights", authMiddleware, asyncHandler(budgetController.getInsights));
 router.get("/alerts", authMiddleware, asyncHandler(budgetController.getAlerts));
 router.post("/alerts/generate", authMiddleware, asyncHandler(budgetController.generateAlerts));
 router.get("/progress/summary", authMiddleware, asyncHandler(budgetController.getProgressSummary));
