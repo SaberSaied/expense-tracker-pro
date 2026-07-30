@@ -45,7 +45,7 @@ export const exportController = {
       const now = new Date().toISOString().slice(0, 10);
 
       if (format === "pdf") {
-        const pdfBuffer = await pdfExportService.generateTransactionsPdf(req.user.id, filters as any);
+        const pdfBuffer = await pdfExportService.generateTransactionsPdf(req.user.id, filters as any, req.user.email);
         const filename = `transactions-${now}.pdf`;
 
         res.setHeader("Content-Type", "application/pdf");
@@ -86,7 +86,7 @@ export const exportController = {
       const now = new Date().toISOString().slice(0, 10);
 
       if (format === "pdf") {
-        const pdfBuffer = await pdfExportService.generateReportPdf(req.user.id, query);
+        const pdfBuffer = await pdfExportService.generateReportPdf(req.user.id, query, req.user.email);
         const filename = `report-${type ?? "summary"}-${now}.pdf`;
 
         res.setHeader("Content-Type", "application/pdf");

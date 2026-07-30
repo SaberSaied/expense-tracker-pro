@@ -235,6 +235,7 @@ async function runTests() {
   assert(pdfContains(pdfTx.buffer!, "Monthly Paycheck"), "PDF contains income description");
   assert(pdfContains(pdfTx.buffer!, "Transaction Export"), "PDF has report title");
   assert(pdfContains(pdfTx.buffer!, "Expense Tracker Pro"), "PDF has app name");
+  assert(pdfContains(pdfTx.buffer!, TEST_EMAIL), "PDF contains user email");
 
   // ─── 3. Export Transactions as CSV (default format) ────────
   console.log("\n─── 3. Export Transactions as CSV (default format) ───");
