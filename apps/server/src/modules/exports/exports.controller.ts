@@ -13,11 +13,17 @@ function getFormat(req: AuthenticatedRequest): "csv" | "pdf" {
   return "csv";
 }
 
+/** Parse columns from query param (comma-separated string or pre-parsed array). */
+function parseColumns(val: unknown): string[] | undefined {
+  if (!val) return undefined;
+  if (Array.isArray(val)) return val.map((c) => String(c).trim().toLowerCase());
+  return String(val).split(",").map((c) => c.trim().toLowerCase());
+}
+
 export const exportController = {
   /**
    * GET /exports/transactions — Download transactions as CSV or PDF.
-   * Supports same filters as the custom report query.
-   * Query param: format=csv|pdf (default: csv)
+   * Supports filters + options: columns, sortBy, sortOrder, orientation (PDF).
    */
   async exportTransactions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
@@ -32,6 +38,9 @@ export const exportController = {
         type,
         minAmount,
         maxAmount,
+        sortBy,
+        sortOrder,
+        columns: columnsRaw,
       } = req.query as Record<string, string | undefined>;
 
       const filters = {
@@ -44,6 +53,9 @@ export const exportController = {
         type: type as "INCOME" | "EXPENSE" | "TRANSFER" | undefined,
         minAmount: minAmount ? Number(minAmount) : undefined,
         maxAmount: maxAmount ? Number(maxAmount) : undefined,
+        sortBy: sortBy as "date" | "amount" | "description" | "type" | undefined,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+        columns: parseColumns(columnsRaw) as any,
       };
 
       const now = new Date().toISOString().slice(0, 10);
@@ -76,7 +88,7 @@ export const exportController = {
   async exportReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const format = getFormat(req);
-      const { type, year, month, date, startDate, endDate, budgetId, savingsGoalId } = req.query as Record<string, string | undefined>;
+      const { type, year, month, date, startDate, endDate, budgetId, savingsGoalId, orientation, sortBy, sortOrder, columns: columnsRaw } = req.query as Record<string, string | undefined>;
 
       const query = {
         type: type ?? "summary",
@@ -87,6 +99,10 @@ export const exportController = {
         endDate,
         budgetId,
         savingsGoalId,
+        orientation: orientation as "portrait" | "landscape" | undefined,
+        sortBy: sortBy as "date" | "amount" | "description" | "type" | undefined,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+        columns: parseColumns(columnsRaw) as any,
       };
 
       const now = new Date().toISOString().slice(0, 10);

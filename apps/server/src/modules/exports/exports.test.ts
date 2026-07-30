@@ -449,8 +449,130 @@ async function runTests() {
   );
   assert(exportCombinedFilter.status === 200, "Combined budget+goal filter returns 200");
 
-  // ─── 12. Ownership Scoping ─────────────────────────────────
-  console.log("\n─── 12. Ownership Verification ───");
+  // ─── 12. Export Options: Columns ─────────────────────────────
+  console.log("\n─── 12. Export Options: Columns (GET /exports/transactions?columns=...) ───");
+
+  // Filtered columns: only date, amount, description
+  const columnFiltered = await request(
+    "GET",
+    `/exports/transactions?columns=date,amount,description`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(columnFiltered.status === 200, "Column-filtered export returns 200");
+  assert(columnFiltered.text.startsWith("Date,Amount,Description"), "Column-filtered CSV starts with selected columns");
+  assert(!columnFiltered.text.includes("ID,"), "Column-filtered CSV does not include ID column");
+  assert(!columnFiltered.text.includes("Category"), "Column-filtered CSV does not include Category column");
+  assert(columnFiltered.text.includes("42.50"), "Column-filtered CSV contains amounts");
+  assert(columnFiltered.text.includes("Whole Foods Market"), "Column-filtered CSV contains descriptions");
+
+  // Single column
+  const singleColumn = await request(
+    "GET",
+    `/exports/transactions?columns=amount`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(singleColumn.status === 200, "Single-column export returns 200");
+  const singleLines = singleColumn.text.trim().split("\n");
+  // Header: Amount, Data: 42.50, Data: 5000.00
+  assert(singleLines.length === 3, "Single-column CSV has 3 lines");
+  assert(singleLines[0].includes("Amount"), "Single-column CSV has Amount header");
+
+  // ─── 13. Export Options: Sort Order ───────────────────────────
+  console.log("\n─── 13. Export Options: Sort Order ───");
+
+  // Sort by amount ascending
+  const sortAsc = await request(
+    "GET",
+    "/exports/transactions?sortBy=amount&sortOrder=asc",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(sortAsc.status === 200, "Sort ascending returns 200");
+  const ascLines = sortAsc.text.trim().split("\n");
+  assert(ascLines.length === 3, "Sorted CSV has 3 lines");
+  // First data row should be 42.50 (smaller amount first)
+  const ascFirstRow = ascLines[1];
+  assert(ascFirstRow.includes("42.50"), "Ascending sort puts 42.50 first");
+
+  // Sort by amount descending
+  const sortDesc = await request(
+    "GET",
+    "/exports/transactions?sortBy=amount&sortOrder=desc",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(sortDesc.status === 200, "Sort descending returns 200");
+  const descLines = sortDesc.text.trim().split("\n");
+  assert(descLines.length === 3, "Descending CSV has 3 lines");
+  // First data row should be 5000.00 (larger amount first)
+  const descFirstRow = descLines[1];
+  assert(descFirstRow.includes("5000.00"), "Descending sort puts 5000.00 first");
+
+  // Sort by description ascending
+  const sortAlpha = await request(
+    "GET",
+    "/exports/transactions?sortBy=description&sortOrder=asc",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(sortAlpha.status === 200, "Sort by description returns 200");
+  const alphaLines = sortAlpha.text.trim().split("\n");
+  assert(alphaLines.length === 3, "Description-sorted CSV has 3 lines");
+  // Alphabetical: "Monthly Paycheck" before "Whole Foods Market"
+  assert(alphaLines[1].includes("Monthly Paycheck"), "Alphabetical sort puts Monthly Paycheck first");
+
+  // Invalid sortBy defaults to date sorting (no error)
+  const sortDefault = await request(
+    "GET",
+    "/exports/transactions?sortBy=invalid",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(sortDefault.status === 400, "Invalid sortBy returns 400");
+
+  // ─── 14. Export Options: PDF Orientation ──────────────────────
+  console.log("\n─── 14. Export Options: PDF Orientation ───");
+
+  const landscapePdf = await request(
+    "GET",
+    "/exports/reports?type=summary&format=pdf&orientation=landscape",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(landscapePdf.status === 200, "Landscape PDF returns 200");
+  assert(landscapePdf.contentType.includes("application/pdf"), "Landscape PDF has correct content type");
+
+  // Default orientation (portrait) still works
+  const portraitPdf = await request(
+    "GET",
+    "/exports/reports?type=summary&format=pdf&orientation=portrait",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(portraitPdf.status === 200, "Portrait PDF returns 200");
+
+  // Invalid orientation returns 400
+  const badOrientation = await request(
+    "GET",
+    "/exports/reports?type=summary&format=pdf&orientation=square",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(badOrientation.status === 400, "Invalid orientation returns 400");
+
+  // Combined: columns + sort + orientation on PDF report
+  const combinedOptions = await request(
+    "GET",
+    "/exports/reports?type=summary&format=pdf&columns=date,amount&sortBy=amount&sortOrder=desc&orientation=landscape",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(combinedOptions.status === 200, "Combined options on PDF returns 200");
+
+  // ─── 15. Ownership Scoping ─────────────────────────────────
+  console.log("\n─── 15. Ownership Verification ───");
 
   const register2 = await request("POST", "/auth/register", {
     email: SECOND_USER_EMAIL,
@@ -493,8 +615,8 @@ async function runTests() {
   // Should not contain Food or Salary since second user has no transactions
   assert(!secondBreakdown.text.includes("Food"), "Second user breakdown does not have primary's categories");
 
-  // ─── 13. Validation ────────────────────────────────────────
-  console.log("\n─── 13. Validation ───");
+  // ─── 16. Validation ────────────────────────────────────────
+  console.log("\n─── 16. Validation ───");
 
   // Invalid date format in transaction export
   const badDate = await request(
@@ -541,8 +663,8 @@ async function runTests() {
   );
   assert(missingType.status === 400, "Missing report type returns 400");
 
-  // ─── 14. Unauthenticated Access ────────────────────────────
-  console.log("\n─── 14. Unauthenticated Access ───");
+  // ─── 17. Unauthenticated Access ────────────────────────────
+  console.log("\n─── 17. Unauthenticated Access ───");
 
   const noAuthTx = await request("GET", "/exports/transactions");
   assert(noAuthTx.status === 401, "Export transactions without auth returns 401");

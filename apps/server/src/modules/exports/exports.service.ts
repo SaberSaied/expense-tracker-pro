@@ -2,7 +2,7 @@ import { reportRepository } from "../reports/reports.repository";
 import { reportService } from "../reports/reports.service";
 import { budgetRepository } from "../budgets/budgets.repository";
 import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
-import type { ExportTransactionsQuery } from "./exports.types";
+import type { ExportTransactionsQuery, ColumnName, SortField } from "./exports.types";
 
 // ─── CSV Escaping Helpers ──────────────────────────────────────
 
@@ -33,39 +33,80 @@ function formatAmount(amount: number): string {
   return amount.toFixed(2);
 }
 
-// ─── CSV Row Builders ──────────────────────────────────────────
+// ─── Column Helpers ────────────────────────────────────────────
 
-const TRANSACTION_HEADERS = [
-  "ID",
-  "Date",
-  "Type",
-  "Amount",
-  "Description",
-  "Category",
-  "Payment Method",
-  "Notes",
-].join(",");
+const ALL_COLUMNS: Array<{ key: ColumnName; label: string }> = [
+  { key: "id", label: "ID" },
+  { key: "date", label: "Date" },
+  { key: "type", label: "Type" },
+  { key: "amount", label: "Amount" },
+  { key: "description", label: "Description" },
+  { key: "category", label: "Category" },
+  { key: "paymentmethod", label: "Payment Method" },
+  { key: "notes", label: "Notes" },
+];
 
-function buildTransactionRow(tx: {
-  id: string;
-  date: Date;
-  type: string;
-  amount: number;
-  description: string;
-  category: { name: string };
-  paymentMethod?: { name: string } | null;
-  notes?: string | null;
-}): string {
-  return [
-    escapeCsv(tx.id),
-    escapeCsv(formatDate(tx.date)),
-    escapeCsv(tx.type),
-    formatAmount(tx.amount),
-    escapeCsv(tx.description),
-    escapeCsv(tx.category.name),
-    escapeCsv(tx.paymentMethod?.name ?? ""),
-    escapeCsv(tx.notes ?? ""),
-  ].join(",");
+/** Resolve which columns to include — defaults to all if not specified. */
+function resolveColumns(columns?: ColumnName[]): Array<{ key: ColumnName; label: string }> {
+  if (!columns || columns.length === 0) return ALL_COLUMNS;
+  return ALL_COLUMNS.filter((c) => columns.includes(c.key));
+}
+
+/** Build a CSV header row from column definitions. */
+function buildCsvHeaders(cols: Array<{ key: ColumnName; label: string }>): string {
+  return cols.map((c) => c.label).join(",");
+}
+
+/** Build a CSV data row from column definitions and a transaction object. */
+function buildCsvRow(
+  cols: Array<{ key: ColumnName; label: string }>,
+  tx: {
+    id: string;
+    date: Date;
+    type: string;
+    amount: number;
+    description: string;
+    category: { name: string };
+    paymentMethod?: { name: string } | null;
+    notes?: string | null;
+  }
+): string {
+  return cols
+    .map((col) => {
+      switch (col.key) {
+        case "id": return escapeCsv(tx.id);
+        case "date": return escapeCsv(formatDate(tx.date));
+        case "type": return escapeCsv(tx.type);
+        case "amount": return formatAmount(tx.amount);
+        case "description": return escapeCsv(tx.description);
+        case "category": return escapeCsv(tx.category.name);
+        case "paymentmethod": return escapeCsv(tx.paymentMethod?.name ?? "");
+        case "notes": return escapeCsv(tx.notes ?? "");
+        default: return "";
+      }
+    })
+    .join(",");
+}
+
+/** Apply sort order to transactions. */
+function sortTransactions<T extends { date: Date; amount: number; description: string; type: string }>(
+  transactions: T[],
+  sortBy?: SortField,
+  sortOrder?: "asc" | "desc"
+): T[] {
+  const dir = sortOrder === "asc" ? 1 : -1;
+  const field = sortBy ?? "date";
+
+  return [...transactions].sort((a, b) => {
+    let cmp = 0;
+    switch (field) {
+      case "date": cmp = a.date.getTime() - b.date.getTime(); break;
+      case "amount": cmp = a.amount - b.amount; break;
+      case "description": cmp = a.description.localeCompare(b.description); break;
+      case "type": cmp = a.type.localeCompare(b.type); break;
+    }
+    return cmp * dir;
+  });
 }
 
 // ─── Public Export Functions ───────────────────────────────────
@@ -73,6 +114,7 @@ function buildTransactionRow(tx: {
 export const exportService = {
   /**
    * Generate a CSV string for transactions matching the given filters.
+   * Supports column selection and sort order.
    */
   async generateTransactionsCsv(
     userId: string,
@@ -99,9 +141,15 @@ export const exportService = {
       dbFilters as Parameters<typeof reportRepository.findCustomTransactions>[1]
     );
 
-    const rows = transactions.map(buildTransactionRow);
+    // Apply sort order
+    const sorted = sortTransactions(transactions, filters.sortBy, filters.sortOrder);
 
-    return [TRANSACTION_HEADERS, ...rows].join("\n");
+    // Apply column selection
+    const cols = resolveColumns(filters.columns);
+    const headerRow = buildCsvHeaders(cols);
+    const dataRows = sorted.map((tx) => buildCsvRow(cols, tx));
+
+    return [headerRow, ...dataRows].join("\n");
   },
 
   /**
@@ -174,7 +222,7 @@ export const exportService = {
       `Balance: ${formatAmount(report.balance)}`,
       `Transactions: ${report.transactionCount}`,
       "",
-      TRANSACTION_HEADERS,
+      buildCsvHeaders(ALL_COLUMNS),
     ];
 
     for (const tx of report.transactions) {
@@ -220,7 +268,7 @@ export const exportService = {
       ].join(","));
     }
 
-    lines.push("", "--- Transactions ---", TRANSACTION_HEADERS);
+    lines.push("", "--- Transactions ---", buildCsvHeaders(ALL_COLUMNS));
     for (const tx of report.transactions) {
       lines.push([
         escapeCsv(tx.id),

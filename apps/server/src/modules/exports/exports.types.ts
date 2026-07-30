@@ -1,3 +1,7 @@
+export type ColumnName = "id" | "date" | "type" | "amount" | "description" | "category" | "paymentmethod" | "notes";
+
+export type SortField = "date" | "amount" | "description" | "type";
+
 export interface ExportTransactionsQuery {
   startDate?: string;
   endDate?: string;
@@ -8,6 +12,9 @@ export interface ExportTransactionsQuery {
   savingsGoalId?: string;
   minAmount?: number;
   maxAmount?: number;
+  columns?: ColumnName[];
+  sortBy?: SortField;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface ExportReportQuery {
@@ -19,4 +26,7 @@ export interface ExportReportQuery {
   endDate?: string;
   budgetId?: string;
   savingsGoalId?: string;
+  columns?: ColumnName[];
+  sortBy?: SortField;
+  sortOrder?: "asc" | "desc";
 }

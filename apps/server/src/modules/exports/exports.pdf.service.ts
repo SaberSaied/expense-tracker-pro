@@ -71,9 +71,11 @@ class ReportPdfGenerator {
   private userEmail: string = "";
   private goalInfo: Record<string, unknown> | null = null;
 
-  constructor(userEmail?: string) {
+  constructor(userEmail?: string, orientation?: "portrait" | "landscape") {
+    const isLandscape = orientation === "landscape";
     this.doc = new PDFDocument({
       size: "LETTER",
+      layout: isLandscape ? "landscape" : "portrait",
       margin: MARGIN_LEFT,
       info: {
         Title: "Financial Report - Expense Tracker Pro",
@@ -549,10 +551,19 @@ class ReportPdfGenerator {
 export const pdfExportService = {
   async generateReportPdf(
     userId: string,
-    query: { type: string; date?: string; year?: number; month?: number; startDate?: string; endDate?: string },
+    query: {
+      type: string;
+      date?: string;
+      year?: number;
+      month?: number;
+      startDate?: string;
+      endDate?: string;
+      savingsGoalId?: string;
+      orientation?: "portrait" | "landscape";
+    },
     userEmail?: string
   ): Promise<Buffer> {
-    const generator = new ReportPdfGenerator(userEmail);
+    const generator = new ReportPdfGenerator(userEmail, query.orientation);
     return generator.generateReportPdf(userId, query);
   },
 
