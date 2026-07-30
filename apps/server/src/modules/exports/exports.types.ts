@@ -4,6 +4,8 @@ export interface ExportTransactionsQuery {
   type?: "INCOME" | "EXPENSE" | "TRANSFER";
   categoryId?: string;
   paymentMethodId?: string;
+  budgetId?: string;
+  savingsGoalId?: string;
   minAmount?: number;
   maxAmount?: number;
 }
@@ -15,4 +17,6 @@ export interface ExportReportQuery {
   date?: string;
   startDate?: string;
   endDate?: string;
+  budgetId?: string;
+  savingsGoalId?: string;
 }

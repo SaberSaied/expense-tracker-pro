@@ -347,8 +347,110 @@ async function runTests() {
   assert(breakdownReport.text.includes("Food"), "Breakdown CSV has category name");
   assert(breakdownReport.text.includes("Salary"), "Breakdown CSV has income category name");
 
-  // ─── 10. Ownership Scoping ─────────────────────────────────
-  console.log("\n─── 10. Ownership Verification ───");
+  // ─── 10. Budget Filter ───────────────────────────────────────
+  console.log("\n─── 10. Budget Filter (GET /exports/transactions?budgetId=xxx) ───");
+
+  // Create a budget
+  const budget = await request(
+    "POST",
+    "/budgets",
+    {
+      targetAmount: 500,
+      categoryId: testCategoryId,
+      startDate: today,
+      period: "MONTHLY",
+    },
+    userTokens?.accessToken
+  );
+  assert(budget.status === 201, "Budget created");
+  const budgetJson = JSON.parse(budget.text);
+  const budgetId = budgetJson.data?.budget?.id as string ?? budgetJson.data?.id as string;
+  assert(budgetId != null, "Budget has ID");
+
+  // Filter transactions by budgetId
+  const exportBudgetTx = await request(
+    "GET",
+    `/exports/transactions?budgetId=${budgetId}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(exportBudgetTx.status === 200, "Export by budget returns 200");
+  const budgetLines = exportBudgetTx.text.trim().split("\n");
+  // Should only include transactions for the budget's category (Food)
+  assert(budgetLines.length === 2, "Budget-filtered CSV has header + 1 transaction");
+  assert(exportBudgetTx.text.includes("42.50"), "Budget CSV contains expense 42.50");
+  assert(!exportBudgetTx.text.includes("5000.00"), "Budget CSV does not contain income (different category)");
+  assert(exportBudgetTx.text.includes("Food"), "Budget CSV contains Food category");
+
+  // Budget filter on reports
+  const exportBudgetReport = await request(
+    "GET",
+    `/exports/reports?type=summary&budgetId=${budgetId}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(exportBudgetReport.status === 200, "Export report by budget returns 200");
+
+  // Invalid budgetId returns empty data (no such budget for this user)
+  const fakeBudgetExport = await request(
+    "GET",
+    "/exports/transactions?budgetId=00000000-0000-0000-0000-000000000000",
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(fakeBudgetExport.status === 200, "Export with non-existent budget returns 200");
+  const fakeBudgetLines = fakeBudgetExport.text.trim().split("\n");
+  assert(fakeBudgetLines.length === 3, "Non-existent budget CSV has all transactions (header + 2 rows)");
+
+  // ─── 11. Savings Goal Filter ──────────────────────────────────
+  console.log("\n─── 11. Savings Goal Filter (GET /exports/reports?savingsGoalId=xxx) ───");
+
+  // Create a savings goal
+  const goal = await request(
+    "POST",
+    "/savings-goals",
+    {
+      name: "Emergency Fund",
+      targetAmount: 10000,
+      deadline: "2027-01-01",
+      priority: "HIGH",
+    },
+    userTokens?.accessToken
+  );
+  assert(goal.status === 201, "Savings goal created");
+  const goalJson = JSON.parse(goal.text);
+  const goalId = goalJson.data?.savingsGoal?.id as string ?? goalJson.data?.id as string;
+  assert(goalId != null, "Savings goal has ID");
+
+  // Export summary report with savingsGoalId filter
+  const exportGoalReport = await request(
+    "GET",
+    `/exports/reports?type=summary&savingsGoalId=${goalId}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(exportGoalReport.status === 200, "Export report with savings goal returns 200");
+
+  // Export breakdown report with savingsGoalId filter
+  const exportGoalBreakdown = await request(
+    "GET",
+    `/exports/reports?type=breakdown&savingsGoalId=${goalId}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(exportGoalBreakdown.status === 200, "Export breakdown with savings goal returns 200");
+
+  // Combined budget + savings goal filter
+  const exportCombinedFilter = await request(
+    "GET",
+    `/exports/reports?type=summary&budgetId=${budgetId}&savingsGoalId=${goalId}`,
+    undefined,
+    userTokens?.accessToken
+  );
+  assert(exportCombinedFilter.status === 200, "Combined budget+goal filter returns 200");
+
+  // ─── 12. Ownership Scoping ─────────────────────────────────
+  console.log("\n─── 12. Ownership Verification ───");
 
   const register2 = await request("POST", "/auth/register", {
     email: SECOND_USER_EMAIL,
@@ -391,8 +493,8 @@ async function runTests() {
   // Should not contain Food or Salary since second user has no transactions
   assert(!secondBreakdown.text.includes("Food"), "Second user breakdown does not have primary's categories");
 
-  // ─── 11. Validation ────────────────────────────────────────
-  console.log("\n─── 11. Validation ───");
+  // ─── 13. Validation ────────────────────────────────────────
+  console.log("\n─── 13. Validation ───");
 
   // Invalid date format in transaction export
   const badDate = await request(
@@ -439,8 +541,8 @@ async function runTests() {
   );
   assert(missingType.status === 400, "Missing report type returns 400");
 
-  // ─── 12. Unauthenticated Access ────────────────────────────
-  console.log("\n─── 12. Unauthenticated Access ───");
+  // ─── 14. Unauthenticated Access ────────────────────────────
+  console.log("\n─── 14. Unauthenticated Access ───");
 
   const noAuthTx = await request("GET", "/exports/transactions");
   assert(noAuthTx.status === 401, "Export transactions without auth returns 401");

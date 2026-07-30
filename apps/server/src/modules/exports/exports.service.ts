@@ -1,5 +1,7 @@
 import { reportRepository } from "../reports/reports.repository";
 import { reportService } from "../reports/reports.service";
+import { budgetRepository } from "../budgets/budgets.repository";
+import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
 import type { ExportTransactionsQuery } from "./exports.types";
 
 // ─── CSV Escaping Helpers ──────────────────────────────────────
@@ -85,6 +87,12 @@ export const exportService = {
     if (filters.type) dbFilters.type = filters.type;
     if (filters.minAmount !== undefined) dbFilters.minAmount = filters.minAmount;
     if (filters.maxAmount !== undefined) dbFilters.maxAmount = filters.maxAmount;
+    if (filters.budgetId) {
+      const budget = await budgetRepository.findById(filters.budgetId);
+      if (budget && budget.userId === userId) {
+        dbFilters.categoryId = budget.categoryId;
+      }
+    }
 
     const transactions = await reportRepository.findCustomTransactions(
       userId,
@@ -108,8 +116,27 @@ export const exportService = {
       month?: number;
       startDate?: string;
       endDate?: string;
+      budgetId?: string;
+      savingsGoalId?: string;
     }
   ): Promise<string> {
+    // Fetch savings goal info if provided
+    let goalInfo: Record<string, unknown> | null = null;
+    if (query.savingsGoalId) {
+      const goal = await savingsGoalRepository.getGoalWithDetails(userId, query.savingsGoalId);
+      if (goal) {
+        goalInfo = {
+          name: goal.name,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          progress: goal.progress,
+          remaining: goal.remaining,
+          daysRemaining: goal.daysRemaining,
+          isCompleted: goal.isCompleted,
+        };
+      }
+    }
+
     switch (query.type) {
       case "daily":
         return this.generateDailyReportCsv(userId, query.date ?? new Date().toISOString().slice(0, 10));
@@ -124,7 +151,7 @@ export const exportService = {
         return this.generateYearlyReportCsv(userId, query.year ?? new Date().getFullYear());
 
       case "summary":
-        return this.generateSummaryCsv(userId, query.startDate, query.endDate);
+        return this.generateSummaryCsv(userId, query.startDate, query.endDate, goalInfo);
 
       case "breakdown":
         return this.generateBreakdownCsv(userId, query.startDate, query.endDate);
@@ -326,10 +353,10 @@ export const exportService = {
 
   // ─── Summary CSV ────────────────────────────────────────────
 
-  async generateSummaryCsv(userId: string, startDate?: string, endDate?: string): Promise<string> {
+  async generateSummaryCsv(userId: string, startDate?: string, endDate?: string, goalInfo?: Record<string, unknown> | null): Promise<string> {
     const summary = await reportService.getSummary(userId, startDate, endDate);
 
-    return [
+    const lines: string[] = [
       "Report Summary",
       "",
       `Income: ${formatAmount(summary.income)}`,
@@ -342,6 +369,25 @@ export const exportService = {
       `Average Transaction: ${formatAmount(summary.averageTransactionAmount)}`,
       `Average Income: ${formatAmount(summary.averageIncome)}`,
       `Average Expense: ${formatAmount(summary.averageExpense)}`,
+    ];
+
+    // Include savings goal info if provided
+    if (goalInfo) {
+      const g = goalInfo as Record<string, any>;
+      lines.push(
+        "",
+        "--- Savings Goal ---",
+        `Goal,${escapeCsv(g.name)}`,
+        `Target,${formatAmount(g.targetAmount)}`,
+        `Saved,${formatAmount(g.currentAmount)}`,
+        `Progress,${g.progress}%`,
+        `Remaining,${formatAmount(g.remaining)}`,
+        `Days Remaining,${g.daysRemaining ?? "N/A"}`,
+        `Status,${g.isCompleted ? "Completed" : "In Progress"}`,
+      );
+    }
+
+    lines.push(
       "",
       "Metric,Value",
       `Income,${formatAmount(summary.income)}`,
@@ -349,7 +395,9 @@ export const exportService = {
       `Net Balance,${formatAmount(summary.netBalance)}`,
       `Savings Rate,${summary.savingsRate}%`,
       `Transactions,${summary.transactionCount}`,
-    ].join("\n");
+    );
+
+    return lines.join("\n");
   },
 
   // ─── Breakdown CSV ──────────────────────────────────────────

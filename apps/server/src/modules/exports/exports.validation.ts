@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const formatSchema = z.enum(["csv", "pdf"]).optional().default("csv");
 
+const uuidField = () => z.string().uuid("Invalid UUID").optional();
+
 export const exportTransactionsQuerySchema = z.object({
   format: formatSchema,
   startDate: z
@@ -15,6 +17,8 @@ export const exportTransactionsQuerySchema = z.object({
   type: z.enum(["INCOME", "EXPENSE", "TRANSFER"]).optional(),
   categoryId: z.string().uuid("Invalid category UUID").optional(),
   paymentMethodId: z.string().uuid("Invalid payment method UUID").optional(),
+  budgetId: uuidField(),
+  savingsGoalId: uuidField(),
   minAmount: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, "Invalid minAmount")
@@ -42,6 +46,8 @@ export const exportReportQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
     .optional(),
+  budgetId: uuidField(),
+  savingsGoalId: uuidField(),
 });
 
 export type FormatType = z.infer<typeof formatSchema>;

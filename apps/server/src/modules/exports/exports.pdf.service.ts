@@ -1,6 +1,8 @@
 import PDFDocument from "pdfkit";
 import { reportService } from "../reports/reports.service";
 import { reportRepository } from "../reports/reports.repository";
+import { budgetRepository } from "../budgets/budgets.repository";
+import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
 
 // ─── Color Palette ─────────────────────────────────────────────
 
@@ -67,6 +69,7 @@ class ReportPdfGenerator {
   private doc: PDFDocument;
   private y: number;
   private userEmail: string = "";
+  private goalInfo: Record<string, unknown> | null = null;
 
   constructor(userEmail?: string) {
     this.doc = new PDFDocument({
@@ -94,10 +97,28 @@ class ReportPdfGenerator {
       month?: number;
       startDate?: string;
       endDate?: string;
+      savingsGoalId?: string;
     }
   ): Promise<Buffer> {
     const buffers: Buffer[] = [];
     this.doc.on("data", (chunk: Buffer) => buffers.push(chunk));
+
+    // Fetch savings goal info if provided
+    let goalInfo: Record<string, unknown> | null = null;
+    if (query.savingsGoalId) {
+      const goal = await savingsGoalRepository.getGoalWithDetails(userId, query.savingsGoalId);
+      if (goal) {
+        goalInfo = {
+          name: goal.name,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          progress: goal.progress,
+          remaining: goal.remaining,
+          isCompleted: goal.isCompleted,
+        };
+      }
+    }
+    this.goalInfo = goalInfo;
 
     switch (query.type) {
       case "daily":
@@ -149,6 +170,12 @@ class ReportPdfGenerator {
     if (filters.type) dbFilters.type = filters.type;
     if (filters.minAmount !== undefined) dbFilters.minAmount = filters.minAmount;
     if (filters.maxAmount !== undefined) dbFilters.maxAmount = filters.maxAmount;
+    if (filters.budgetId) {
+      const budget = await budgetRepository.findById(filters.budgetId as string);
+      if (budget) {
+        dbFilters.categoryId = budget.categoryId;
+      }
+    }
 
     const summary = await reportService.getSummary(
       userId,
@@ -252,6 +279,17 @@ class ReportPdfGenerator {
     this.addSummaryCards(summary);
     this.addSectionGap();
     this.addDetailedSummary(summary);
+    if (this.goalInfo) {
+      this.addSectionGap();
+      this.addSectionTitle("Savings Goal Progress");
+      const g = this.goalInfo as Record<string, any>;
+      this.addInfoRow("Goal", g.name);
+      this.addInfoRow("Target", fmtCurrency(g.targetAmount));
+      this.addInfoRow("Saved", fmtCurrency(g.currentAmount));
+      this.addInfoRow("Progress", `${g.progress}%`);
+      this.addInfoRow("Remaining", fmtCurrency(g.remaining));
+      this.addInfoRow("Status", g.isCompleted ? "Completed" : "In Progress");
+    }
     this.addFooter();
   }
 
@@ -481,7 +519,6 @@ class ReportPdfGenerator {
       if (rowIdx % 2 === 1) this.doc.rect(startX, this.y, CONTENT_WIDTH, rowHeight).fillColor(COLORS.bgLight).fill();
       let rx = startX + 8;
       row.forEach((cell, cellIdx) => {
-        const isAmount = /^[\$|\-]/.test(cell);
         this.doc.fontSize(8).font("Helvetica");
         const color = cell.startsWith("-$") || (cell.startsWith("$") && cellIdx > 0 && row[0].includes("Expense")) ? COLORS.danger : cell.startsWith("$") ? COLORS.accent : COLORS.textPrimary;
         this.doc.fillColor(color).text(truncateText(cell, avgColWidth - 4, this.doc), rx, this.y + 3, { width: avgColWidth, lineBreak: false });
