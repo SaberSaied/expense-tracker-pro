@@ -19,11 +19,11 @@ export const budgetService = {
   },
 
   async findById(userId: string, id: string) {
-    const budget = await budgetRepository.findById(id);
-    if (!budget || budget.userId !== userId) {
+    const budgetWithDetails = await budgetRepository.getBudgetWithProgress(userId, id);
+    if (!budgetWithDetails) {
       throw new NotFoundError("Budget not found");
     }
-    return budget;
+    return budgetWithDetails;
   },
 
   async getProgress(userId: string, id: string) {
