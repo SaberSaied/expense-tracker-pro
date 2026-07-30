@@ -96,4 +96,13 @@ export const savingsGoalController = {
       next(err);
     }
   },
+
+  async getInsights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const insights = await savingsGoalService.getInsights(req.user.id);
+      sendSuccess(res, { insights });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

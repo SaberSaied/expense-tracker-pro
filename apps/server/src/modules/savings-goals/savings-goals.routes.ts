@@ -8,6 +8,7 @@ import { authMiddleware } from "@/common/middleware/auth";
 const router: Router = Router();
 
 router.get("/", validate(savingsGoalQuerySchema, "query"), authMiddleware, asyncHandler(savingsGoalController.findAll));
+router.get("/insights", authMiddleware, asyncHandler(savingsGoalController.getInsights));
 router.get("/stats", authMiddleware, asyncHandler(savingsGoalController.getStats));
 router.get("/:id", validate(uuidParamSchema, "params"), authMiddleware, asyncHandler(savingsGoalController.findById));
 router.post("/", validate(createSavingsGoalSchema), authMiddleware, asyncHandler(savingsGoalController.create));
