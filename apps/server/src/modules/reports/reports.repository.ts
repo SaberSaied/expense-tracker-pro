@@ -84,4 +84,51 @@ export const reportRepository = {
       orderBy: { date: "asc" },
     });
   },
+
+  async findCustomTransactions(
+    userId: string,
+    filters: {
+      startDate?: Date;
+      endDate?: Date;
+      categoryId?: string;
+      paymentMethodId?: string;
+      type?: string;
+      minAmount?: number;
+      maxAmount?: number;
+    }
+  ) {
+    const where: Record<string, unknown> = { userId };
+
+    if (filters.startDate || filters.endDate) {
+      const dateFilter: Record<string, Date> = {};
+      if (filters.startDate) dateFilter.gte = filters.startDate;
+      if (filters.endDate) dateFilter.lte = filters.endDate;
+      where.date = dateFilter;
+    }
+
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+
+    if (filters.paymentMethodId) {
+      where.paymentMethodId = filters.paymentMethodId;
+    }
+
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
+    if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
+      const amountFilter: Record<string, number> = {};
+      if (filters.minAmount !== undefined) amountFilter.gte = filters.minAmount;
+      if (filters.maxAmount !== undefined) amountFilter.lte = filters.maxAmount;
+      where.amount = amountFilter;
+    }
+
+    return prisma.transaction.findMany({
+      where: where as any,
+      include: { category: true },
+      orderBy: { date: "desc" },
+    });
+  },
 };

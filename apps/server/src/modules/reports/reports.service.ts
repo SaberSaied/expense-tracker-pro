@@ -470,6 +470,98 @@ export const reportService = {
     };
   },
 
+  async getCustomReport(
+    userId: string,
+    filters: {
+      startDate?: string;
+      endDate?: string;
+      categoryId?: string;
+      paymentMethodId?: string;
+      type?: "INCOME" | "EXPENSE" | "TRANSFER";
+      minAmount?: number;
+      maxAmount?: number;
+    }
+  ) {
+    const dbFilters: {
+      startDate?: Date;
+      endDate?: Date;
+      categoryId?: string;
+      paymentMethodId?: string;
+      type?: string;
+      minAmount?: number;
+      maxAmount?: number;
+    } = {};
+
+    if (filters.startDate) dbFilters.startDate = new Date(filters.startDate);
+    if (filters.endDate) dbFilters.endDate = new Date(filters.endDate);
+    if (filters.categoryId) dbFilters.categoryId = filters.categoryId;
+    if (filters.paymentMethodId) dbFilters.paymentMethodId = filters.paymentMethodId;
+    if (filters.type) dbFilters.type = filters.type;
+    if (filters.minAmount !== undefined) dbFilters.minAmount = filters.minAmount;
+    if (filters.maxAmount !== undefined) dbFilters.maxAmount = filters.maxAmount;
+
+    const transactions = await reportRepository.findCustomTransactions(userId, dbFilters);
+
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    const categoryMap = new Map<
+      string,
+      {
+        categoryId: string;
+        categoryName: string;
+        categoryColor: string;
+        categoryIcon: string;
+        total: number;
+        count: number;
+      }
+    >();
+
+    const mappedTransactions = transactions.map((tx) => {
+      if (tx.type === "INCOME") totalIncome += tx.amount;
+      else if (tx.type === "EXPENSE") totalExpenses += tx.amount;
+
+      const catKey = tx.categoryId;
+      if (!categoryMap.has(catKey)) {
+        categoryMap.set(catKey, {
+          categoryId: tx.categoryId,
+          categoryName: tx.category.name,
+          categoryColor: tx.category.color,
+          categoryIcon: tx.category.icon,
+          total: 0,
+          count: 0,
+        });
+      }
+      const cEntry = categoryMap.get(catKey)!;
+      cEntry.total += tx.amount;
+      cEntry.count += 1;
+
+      return {
+        id: tx.id,
+        amount: tx.amount,
+        description: tx.description,
+        type: tx.type,
+        date: tx.date,
+        categoryId: tx.categoryId,
+        categoryName: tx.category.name,
+        categoryColor: tx.category.color,
+        categoryIcon: tx.category.icon,
+      };
+    });
+
+    const spendingByCategory = Array.from(categoryMap.values())
+      .sort((a, b) => b.total - a.total);
+
+    return {
+      filters,
+      income: totalIncome,
+      expenses: totalExpenses,
+      balance: totalIncome - totalExpenses,
+      transactionCount: transactions.length,
+      transactions: mappedTransactions,
+      spendingByCategory,
+    };
+  },
+
   async getDailyReport(userId: string, dateStr: string) {
     const date = new Date(dateStr);
     const transactions = await reportRepository.findTransactionsByDate(userId, date);

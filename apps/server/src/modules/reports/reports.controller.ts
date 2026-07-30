@@ -74,4 +74,31 @@ export const reportController = {
       next(err);
     }
   },
+
+  async getCustomReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const {
+        startDate,
+        endDate,
+        categoryId,
+        paymentMethodId,
+        type,
+        minAmount,
+        maxAmount,
+      } = req.query as Record<string, string | undefined>;
+
+      const result = await reportService.getCustomReport(req.user.id, {
+        startDate,
+        endDate,
+        categoryId,
+        paymentMethodId,
+        type: type as "INCOME" | "EXPENSE" | "TRANSFER" | undefined,
+        minAmount: minAmount ? Number(minAmount) : undefined,
+        maxAmount: maxAmount ? Number(maxAmount) : undefined,
+      });
+      sendSuccess(res, { report: result });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

@@ -42,9 +42,20 @@ export const yearlyReportQuerySchema = z.object({
   year: z.string().regex(/^\d{4}$/, "Invalid year format (YYYY)").optional(),
 });
 
+export const customReportQuerySchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
+  categoryId: z.string().uuid("Invalid category UUID").optional(),
+  paymentMethodId: z.string().uuid("Invalid payment method UUID").optional(),
+  type: z.enum(["INCOME", "EXPENSE", "TRANSFER"]).optional(),
+  minAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid minAmount").optional(),
+  maxAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid maxAmount").optional(),
+});
+
 export type CategorySummaryQueryInput = z.infer<typeof categorySummaryQuerySchema>;
 export type MonthlyTrendQueryInput = z.infer<typeof monthlyTrendQuerySchema>;
 export type DailyReportQueryInput = z.infer<typeof dailyReportQuerySchema>;
 export type WeeklyReportQueryInput = z.infer<typeof weeklyReportQuerySchema>;
 export type MonthlyReportQueryInput = z.infer<typeof monthlyReportQuerySchema>;
 export type YearlyReportQueryInput = z.infer<typeof yearlyReportQuerySchema>;
+export type CustomReportQueryInput = z.infer<typeof customReportQuerySchema>;

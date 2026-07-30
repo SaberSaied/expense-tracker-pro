@@ -173,3 +173,23 @@ export interface YearlyReport {
   topCategories: YearlyTopCategory[];
   budgetPerformance: MonthlyBudgetPerformance[];
 }
+
+export interface CustomReportQuery {
+  startDate?: string;
+  endDate?: string;
+  categoryId?: string;
+  paymentMethodId?: string;
+  type?: "INCOME" | "EXPENSE" | "TRANSFER";
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+export interface CustomReport {
+  filters: CustomReportQuery;
+  income: number;
+  expenses: number;
+  balance: number;
+  transactionCount: number;
+  transactions: DailyReportTransaction[];
+  spendingByCategory: DailyCategoryBreakdown[];
+}
