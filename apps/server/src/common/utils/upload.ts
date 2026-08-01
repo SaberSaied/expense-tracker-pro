@@ -6,6 +6,7 @@ import fsp from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { RequestHandler, NextFunction } from "express";
 import { ValidationError } from "@/common/errors";
+import { logger } from "@/config/logger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,9 +20,21 @@ export const UPLOADS_DIR = path.resolve(__dirname, "../../../uploads");
 export const AVATARS_DIR = path.join(UPLOADS_DIR, "avatars");
 export const RECEIPTS_DIR = path.join(UPLOADS_DIR, "receipts");
 
-// Ensure the upload directories exist at module load
-fs.mkdirSync(AVATARS_DIR, { recursive: true });
-fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
+// Ensure the upload directories exist at module load.
+// Best-effort: on serverless hosts (e.g. Vercel) the filesystem is read-only,
+// so failures are ignored — the API must still boot, and upload endpoints
+// surface their own errors at request time.
+try {
+  fs.mkdirSync(AVATARS_DIR, { recursive: true });
+  fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
+} catch {
+  // Read-only filesystem (e.g. Vercel serverless) — uploads unavailable here.
+  // Warn so a misconfigured writable host (permissions) isn't silently masked.
+  logger.warn(
+    "[upload] Could not create upload directories — uploads will be unavailable " +
+      "(read-only filesystem or insufficient permissions)"
+  );
+}
 
 // ─── Allowed MIME types ───────────────────────────────────────
 
