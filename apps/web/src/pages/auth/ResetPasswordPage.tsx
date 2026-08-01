@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { authApi } from "@/services/auth";
 import { ApiError } from "@/services/api";
+import { ValidationErrors } from "@/components/ui/ValidationErrors";
+import { extractFieldErrors, focusFirstInvalidField } from "@/utils/errors";
 
 /**
  * Reset password page — set a new password using a verified token.
@@ -20,6 +22,13 @@ export const ResetPasswordPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
+
+  // When validation errors appear, move focus to the first invalid field so
+  // keyboard & screen-reader users can locate and fix it (WCAG 3.3.1).
+  useEffect(() => {
+    if (fieldErrors) focusFirstInvalidField("reset-password-form");
+  }, [fieldErrors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +52,8 @@ export const ResetPasswordPage: React.FC = () => {
       toast.success("Password updated", { description: result.message });
       setIsSuccess(true);
     } catch (err) {
+      const fieldErrors = extractFieldErrors(err);
+      if (fieldErrors) setFieldErrors(fieldErrors);
       const message =
         err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
       toast.error("Reset failed", { description: message });
@@ -100,6 +111,8 @@ export const ResetPasswordPage: React.FC = () => {
         </p>
       </div>
 
+      <ValidationErrors errors={fieldErrors} onDismiss={() => setFieldErrors(undefined)} />
+
       <Input
         label="New Password"
         type={showPassword ? "text" : "password"}
@@ -111,13 +124,15 @@ export const ResetPasswordPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="text-text-muted hover:text-text-primary transition-colors"
+            className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
+        error={fieldErrors?.password?.[0]}
         autoComplete="new-password"
+        name="password"
         required
       />
 
@@ -134,6 +149,7 @@ export const ResetPasswordPage: React.FC = () => {
             : undefined
         }
         autoComplete="new-password"
+        name="confirmPassword"
         required
       />
 

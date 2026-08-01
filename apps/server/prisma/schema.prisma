@@ -44,6 +44,26 @@ enum NotificationType {
   BUDGET_CRITICAL
   EXPORT_COMPLETE
   WEEKLY_DIGEST
+  REMINDER
+  MONTHLY_SUMMARY
+  BILL_DUE_SOON
+  BILL_OVERDUE
+}
+
+/// What a recurring reminder is about.
+enum ReminderType {
+  RECURRING_EXPENSE
+  RECURRING_INCOME
+  SAVINGS_CONTRIBUTION
+  CUSTOM
+}
+
+/// How often a recurring reminder fires.
+enum ReminderFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
 }
 
 enum Currency {
@@ -162,6 +182,9 @@ model User {
   /// The user's savings goals.
   savingsGoals SavingsGoal[]
 
+  /// The user's recurring reminders.
+  reminders Reminder[]
+
   /// Index for efficient querying and sorting by creation date.
   @@index([createdAt])
 
@@ -197,6 +220,9 @@ model Category {
 
   /// Budget targets set for this category.
   budgets Budget[]
+
+  /// Recurring reminders linked to this category.
+  reminders Reminder[]
 
   /// Timestamp of category creation.
   createdAt DateTime @default(now())
@@ -393,6 +419,11 @@ model Notification {
   /// Whether the user has read/dismissed this notification.
   read      Boolean          @default(false)
 
+  /// Optional stable key for de-duplication (e.g. "budget:{id}:{period}").
+  /// A unique (userId, dedupKey) pair prevents duplicate notifications at the
+  /// database level, so concurrent batch jobs can safely insert without races.
+  dedupKey  String?
+
   /// Foreign key to the owning user.
   userId    String           @db.Uuid
 
@@ -401,6 +432,9 @@ model Notification {
 
   /// Timestamp of notification creation.
   createdAt DateTime @default(now())
+
+  /// Prevent duplicate (userId, dedupKey) rows (NULL dedupKey values are ignored).
+  @@unique([userId, dedupKey])
 
   /// Query unread notifications for a user.
   @@index([userId, read])
@@ -456,6 +490,87 @@ model SavingsGoal {
   /// Query savings goals by user.
   @@index([userId])
 
+  /// Recurring reminders linked to this goal.
+  reminders Reminder[]
+
   /// Map the model to the "savings_goals" table in PostgreSQL.
   @@map("savings_goals")
+}
+
+/// User-defined recurring reminder that generates notifications on a schedule.
+model Reminder {
+  /// Unique reminder identifier (UUID v4).
+  id        String           @id @default(uuid()) @db.Uuid
+
+  /// What the reminder is about (recurring expense, income, savings contribution, or custom).
+  type      ReminderType
+
+  /// Short reminder title (e.g. "Rent", "Salary Day", "Emergency Fund Top-up").
+  title     String
+
+  /// Optional message body (used mainly for custom reminders).
+  message   String?
+
+  /// Optional amount associated with the reminder (for expense/income/contribution types).
+  amount    Float?
+
+  /// How often the reminder recurs.
+  frequency ReminderFrequency @default(MONTHLY)
+
+  /// Every N frequency units (e.g. interval 2 + WEEKLY = every 2 weeks).
+  interval  Int               @default(1)
+
+  /// For WEEKLY frequency: day of week 0 (Sunday) - 6 (Saturday).
+  dayOfWeek Int?
+
+  /// For MONTHLY/YEARLY frequency: day of month 1-31 (clamped to month length).
+  dayOfMonth Int?
+
+  /// The date the schedule starts from.
+  startDate DateTime          @db.Date
+
+  /// Next date the reminder should trigger (advanced after each trigger).
+  nextTriggerDate DateTime    @db.Date
+
+  /// Whether the reminder is active.
+  enabled   Boolean           @default(true)
+
+  /// Optional category link (for recurring expense/income reminders).
+  categoryId String?          @db.Uuid
+
+  /// The category this reminder relates to (optional).
+  category  Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// Optional savings goal link (for savings contribution reminders).
+  savingsGoalId String?       @db.Uuid
+
+  /// The savings goal this reminder relates to (optional).
+  savingsGoal SavingsGoal?    @relation(fields: [savingsGoalId], references: [id], onDelete: SetNull)
+
+  /// Foreign key to the owning user.
+  userId    String            @db.Uuid
+
+  /// The user who owns this reminder.
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Timestamp of the last successful trigger.
+  lastTriggeredAt DateTime?
+
+  /// Timestamp of reminder creation.
+  createdAt DateTime @default(now())
+
+  /// Timestamp of the last update.
+  updatedAt DateTime @updatedAt
+
+  /// Find active reminders by user.
+  @@index([userId, enabled])
+
+  /// Find due reminders by user.
+  @@index([userId, nextTriggerDate])
+
+  /// Filter reminders by user and type.
+  @@index([userId, type])
+
+  /// Map the model to the "reminders" table in PostgreSQL.
+  @@map("reminders")
 }

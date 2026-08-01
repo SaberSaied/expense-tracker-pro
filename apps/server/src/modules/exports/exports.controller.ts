@@ -1,15 +1,17 @@
 import type { Response, NextFunction } from "express";
 import { exportService } from "./exports.service";
 import { pdfExportService } from "./exports.pdf.service";
+import { xlsxExportService } from "./exports.xlsx.service";
 import type { AuthenticatedRequest } from "@/common/types";
 
 /**
  * Determine the export format from the query string.
  * Defaults to "csv" if not provided.
  */
-function getFormat(req: AuthenticatedRequest): "csv" | "pdf" {
+function getFormat(req: AuthenticatedRequest): "csv" | "pdf" | "xlsx" {
   const format = req.query.format as string | undefined;
   if (format === "pdf") return "pdf";
+  if (format === "xlsx") return "xlsx";
   return "csv";
 }
 
@@ -18,6 +20,15 @@ function parseColumns(val: unknown): string[] | undefined {
   if (!val) return undefined;
   if (Array.isArray(val)) return val.map((c) => String(c).trim().toLowerCase());
   return String(val).split(",").map((c) => c.trim().toLowerCase());
+}
+
+/**
+ * Set security headers on the response.
+ * (Real rate-limit headers are provided by the global express-rate-limit middleware.)
+ */
+function setSecurityHeaders(res: Response): void {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
 }
 
 // ─── File Naming ────────────────────────────────────────────────
@@ -38,12 +49,6 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 
 /**
  * Build a descriptive export filename.
- *
- * Examples:
- *   transactions-2026-08-01.csv
- *   expenses-2026-08-01.csv
- *   monthly-report-july-2026.pdf
- *   daily-report-2026-08-01.csv
  */
 function buildExportFilename(
   context: {
@@ -58,10 +63,9 @@ function buildExportFilename(
     endDate?: string;
   }
 ): string {
-  const ext = context.format === "pdf" ? "pdf" : "csv";
+  const ext = context.format === "pdf" ? "pdf" : context.format === "xlsx" ? "xlsx" : "csv";
 
   if (context.type === "transactions") {
-    // Transaction exports
     const prefix = context.transactionType
       ? (TYPE_LABELS[context.transactionType] ?? "transactions")
       : "transactions";
@@ -72,40 +76,33 @@ function buildExportFilename(
     return `${prefix}-${context.date ?? todayStr()}.${ext}`;
   }
 
-  // Report exports
   const rt = context.reportType ?? "summary";
 
   switch (rt) {
     case "daily":
       return `daily-report-${context.date ?? todayStr()}.${ext}`;
-
     case "weekly":
       return `weekly-report-${context.date ?? todayStr()}.${ext}`;
-
     case "monthly": {
       const month = context.month ?? new Date().getMonth() + 1;
       const year = context.year ?? new Date().getFullYear();
       const monthName = MONTH_NAMES[month - 1] ?? "unknown";
       return `monthly-report-${monthName}-${year}.${ext}`;
     }
-
     case "yearly":
       return `yearly-report-${context.year ?? new Date().getFullYear()}.${ext}`;
-
     case "summary": {
       const range = context.startDate && context.endDate
         ? `${context.startDate}-to-${context.endDate}`
         : todayStr();
       return `summary-report-${range}.${ext}`;
     }
-
     case "breakdown": {
       const range = context.startDate && context.endDate
         ? `${context.startDate}-to-${context.endDate}`
         : todayStr();
       return `breakdown-report-${range}.${ext}`;
     }
-
     default:
       return `report-${rt}-${todayStr()}.${ext}`;
   }
@@ -114,25 +111,32 @@ function buildExportFilename(
 export const exportController = {
   /**
    * GET /exports/transactions — Download transactions as CSV or PDF.
-   * Supports filters + options: columns, sortBy, sortOrder, orientation (PDF).
+   * Supports filters + options: columns, sortBy, sortOrder, orientation (PDF), page, limit.
+   * Sets X-Total-Count, X-Page, X-Per-Page headers for paginated exports.
    */
   async exportTransactions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
+      setSecurityHeaders(res);
+
       const format = getFormat(req);
-      const {
-        startDate,
-        endDate,
-        categoryId,
-        paymentMethodId,
-        budgetId,
-        savingsGoalId,
-        type,
-        minAmount,
-        maxAmount,
-        sortBy,
-        sortOrder,
-        columns: columnsRaw,
-      } = req.query as Record<string, string | undefined>;
+      const q = req.query as Record<string, unknown>;
+
+      // Extract string fields (Zod leaves them as strings)
+      const startDate = q.startDate as string | undefined;
+      const endDate = q.endDate as string | undefined;
+      const categoryId = q.categoryId as string | undefined;
+      const paymentMethodId = q.paymentMethodId as string | undefined;
+      const budgetId = q.budgetId as string | undefined;
+      const savingsGoalId = q.savingsGoalId as string | undefined;
+      const type = q.type as "INCOME" | "EXPENSE" | "TRANSFER" | undefined;
+      const minAmount = q.minAmount as string | undefined;
+      const maxAmount = q.maxAmount as string | undefined;
+      const sortBy = q.sortBy as string | undefined;
+      const sortOrder = q.sortOrder as string | undefined;
+      const columnsRaw = q.columns;
+      // Extract number fields (Zod transforms them from strings)
+      const page = q.page as number | undefined;
+      const limit = q.limit as number | undefined;
 
       const filters = {
         startDate,
@@ -141,12 +145,14 @@ export const exportController = {
         paymentMethodId,
         budgetId,
         savingsGoalId,
-        type: type as "INCOME" | "EXPENSE" | "TRANSFER" | undefined,
+        type,
         minAmount: minAmount ? Number(minAmount) : undefined,
         maxAmount: maxAmount ? Number(maxAmount) : undefined,
         sortBy: sortBy as "date" | "amount" | "description" | "type" | undefined,
         sortOrder: sortOrder as "asc" | "desc" | undefined,
         columns: parseColumns(columnsRaw) as any,
+        page,
+        limit,
       };
 
       if (format === "pdf") {
@@ -164,8 +170,37 @@ export const exportController = {
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Content-Length", pdfBuffer.length);
         res.end(pdfBuffer);
+      } else if (format === "xlsx") {
+        const result = await xlsxExportService.generateTransactionsXlsx(req.user.id, filters as any);
+
+        // Set pagination metadata headers
+        res.setHeader("X-Total-Count", String(result.totalCount));
+        res.setHeader("X-Page", String(result.page));
+        res.setHeader("X-Per-Page", String(result.limit));
+        res.setHeader("X-Total-Pages", String(result.totalPages));
+
+        const filename = buildExportFilename({
+          type: "transactions",
+          transactionType: type,
+          format: "xlsx",
+          startDate,
+          endDate,
+          date: todayStr(),
+        });
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.setHeader("Content-Length", result.buffer.length);
+        res.end(result.buffer);
       } else {
-        const csv = await exportService.generateTransactionsCsv(req.user.id, filters);
+        const result = await exportService.generateTransactionsCsv(req.user.id, filters);
+
+        // Set pagination metadata headers
+        res.setHeader("X-Total-Count", String(result.totalCount));
+        res.setHeader("X-Page", String(result.page));
+        res.setHeader("X-Per-Page", String(result.limit));
+        res.setHeader("X-Total-Pages", String(result.totalPages));
+
         const filename = buildExportFilename({
           type: "transactions",
           transactionType: type,
@@ -177,7 +212,7 @@ export const exportController = {
 
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-        res.send(csv);
+        res.send(result.csv);
       }
     } catch (err) {
       next(err);
@@ -190,8 +225,23 @@ export const exportController = {
    */
   async exportReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
+      setSecurityHeaders(res);
+
       const format = getFormat(req);
-      const { type, year, month, date, startDate, endDate, budgetId, savingsGoalId, orientation, sortBy, sortOrder, columns: columnsRaw } = req.query as Record<string, string | undefined>;
+      const q = req.query as Record<string, unknown>;
+
+      const type = q.type as string | undefined;
+      const year = q.year as string | undefined;
+      const month = q.month as string | undefined;
+      const date = q.date as string | undefined;
+      const startDate = q.startDate as string | undefined;
+      const endDate = q.endDate as string | undefined;
+      const budgetId = q.budgetId as string | undefined;
+      const savingsGoalId = q.savingsGoalId as string | undefined;
+      const orientation = q.orientation as string | undefined;
+      const sortBy = q.sortBy as string | undefined;
+      const sortOrder = q.sortOrder as string | undefined;
+      const columnsRaw = q.columns;
 
       const query = {
         type: type ?? "summary",
@@ -225,6 +275,23 @@ export const exportController = {
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Content-Length", pdfBuffer.length);
         res.end(pdfBuffer);
+      } else if (format === "xlsx") {
+        const xlsxBuffer = await xlsxExportService.generateReportXlsx(req.user.id, query as any);
+        const filename = buildExportFilename({
+          type: "report",
+          reportType: type ?? "summary",
+          format: "xlsx",
+          date,
+          year: year ? Number(year) : undefined,
+          month: month ? Number(month) : undefined,
+          startDate,
+          endDate,
+        });
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.setHeader("Content-Length", xlsxBuffer.length);
+        res.end(xlsxBuffer);
       } else {
         const csv = await exportService.generateReportCsv(req.user.id, query);
         const filename = buildExportFilename({

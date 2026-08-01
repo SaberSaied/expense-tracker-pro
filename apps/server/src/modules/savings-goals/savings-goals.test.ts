@@ -90,19 +90,9 @@ function assert(condition: unknown, label: string) {
   }
 }
 
-function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function futureDateStr(daysFromNow: number): string {
   const d = new Date();
   d.setDate(d.getDate() + daysFromNow);
-  return d.toISOString().slice(0, 10);
-}
-
-function pastDateStr(daysAgo: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
   return d.toISOString().slice(0, 10);
 }
 
@@ -387,7 +377,7 @@ async function runTests() {
   );
   assert(exceedAllowed.status === 200, "Exceeding with allowExceed returns 200");
   const afterExceed = exceedAllowed.json.data?.savingsGoal as Record<string, unknown> | undefined;
-  assert(afterExceed!.currentAmount > 15000, "Current amount exceeds target");
+  assert(Number(afterExceed!.currentAmount) > 15000, "Current amount exceeds target");
   assert(afterExceed!.isCompleted === true, "Goal auto-completed after exceeding target");
   assert(afterExceed!.completedAt != null, "completedAt set on auto-complete");
 
@@ -401,7 +391,7 @@ async function runTests() {
   );
   assert(withdraw.status === 200, "Withdraw progress returns 200");
   const afterWithdraw = withdraw.json.data?.savingsGoal as Record<string, unknown> | undefined;
-  assert(afterWithdraw!.currentAmount < 7000, "Current amount decreased below target");
+  assert(Number(afterWithdraw!.currentAmount) < 7000, "Current amount decreased below target");
   assert(afterWithdraw!.isCompleted === false, "Goal un-completed after dropping below target");
   assert(afterWithdraw!.completedAt == null, "completedAt cleared on withdraw below target");
 
@@ -456,12 +446,12 @@ async function runTests() {
   assert(stats.json.success === true, "Stats success=true");
   const statsData = stats.json.data?.stats as Record<string, unknown> | undefined;
   assert(statsData != null, "Stats data returned");
-  assert(statsData!.totalGoals >= 4, "totalGoals count includes all goals");
-  assert(statsData!.activeGoals >= 2, "activeGoals count is correct");
-  assert(statsData!.completedGoals >= 1, "completedGoals count is correct");
-  assert(statsData!.totalTarget > 0, "totalTarget is the sum of all targets");
-  assert(statsData!.totalSaved > 0, "totalSaved is the sum of all current amounts");
-  assert(statsData!.overallPercentage >= 0, "overallPercentage is computed");
+  assert(Number(statsData!.totalGoals) >= 4, "totalGoals count includes all goals");
+  assert(Number(statsData!.activeGoals) >= 2, "activeGoals count is correct");
+  assert(Number(statsData!.completedGoals) >= 1, "completedGoals count is correct");
+  assert(Number(statsData!.totalTarget) > 0, "totalTarget is the sum of all targets");
+  assert(Number(statsData!.totalSaved) > 0, "totalSaved is the sum of all current amounts");
+  assert(Number(statsData!.overallPercentage) >= 0, "overallPercentage is computed");
   assert(statsData!.closestGoal != null, "closestGoal is identified");
   const closest = statsData!.closestGoal as Record<string, unknown>;
   assert(closest!.progress != null, "Closest goal has progress percentage");

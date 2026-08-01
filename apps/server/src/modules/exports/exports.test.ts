@@ -11,6 +11,7 @@
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { request as httpRequest } from "node:http";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -805,6 +806,82 @@ async function runTests() {
     fnSummaryRange.disposition?.includes("summary-report-2026-01-01-to-2026-06-30.csv"),
     `Summary range filename: summary-report-2026-01-01-to-2026-06-30.csv (got: ${fnSummaryRange.disposition})`
   );
+
+  // ─── 19. Performance & Security ──────────────────────────────
+  console.log("\n─── 19. Pagination, Headers & Security ───");
+
+  // ── Pagination ──
+
+  // page=1, limit=1 returns the first transaction (1 row)
+  const page1 = await request("GET", "/exports/transactions?page=1&limit=1", undefined, userTokens?.accessToken);
+  assert(page1.status === 200, "Page 1 with limit 1 returns 200");
+  const page1Lines = page1.text.trim().split("\n");
+  assert(page1Lines.length === 2, `Page 1 CSV has header + 1 row (got ${page1Lines.length})`);
+  assert(page1.disposition?.includes(".csv"), "Page 1 response is CSV");
+
+  // page=2, limit=1 should return the second transaction
+  const page2 = await request("GET", "/exports/transactions?page=2&limit=1", undefined, userTokens?.accessToken);
+  assert(page2.status === 200, "Page 2 with limit 1 returns 200");
+  const page2Lines = page2.text.trim().split("\n");
+  assert(page2Lines.length === 2, `Page 2 CSV has header + 1 row (got ${page2Lines.length})`);
+  // Total rows across page 1 + page 2 should cover both transactions
+  const bothRows = page1Lines.slice(1).concat(page2Lines.slice(1));
+  // Should have 2 data rows (1 from each page)
+  const uniqueRows = [...new Set(bothRows)];
+  assert(uniqueRows.length === 2, "Page 1 + Page 2 have 2 unique transactions across both pages");
+
+  // Page with limit > total returns all
+  const pageLarge = await request("GET", "/exports/transactions?page=1&limit=100", undefined, userTokens?.accessToken);
+  assert(pageLarge.status === 200, "Large page limit returns 200");
+  const largeLines = pageLarge.text.trim().split("\n");
+  assert(largeLines.length === 3, `Large limit CSV has header + 2 rows (got ${largeLines.length})`);
+
+  // Default pagination (no params) still works
+  const defaultPage = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
+  assert(defaultPage.status === 200, "Default (no page params) returns 200");
+  const defaultLines = defaultPage.text.trim().split("\n");
+  assert(defaultLines.length === 3, `Default CSV has header + 2 rows (got ${defaultLines.length})`);
+
+  // ── Security Headers ──
+
+  // Make a request and inspect headers via Node.js http module
+  const secHeaders = await new Promise<Record<string, string>>((resolve, reject) => {
+    const url = new URL(`${BASE}/exports/transactions`);
+    const req = httpRequest(
+      url,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${userTokens?.accessToken}` },
+      },
+      (res) => {
+        const headers: Record<string, string> = {};
+        for (const [key, value] of Object.entries(res.headers)) {
+          headers[key] = String(value);
+        }
+        res.resume();
+        res.on("end", () => resolve(headers));
+      }
+    );
+    req.on("error", reject);
+    req.end();
+  });
+
+  assert(secHeaders["x-content-type-options"] === "nosniff", "X-Content-Type-Options is nosniff");
+  assert(secHeaders["x-frame-options"] === "DENY", "X-Frame-Options is DENY");
+
+  // ── Invalid Page/Limit ──
+
+  const badPage = await request("GET", "/exports/transactions?page=0", undefined, userTokens?.accessToken);
+  assert(badPage.status === 400, "page=0 returns 400");
+
+  const badLimit = await request("GET", "/exports/transactions?limit=0", undefined, userTokens?.accessToken);
+  assert(badLimit.status === 400, "limit=0 returns 400");
+
+  const hugeLimit = await request("GET", "/exports/transactions?limit=10001", undefined, userTokens?.accessToken);
+  assert(hugeLimit.status === 400, "limit=10001 returns 400 (max is 10000)");
+
+  const nonNumericPage = await request("GET", "/exports/transactions?page=abc", undefined, userTokens?.accessToken);
+  assert(nonNumericPage.status === 400, "page=abc returns 400");
 
   // ── Summary ──────────────────────────────────────────────
   const total = passed + failed;

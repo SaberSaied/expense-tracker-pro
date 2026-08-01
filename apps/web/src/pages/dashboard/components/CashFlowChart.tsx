@@ -16,6 +16,7 @@ import type { CashFlowDataPoint, DateRangePreset } from "@/services/dashboard";
 import { DateRangeFilter } from "./DateRangeFilter";
 import type { DateRangeFilterValue } from "./DateRangeFilter";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { usePrefersReducedMotion } from "@/hooks";
 
 // ─── Custom Tooltip ────────────────────────────────────────────
 
@@ -110,7 +111,8 @@ const CustomLegend: React.FC = () => (
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const CashFlowChart: React.FC = () => {
+export const CashFlowChart = React.memo(function CashFlowChart() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [dateFilter, setDateFilter] = useState<DateRangeFilterValue>({ range: "this_year" });
   const [chartData, setChartData] = useState<CashFlowDataPoint[]>([]);
   const [summary, setSummary] = useState<{
@@ -210,7 +212,7 @@ export const CashFlowChart: React.FC = () => {
           <p className="text-sm text-text-muted">
             No transactions recorded yet
           </p>
-          <p className="text-xs text-text-muted/60">
+          <p className="text-xs text-text-muted">
             Add income and expense transactions to see your cash flow
           </p>
         </div>
@@ -236,7 +238,7 @@ export const CashFlowChart: React.FC = () => {
       {/* Summary Stats */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 pb-4 border-b border-border-glass">
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Total Income
             </p>
@@ -244,7 +246,7 @@ export const CashFlowChart: React.FC = () => {
               {formatCurrency(summary.totalIncome)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Total Expenses
             </p>
@@ -252,7 +254,7 @@ export const CashFlowChart: React.FC = () => {
               {formatCurrency(summary.totalExpense)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Net Cash Flow
             </p>
@@ -266,7 +268,7 @@ export const CashFlowChart: React.FC = () => {
               {formatCurrency(summary.netCashFlow)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Final Balance
             </p>
@@ -286,6 +288,7 @@ export const CashFlowChart: React.FC = () => {
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
+            accessibilityLayer
             data={chartData}
             margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
           >
@@ -301,19 +304,19 @@ export const CashFlowChart: React.FC = () => {
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.04)"
+              stroke="var(--color-chart-grid)"
               vertical={false}
             />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
-              axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
+              axisLine={{ stroke: "var(--color-chart-grid)" }}
               tickLine={false}
               interval="preserveStartEnd"
               minTickGap={40}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
@@ -321,7 +324,7 @@ export const CashFlowChart: React.FC = () => {
             />
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ stroke: "rgba(255,255,255,0.06)" }}
+              cursor={{ stroke: "var(--color-chart-grid)" }}
             />
             <Legend content={<CustomLegend />} />
             <Area
@@ -333,6 +336,9 @@ export const CashFlowChart: React.FC = () => {
               fill="url(#cashFlowIncomeGrad)"
               dot={false}
               activeDot={{ r: 4, fill: "#22C55E", strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
             <Area
               type="monotone"
@@ -343,6 +349,9 @@ export const CashFlowChart: React.FC = () => {
               fill="url(#cashFlowExpenseGrad)"
               dot={false}
               activeDot={{ r: 4, fill: "#F59E0B", strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
             {/* Running balance line - rendered as a Recharts Area with fill=none for the line effect */}
             <Area
@@ -352,8 +361,11 @@ export const CashFlowChart: React.FC = () => {
               stroke="#06B6D4"
               strokeWidth={2.5}
               fill="none"
-              dot={{ r: 2.5, fill: "#06B6D4", strokeWidth: 1.5, stroke: "#1E293B" }}
+              dot={{ r: 2.5, fill: "#06B6D4", strokeWidth: 1.5, stroke: "var(--color-bg-card)" }}
               activeDot={{ r: 5, fill: "#06B6D4", strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -387,4 +399,4 @@ export const CashFlowChart: React.FC = () => {
       )}
     </div>
   );
-};
+});

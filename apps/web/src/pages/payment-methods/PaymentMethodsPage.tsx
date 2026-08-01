@@ -124,6 +124,21 @@ export const PaymentMethodsPage: React.FC = () => {
     setShowModal(true);
   };
 
+  // Opens the transaction-statistics details modal for a payment method.
+  // Shared by the card click and keyboard activation handlers.
+  const openDetails = async (pm: ApiPaymentMethod) => {
+    setDetailsLoading(true);
+    setShowDetailsModal(true);
+    try {
+      const details = await paymentMethodsApi.findById(pm.id);
+      setSelectedPaymentMethod(details);
+    } catch {
+      setSelectedPaymentMethod(pm);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -190,7 +205,7 @@ export const PaymentMethodsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-8 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
+      <div className="space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-7 w-40" />
@@ -198,7 +213,7 @@ export const PaymentMethodsPage: React.FC = () => {
           </div>
           <Skeleton className="h-10 w-44 rounded-lg" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="glass rounded-xl p-5">
               <div className="flex items-center gap-3 mb-4">
@@ -217,11 +232,11 @@ export const PaymentMethodsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
+    <div className="space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-text-primary">Payment Methods</h2>
+          <h2 className="page-title font-bold text-text-primary">Payment Methods</h2>
           <p className="text-sm text-text-secondary mt-1">
             Manage your saved credit cards, bank accounts, and payment options
           </p>
@@ -241,21 +256,22 @@ export const PaymentMethodsPage: React.FC = () => {
           onAction={openCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
             {paymentMethods.map((pm) => (
               <div
                 key={pm.id}
                 className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150 group cursor-pointer"
-                onClick={async () => {
-                  setDetailsLoading(true);
-                  setShowDetailsModal(true);
-                  try {
-                    const details = await paymentMethodsApi.findById(pm.id);
-                    setSelectedPaymentMethod(details);
-                  } catch {
-                    setSelectedPaymentMethod(pm);
-                  } finally {
-                    setDetailsLoading(false);
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for ${pm.name}`}
+                onClick={() => void openDetails(pm)}
+                onKeyDown={(e) => {
+                  // Only activate when the card itself (not a nested button like
+                  // Edit/Delete) has focus — prevents opening two modals at once.
+                  if (e.target !== e.currentTarget) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    void openDetails(pm);
                   }
                 }}
               >
@@ -286,7 +302,7 @@ export const PaymentMethodsPage: React.FC = () => {
                   <span className="text-xs text-text-muted">
                     {pm._count?.transactions ?? 0} transaction{(pm._count?.transactions ?? 0) !== 1 ? "s" : ""}
                   </span>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-150">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -351,6 +367,7 @@ export const PaymentMethodsPage: React.FC = () => {
                 value={formColor}
                 onChange={(e) => setFormColor(e.target.value)}
                 placeholder="#3B82F6"
+                aria-label="Color (hex code)"
                 pattern="^#[0-9a-fA-F]{6}$"
                 maxLength={7}
                 className={clsx(
@@ -380,6 +397,7 @@ export const PaymentMethodsPage: React.FC = () => {
                     )}
                     style={{ backgroundColor: color }}
                     aria-label={"Select color " + color}
+                    aria-pressed={isSelected}
                   />
                 );
               })}
@@ -401,10 +419,11 @@ export const PaymentMethodsPage: React.FC = () => {
                       "flex flex-col items-center gap-1 rounded-xl p-2.5 transition-all",
                       isSelected
                         ? "bg-primary/15 ring-2 ring-primary ring-offset-1 ring-offset-bg-app scale-105"
-                        : "hover:bg-white/5 hover:scale-105",
+                        : "hover:bg-overlay/5 hover:scale-105",
                     )}
                     title={opt.label}
                     aria-label={"Select icon: " + opt.label}
+                    aria-pressed={isSelected}
                   >
                     <CategoryIcon
                       name={opt.value}

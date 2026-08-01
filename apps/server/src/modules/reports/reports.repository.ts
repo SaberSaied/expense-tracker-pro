@@ -172,7 +172,8 @@ export const reportRepository = {
     return { categoryGroup, paymentMethodGroup, incomeExpenseGroup, largestTx, smallestTx, paymentMethods, userCategories };
   },
 
-  async findCustomTransactions(
+  /** Build the base where clause used by both findCustomTransactions and countCustomTransactions. */
+  buildCustomFilter(
     userId: string,
     filters: {
       startDate?: Date;
@@ -183,7 +184,7 @@ export const reportRepository = {
       minAmount?: number;
       maxAmount?: number;
     }
-  ) {
+  ): Record<string, unknown> {
     const where: Record<string, unknown> = { userId };
 
     if (filters.startDate || filters.endDate) {
@@ -212,10 +213,54 @@ export const reportRepository = {
       where.amount = amountFilter;
     }
 
+    return where;
+  },
+
+  async findCustomTransactions(
+    userId: string,
+    filters: {
+      startDate?: Date;
+      endDate?: Date;
+      categoryId?: string;
+      paymentMethodId?: string;
+      type?: string;
+      minAmount?: number;
+      maxAmount?: number;
+    },
+    pagination?: { skip: number; take: number },
+    sort?: { sortBy?: string; sortOrder?: "asc" | "desc" }
+  ) {
+    const where = this.buildCustomFilter(userId, filters);
+
+    // Apply global sort via DB (needed for correct pagination)
+    const orderBy: Record<string, "asc" | "desc"> = sort?.sortBy
+      ? { [sort.sortBy]: sort.sortOrder ?? "desc" }
+      : { date: "desc" };
+
     return prisma.transaction.findMany({
       where: where as any,
       include: { category: true, paymentMethod: true },
-      orderBy: { date: "desc" },
+      orderBy,
+      ...(pagination ? { skip: pagination.skip, take: pagination.take } : {}),
+    });
+  },
+
+  async countCustomTransactions(
+    userId: string,
+    filters: {
+      startDate?: Date;
+      endDate?: Date;
+      categoryId?: string;
+      paymentMethodId?: string;
+      type?: string;
+      minAmount?: number;
+      maxAmount?: number;
+    }
+  ): Promise<number> {
+    const where = this.buildCustomFilter(userId, filters);
+
+    return prisma.transaction.count({
+      where: where as any,
     });
   },
 };

@@ -91,6 +91,18 @@ async function runTests() {
   console.log("\n🧪 Dashboard Module — API Integration Tests\n");
   console.log(`Test user: ${TEST_EMAIL}\n`);
 
+  // Use the current date for test transactions so "monthly" matches "all-time"
+  // regardless of when the suite runs (previously hardcoded to July 2026,
+  // which broke monthly assertions once that month had passed). Computed in
+  // LOCAL time to stay consistent with the dashboard service's monthly window
+  // (toISOString would use UTC and drift across month boundaries).
+  const now = new Date();
+  const yearNum = now.getFullYear();
+  const monthNum = String(now.getMonth() + 1).padStart(2, "0");
+  const dayNum = String(now.getDate()).padStart(2, "0");
+  const today = `${yearNum}-${monthNum}-${dayNum}`;
+  const firstOfMonth = `${yearNum}-${monthNum}-01`;
+
   // ─── 0. Health Check ───────────────────────────────────────
   console.log("─── 0. Health Check ───");
   const health = await request("GET", "/health");
@@ -140,14 +152,14 @@ async function runTests() {
   // Income
   const income1 = await request(
     "POST", "/transactions",
-    { type: "INCOME", amount: 5000, description: "Monthly Salary", date: "2026-07-01", categoryId: salaryId },
+    { type: "INCOME", amount: 5000, description: "Monthly Salary", date: today, categoryId: salaryId },
     userTokens?.accessToken
   );
   assert(income1.status === 201, "Income 1 created");
 
   const income2 = await request(
     "POST", "/transactions",
-    { type: "INCOME", amount: 500, description: "Freelance Project", date: "2026-07-15", categoryId: salaryId },
+    { type: "INCOME", amount: 500, description: "Freelance Project", date: today, categoryId: salaryId },
     userTokens?.accessToken
   );
   assert(income2.status === 201, "Income 2 created");
@@ -155,28 +167,28 @@ async function runTests() {
   // Expenses
   const expense1 = await request(
     "POST", "/transactions",
-    { type: "EXPENSE", amount: 350, description: "Groceries", date: "2026-07-05", categoryId: foodId, paymentMethodId: pmId },
+    { type: "EXPENSE", amount: 350, description: "Groceries", date: today, categoryId: foodId, paymentMethodId: pmId },
     userTokens?.accessToken
   );
   assert(expense1.status === 201, "Expense 1 created");
 
   const expense2 = await request(
     "POST", "/transactions",
-    { type: "EXPENSE", amount: 1500, description: "Monthly Rent", date: "2026-07-01", categoryId: housingId, paymentMethodId: pmId },
+    { type: "EXPENSE", amount: 1500, description: "Monthly Rent", date: today, categoryId: housingId, paymentMethodId: pmId },
     userTokens?.accessToken
   );
   assert(expense2.status === 201, "Expense 2 created");
 
   const expense3 = await request(
     "POST", "/transactions",
-    { type: "EXPENSE", amount: 45, description: "Gas", date: "2026-07-10", categoryId: transportId, paymentMethodId: pmId },
+    { type: "EXPENSE", amount: 45, description: "Gas", date: today, categoryId: transportId, paymentMethodId: pmId },
     userTokens?.accessToken
   );
   assert(expense3.status === 201, "Expense 3 created");
 
   const expense4 = await request(
     "POST", "/transactions",
-    { type: "EXPENSE", amount: 120, description: "Dinner Out", date: "2026-07-12", categoryId: foodId },
+    { type: "EXPENSE", amount: 120, description: "Dinner Out", date: today, categoryId: foodId },
     userTokens?.accessToken
   );
   assert(expense4.status === 201, "Expense 4 created");
@@ -184,7 +196,7 @@ async function runTests() {
   // Create a budget
   const budget = await request(
     "POST", "/budgets",
-    { categoryId: foodId, targetAmount: 800, period: "MONTHLY", startDate: "2026-07-01", alertThreshold: 80 },
+    { categoryId: foodId, targetAmount: 800, period: "MONTHLY", startDate: firstOfMonth, alertThreshold: 80 },
     userTokens?.accessToken
   );
   assert(budget.status === 201, "Budget created");
@@ -212,7 +224,7 @@ async function runTests() {
   // ─── 4. Monthly Overview ───────────────────────────────────
   console.log("\n─── 4. Monthly Overview ───");
 
-  // All transactions are in July 2026, so monthly should match all-time
+  // All transactions are dated today (current month), so monthly matches all-time
   assert(typeof data!.monthlyIncome === "number", "monthlyIncome is a number");
   assert(data!.monthlyIncome === 5500, `monthlyIncome = 5500 (got ${data!.monthlyIncome})`);
   assert(typeof data!.monthlyExpense === "number", "monthlyExpense is a number");
@@ -227,9 +239,9 @@ async function runTests() {
   assert(stats != null, "quickStats object returned");
   assert(stats!.totalTransactions === 6, `totalTransactions = 6 (got ${stats!.totalTransactions})`);
   assert(typeof stats!.totalCategories === "number", "totalCategories is a number");
-  assert(stats!.totalCategories >= 9, `totalCategories >= 9 (got ${stats!.totalCategories})`);
+  assert(Number(stats!.totalCategories) >= 9, `totalCategories >= 9 (got ${stats!.totalCategories})`);
   assert(typeof stats!.totalPaymentMethods === "number", "totalPaymentMethods is a number");
-  assert(stats!.totalPaymentMethods >= 5, `totalPaymentMethods >= 5 (got ${stats!.totalPaymentMethods})`);
+  assert(Number(stats!.totalPaymentMethods) >= 5, `totalPaymentMethods >= 5 (got ${stats!.totalPaymentMethods})`);
   assert(typeof stats!.averageTransactionAmount === "number", "averageTransactionAmount is a number");
   // Average: (5000 + 500 + 350 + 1500 + 45 + 120) / 6 = 7515 / 6 = 1252.5
   assert(stats!.averageTransactionAmount === 7515 / 6, `avg = ${7515 / 6} (got ${stats!.averageTransactionAmount})`);

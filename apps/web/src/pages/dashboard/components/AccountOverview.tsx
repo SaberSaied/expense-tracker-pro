@@ -17,7 +17,7 @@ interface AccountOverviewProps {
  * Account Overview widget — displays spending breakdown by payment method,
  * net activity per method, and highlights the most-used payment method.
  */
-export const AccountOverview: React.FC<AccountOverviewProps> = ({ methods, mostUsed }) => {
+export const AccountOverview = React.memo(function AccountOverview({ methods, mostUsed }: AccountOverviewProps) {
   const formatCurrency = (value: number) =>
     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -71,7 +71,7 @@ export const AccountOverview: React.FC<AccountOverviewProps> = ({ methods, mostU
                   key={method.paymentMethodId}
                   className={clsx(
                     "p-3 rounded-lg transition-colors",
-                    isMostUsed ? "bg-accent/5" : "bg-white/3",
+                    isMostUsed ? "bg-accent/5" : "bg-overlay/3",
                   )}
                 >
                   {/* Header: icon + name + net */}
@@ -116,7 +116,7 @@ export const AccountOverview: React.FC<AccountOverviewProps> = ({ methods, mostU
                     <span className="text-xs text-text-muted tabular-nums w-16 shrink-0">
                       {formatCurrency(method.totalExpense)}
                     </span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full bg-overlay/5 overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
@@ -136,7 +136,7 @@ export const AccountOverview: React.FC<AccountOverviewProps> = ({ methods, mostU
                     <span className="text-xs text-text-muted tabular-nums w-16 shrink-0">
                       {formatCurrency(method.totalIncome)}
                     </span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full bg-overlay/5 overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500 bg-success"
                         style={{
@@ -160,4 +160,4 @@ export const AccountOverview: React.FC<AccountOverviewProps> = ({ methods, mostU
       )}
     </div>
   );
-};
+});

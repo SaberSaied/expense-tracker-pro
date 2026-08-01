@@ -31,15 +31,15 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary hover:bg-primary-hover active:brightness-90 text-text-inverse shadow-md active:scale-[0.98]",
+    "bg-primary hover:bg-primary-hover active:brightness-90 text-text-inverse shadow-md",
   secondary:
     "bg-secondary/10 hover:bg-secondary/20 active:bg-secondary/30 text-secondary border border-secondary/30",
   danger:
-    "bg-error hover:brightness-90 active:brightness-80 text-white shadow-md active:scale-[0.98]",
+    "bg-error hover:brightness-90 active:brightness-80 text-white shadow-md",
   ghost:
-    "bg-transparent hover:bg-white/5 active:bg-white/10 text-text-secondary hover:text-text-primary",
+    "bg-transparent hover:bg-overlay/5 active:bg-overlay/10 text-text-secondary hover:text-text-primary",
   outline:
-    "bg-transparent hover:bg-white/5 active:bg-white/10 text-text-primary border border-border-card hover:border-text-muted",
+    "bg-transparent hover:bg-overlay/5 active:bg-overlay/10 text-text-primary border border-border-card hover:border-text-muted",
 };
 
 /**
@@ -62,13 +62,15 @@ export const Button: React.FC<ButtonProps> = ({
       className={clsx(
         "inline-flex items-center justify-center font-medium rounded-lg",
         "transition-all duration-150 ease-standard cursor-pointer select-none",
+        "active:scale-[0.97]",
         "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-app",
-        "disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none",
+        "disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:active:scale-100",
         sizeStyles[size],
         variantStyles[variant],
         className,
       )}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       {...props}
     >
       {isLoading ? (

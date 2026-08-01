@@ -182,6 +182,65 @@ export const TransactionsPage: React.FC = () => {
   // ─── Row action dropdown ─────────────────────────────────
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+  // Menu keyboard navigation (WCAG 2.1.1 / APG menu pattern):
+  // Arrow/Home/End move between items; Enter/Space/Escape already activate/close.
+  const handleDropdownKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const menu = e.currentTarget;
+    const items = Array.from(
+      menu.querySelectorAll<HTMLElement>("[role='menuitem']"),
+    );
+    if (items.length === 0) return;
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    let nextIndex: number;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = items.length - 1;
+    } else if (e.key === "Tab") {
+      // APG menu pattern: Tab closes the menu and focus moves to the next
+      // focusable element after the trigger (Shift+Tab goes before it).
+      // Exclude the closing menu's own items — they match `button`/`[href]`
+      // selectors despite tabIndex={-1}, so focusing them would lose focus
+      // to <body> the instant the menu unmounts.
+      e.preventDefault();
+      setOpenDropdownId(null);
+      const trigger = dropdownTriggerRef.current;
+      const menu = dropdownRef.current;
+      if (trigger) {
+        const focusables = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((el) => !menu?.contains(el));
+        const idx = focusables.indexOf(trigger);
+        const target = e.shiftKey ? focusables[idx - 1] : focusables[idx + 1];
+        // Fall back to the trigger so focus is never stranded (e.g. when the
+        // trigger is the first/last focusable on the page).
+        (target ?? trigger).focus();
+      }
+      return;
+    } else {
+      return;
+    }
+    items[nextIndex]?.focus();
+  };
+
+  // Close the dropdown and restore focus to its trigger button (WCAG 2.4.3).
+  const closeDropdown = () => {
+    setOpenDropdownId(null);
+    // Defer so the menu unmounts before returning focus to the trigger.
+    requestAnimationFrame(() => dropdownTriggerRef.current?.focus());
+  };
 
   // ─── Debounce search ─────────────────────────────────────
   useEffect(() => {
@@ -456,15 +515,30 @@ export const TransactionsPage: React.FC = () => {
     input.click();
   };
 
-  // ─── Close dropdown on outside click ─────────────────────
+  // Focus the first menu item when a row dropdown opens (keyboard users).
+  useEffect(() => {
+    if (!openDropdownId) return;
+    dropdownRef.current
+      ?.querySelector<HTMLElement>("[role='menuitem']")
+      ?.focus();
+  }, [openDropdownId]);
+
+  // ─── Close dropdown on outside click / Escape ─────────────
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdownId(null);
+        closeDropdown();
       }
     };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDropdown();
+    };
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, []);
 
   const clearFilters = () => {
@@ -508,7 +582,7 @@ export const TransactionsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-text-primary">Transactions</h2>
+          <h2 className="page-title font-bold text-text-primary">Transactions</h2>
           <p className="text-sm text-text-secondary mt-1">
             {totalCount} transaction{totalCount !== 1 && "s"} found
           </p>
@@ -574,12 +648,14 @@ export const TransactionsPage: React.FC = () => {
             <input
               type="search"
               placeholder="Search descriptions and notes..."
+              aria-label="Search transactions"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
             />
           </div>
           <Select
+            aria-label="Filter by type"
             options={typeOptions}
             placeholder="All Types"
             value={typeFilter}
@@ -589,6 +665,7 @@ export const TransactionsPage: React.FC = () => {
             }}
           />
           <Select
+            aria-label="Filter by category"
             options={categoryOptions}
             placeholder="All Categories"
             value={categoryFilter}
@@ -598,6 +675,7 @@ export const TransactionsPage: React.FC = () => {
             }}
           />
           <Select
+            aria-label="Filter by payment method"
             options={paymentMethodOptions}
             placeholder="All Payment Methods"
             value={paymentMethodFilter}
@@ -625,9 +703,9 @@ export const TransactionsPage: React.FC = () => {
                 setCurrentPage(1);
               }}
               className="w-full sm:w-auto px-3 py-2 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
-              title="Start date"
+              aria-label="Start date"
             />
-            <span className="text-text-muted text-sm">—</span>
+            <span className="text-text-muted text-sm" aria-hidden="true">—</span>
             <input
               type="date"
               value={endDate}
@@ -636,7 +714,7 @@ export const TransactionsPage: React.FC = () => {
                 setCurrentPage(1);
               }}
               className="w-full sm:w-auto px-3 py-2 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
-              title="End date"
+              aria-label="End date"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -644,6 +722,7 @@ export const TransactionsPage: React.FC = () => {
             <input
               type="number"
               placeholder="Min"
+              aria-label="Minimum amount"
               value={minAmount}
               onChange={(e) => {
                 setMinAmount(e.target.value);
@@ -653,10 +732,11 @@ export const TransactionsPage: React.FC = () => {
               step="0.01"
               className="w-24 px-3 py-2 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
             />
-            <span className="text-text-muted text-sm">—</span>
+            <span className="text-text-muted text-sm" aria-hidden="true">—</span>
             <input
               type="number"
               placeholder="Max"
+              aria-label="Maximum amount"
               value={maxAmount}
               onChange={(e) => {
                 setMaxAmount(e.target.value);
@@ -668,8 +748,14 @@ export const TransactionsPage: React.FC = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-text-muted whitespace-nowrap">Sort by</label>
+            <span
+              className="text-sm text-text-muted whitespace-nowrap"
+              id="sort-by-label"
+            >
+              Sort by
+            </span>
             <Select
+              aria-labelledby="sort-by-label"
               options={sortOptions}
               placeholder="Sort by"
               value={sortField}
@@ -680,13 +766,15 @@ export const TransactionsPage: React.FC = () => {
             />
             <button
               onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-              className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all"
+              className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-all"
+              aria-label={`Sort direction: currently ${sortDir === "asc" ? "ascending" : "descending"}`}
+              aria-pressed={sortDir === "asc"}
               title={sortDir === "asc" ? "Ascending" : "Descending"}
             >
               {sortDir === "asc" ? (
-                <ArrowUp className="size-4" />
+                <ArrowUp className="size-4" aria-hidden="true" />
               ) : (
-                <ArrowDown className="size-4" />
+                <ArrowDown className="size-4" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -695,11 +783,11 @@ export const TransactionsPage: React.FC = () => {
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="glass rounded-xl p-3 flex items-center justify-between animate-[fade-in_0.2s_ease-out]">
+        <div className="glass rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-[fade-in_0.2s_ease-out]">
           <span className="text-sm text-text-primary font-medium">
             {selectedIds.size} selected
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -770,158 +858,264 @@ export const TransactionsPage: React.FC = () => {
               onChange={toggleSelectAll}
               aria-label="Select all transactions"
             />
-            <button onClick={() => toggleSort("date")} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+            <button
+              onClick={() => toggleSort("date")}
+              className="flex items-center gap-1 hover:text-text-primary transition-colors"
+              aria-label={`Sort by date${sortField === "date" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
+            >
               <span>Date</span>
               {sortField === "date" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />
+                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
               )}
-              {sortField !== "date" && <ArrowUpDown className="size-3" />}
+              {sortField !== "date" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
-            <button onClick={() => toggleSort("description")} className="flex items-center gap-1 hover:text-text-primary transition-colors text-left">
+            <button
+              onClick={() => toggleSort("description")}
+              className="flex items-center gap-1 hover:text-text-primary transition-colors text-left"
+              aria-label={`Sort by description${sortField === "description" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
+            >
               <span>Description</span>
               {sortField === "description" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />
+                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
               )}
-              {sortField !== "description" && <ArrowUpDown className="size-3" />}
+              {sortField !== "description" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
             <div className="flex items-center gap-1">Category</div>
-            <button onClick={() => toggleSort("amount")} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+            <button
+              onClick={() => toggleSort("amount")}
+              className="flex items-center gap-1 hover:text-text-primary transition-colors"
+              aria-label={`Sort by amount${sortField === "amount" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
+            >
               <span>Amount</span>
               {sortField === "amount" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />
+                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
               )}
-              {sortField !== "amount" && <ArrowUpDown className="size-3" />}
+              {sortField !== "amount" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
             <span className="sr-only">Actions</span>
           </div>
 
           {/* Table rows */}
-          {transactions.map((txn) => (
+          {transactions.map((txn, index) => (
             <div
               key={txn.id}
               className={clsx(
-                "grid grid-cols-1 md:grid-cols-[auto_1fr_1.5fr_1fr_0.8fr_auto] gap-2 md:gap-4 items-start md:items-center",
-                "px-5 py-4 border-b border-border-card/50 hover:bg-white/[0.02] transition-colors group",
+                "list-window relative px-5 py-4 border-b border-border-card/50 transition-colors group",
                 selectedIds.has(txn.id) && "bg-primary/[0.03]",
+                openDropdownId === txn.id && "bg-overlay/[0.02]",
               )}
             >
-              <Checkbox
-                checked={selectedIds.has(txn.id)}
-                onChange={() => toggleSelect(txn.id)}
-                aria-label={`Select ${txn.description}`}
-              />
-              <div className="flex items-center gap-3">
+              {/* ── Mobile card layout (< md) ── */}
+              <div className="flex items-center gap-3 md:hidden">
+                <Checkbox
+                  checked={selectedIds.has(txn.id)}
+                  onChange={() => toggleSelect(txn.id)}
+                  aria-label={`Select ${txn.description}`}
+                  className="shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {txn.description}
+                    </p>
+                    {txn.receiptUrl && (
+                      <a
+                        href={txn.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 p-0.5 rounded text-text-muted hover:text-primary transition-colors"
+                        title="View receipt"
+                      >
+                        <ImageIcon className="size-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
+                      {txn.date.split("T")[0]}
+                    </span>
+                    <span className="size-1 rounded-full bg-text-muted/40" aria-hidden="true" />
+                    <div
+                      className="size-4 rounded flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${txn.category.color}20` }}
+                    >
+                      <CategoryIcon name={txn.category.icon} size={10} style={{ color: txn.category.color }} />
+                    </div>
+                    <span className="text-xs text-text-secondary truncate">
+                      {txn.category.name}
+                    </span>
+                  </div>
+                  {txn.notes && (
+                    <p className="text-xs text-text-muted mt-0.5 truncate">{txn.notes}</p>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span
+                    className={clsx(
+                      "text-sm font-semibold tabular-nums",
+                      txn.type === "INCOME"
+                        ? "text-success"
+                        : txn.type === "EXPENSE"
+                          ? "text-error"
+                          : "text-text-secondary",
+                    )}
+                  >
+                    {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}
+                    ${txn.amount.toFixed(2)}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      dropdownTriggerRef.current = e.currentTarget;
+                      setOpenDropdownId(openDropdownId === txn.id ? null : txn.id);
+                    }}
+                    className="p-1.5 -mr-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-all"
+                    aria-label={`Actions for ${txn.description}`}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Desktop table layout (md+) ── */}
+              <div className="hidden md:grid md:grid-cols-[auto_1fr_1.5fr_1fr_0.8fr_auto] md:gap-4 md:items-center">
+                <Checkbox
+                  checked={selectedIds.has(txn.id)}
+                  onChange={() => toggleSelect(txn.id)}
+                  aria-label={`Select ${txn.description}`}
+                />
                 <span className="text-sm text-text-secondary tabular-nums whitespace-nowrap">
                   {txn.date.split("T")[0]}
                 </span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-text-primary truncate">
-                    {txn.description}
-                  </p>
-                  {txn.receiptUrl && (
-                    <a
-                      href={txn.receiptUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 p-0.5 rounded text-text-muted hover:text-primary transition-colors"
-                      title="View receipt"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ImageIcon className="size-3.5" />
-                    </a>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {txn.description}
+                    </p>
+                    {txn.receiptUrl && (
+                      <a
+                        href={txn.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 p-0.5 rounded text-text-muted hover:text-primary transition-colors"
+                        title="View receipt"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ImageIcon className="size-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  {txn.notes && (
+                    <p className="text-xs text-text-muted mt-0.5 truncate">{txn.notes}</p>
                   )}
                 </div>
-                {txn.notes && (
-                  <p className="text-xs text-text-muted mt-0.5 truncate">{txn.notes}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <div
-                  className="size-5 rounded-md flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${txn.category.color}20` }}
-                >
-                  <CategoryIcon name={txn.category.icon} size={12} style={{ color: txn.category.color }} />
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className="size-5 rounded-md flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${txn.category.color}20` }}
+                  >
+                    <CategoryIcon name={txn.category.icon} size={12} style={{ color: txn.category.color }} />
+                  </div>
+                  <Badge variant="default" className="truncate max-w-28">
+                    {txn.category.name}
+                  </Badge>
                 </div>
-                <Badge variant="default" className="truncate max-w-28">
-                  {txn.category.name}
-                </Badge>
-              </div>
-              <span
-                className={clsx(
-                  "text-sm font-semibold tabular-nums",
-                  txn.type === "INCOME"
-                    ? "text-success"
-                    : txn.type === "EXPENSE"
-                      ? "text-error"
-                      : "text-text-secondary",
-                )}
-              >
-                {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}
-                ${txn.amount.toFixed(2)}
-              </span>
-              <div className="relative">
+                <span
+                  className={clsx(
+                    "text-sm font-semibold tabular-nums",
+                    txn.type === "INCOME"
+                      ? "text-success"
+                      : txn.type === "EXPENSE"
+                        ? "text-error"
+                        : "text-text-secondary",
+                  )}
+                >
+                  {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}
+                  ${txn.amount.toFixed(2)}
+                </span>
                 <button
-                  onClick={() => setOpenDropdownId(openDropdownId === txn.id ? null : txn.id)}
-                  className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+                  onClick={(e) => {
+                    dropdownTriggerRef.current = e.currentTarget;
+                    setOpenDropdownId(openDropdownId === txn.id ? null : txn.id);
+                  }}
+                  className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
                   aria-label={`Actions for ${txn.description}`}
                 >
                   <MoreHorizontal className="size-4" />
                 </button>
-                {openDropdownId === txn.id && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute right-0 top-full mt-1 z-50 w-40 py-1.5 rounded-xl border border-border-card bg-bg-app shadow-xl shadow-black/20"
-                  >
-                    <button
-                      onClick={() => openEditModal(txn)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-white/5 transition-colors"
-                    >
-                      <Pencil className="size-3.5 text-text-muted" />
-                      Edit
-                    </button>
-                    {txn.receiptUrl ? (
-                      <div className="border-t border-border-card/50 mt-1 pt-1">
-                        <a
-                          href={txn.receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-white/5 transition-colors"
-                        >
-                          <ExternalLink className="size-3.5 text-text-muted" />
-                          View Receipt
-                        </a>
-                        <button
-                          onClick={() => handleRemoveReceipt(txn.id)}
-                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-warning hover:bg-white/5 transition-colors"
-                        >
-                          <X className="size-3.5" />
-                          Remove Receipt
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="border-t border-border-card/50 mt-1 pt-1">
-                        <button
-                          onClick={() => triggerReceiptUpload(txn.id)}
-                          disabled={uploadingReceiptId === txn.id}
-                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50"
-                        >
-                          <Upload className="size-3.5 text-text-muted" />
-                          {uploadingReceiptId === txn.id ? "Uploading..." : "Upload Receipt"}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => openDeleteDialog(txn)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-error hover:bg-white/5 transition-colors"
-                    >
-                      <Trash2 className="size-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                )}
               </div>
+
+              {/* ── Shared actions dropdown (anchored to row, flips up on last row to avoid clipping) ── */}
+              {openDropdownId === txn.id && (
+                <div
+                  ref={dropdownRef}
+                  role="menu"
+                  aria-label={`Actions for ${txn.description}`}
+                  onKeyDown={handleDropdownKeyDown}
+                  className={clsx(
+                    "absolute right-4 z-50 w-44 py-1.5 rounded-xl border border-border-card bg-bg-app shadow-xl shadow-black/20",
+                    "animate-[pop-in_0.15s_ease-out]",
+                    index === transactions.length - 1
+                      ? "bottom-full mb-1 origin-bottom-right"
+                      : "top-full mt-1 origin-top-right",
+                  )}
+                >
+                  <button
+                    role="menuitem"
+                    tabIndex={-1}
+                    onClick={() => openEditModal(txn)}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-overlay/5 transition-colors"
+                  >
+                    <Pencil className="size-3.5 text-text-muted" />
+                    Edit
+                  </button>
+                  {txn.receiptUrl ? (
+                    <div className="border-t border-border-card/50 mt-1 pt-1">
+                      <a
+                        href={txn.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        role="menuitem"
+                        tabIndex={-1}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-overlay/5 transition-colors"
+                      >
+                        <ExternalLink className="size-3.5 text-text-muted" />
+                        View Receipt
+                      </a>
+                      <button
+                        role="menuitem"
+                        tabIndex={-1}
+                        onClick={() => handleRemoveReceipt(txn.id)}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-warning hover:bg-overlay/5 transition-colors"
+                      >
+                        <X className="size-3.5" />
+                        Remove Receipt
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-t border-border-card/50 mt-1 pt-1">
+                      <button
+                        role="menuitem"
+                        tabIndex={-1}
+                        onClick={() => triggerReceiptUpload(txn.id)}
+                        disabled={uploadingReceiptId === txn.id}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-text-primary hover:bg-overlay/5 transition-colors disabled:opacity-50"
+                      >
+                        <Upload className="size-3.5 text-text-muted" />
+                        {uploadingReceiptId === txn.id ? "Uploading..." : "Upload Receipt"}
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    role="menuitem"
+                    tabIndex={-1}
+                    onClick={() => openDeleteDialog(txn)}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-error hover:bg-overlay/5 transition-colors"
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
@@ -948,20 +1142,30 @@ export const TransactionsPage: React.FC = () => {
         title="Add Transaction"
         description="Record a new income, expense, or transfer transaction."
       >
-        <form className="space-y-4" onSubmit={handleFormSubmit}>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary">Type</label>
-            <div className="flex gap-2">
+        <form className="space-y-4" onSubmit={handleFormSubmit}>              <div className="space-y-1.5">
+            <span
+              className="block text-sm font-medium text-text-secondary"
+              id="transaction-type-label-add"
+            >
+              Type
+            </span>
+            <div
+              className="flex gap-2"
+              role="radiogroup"
+              aria-labelledby="transaction-type-label-add"
+            >
               {TRANSACTION_TYPES.map((t) => (
                 <button
                   key={t}
                   type="button"
+                  role="radio"
+                  aria-checked={formType === t}
                   onClick={() => setFormType(t)}
                   className={clsx(
                     "flex-1 rounded-lg py-2 text-sm font-medium transition-all",
                     formType === t
                       ? "bg-primary/15 text-primary ring-1 ring-primary"
-                      : "bg-bg-app text-text-secondary hover:bg-white/5",
+                      : "bg-bg-app text-text-secondary hover:bg-overlay/5",
                   )}
                 >
                   {t === "INCOME" ? "Income" : t === "EXPENSE" ? "Expense" : "Transfer"}
@@ -1043,18 +1247,29 @@ export const TransactionsPage: React.FC = () => {
       >
         <form className="space-y-4" onSubmit={handleEditSubmit}>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary">Type</label>
-            <div className="flex gap-2">
+            <span
+              className="block text-sm font-medium text-text-secondary"
+              id="transaction-type-label-edit"
+            >
+              Type
+            </span>
+            <div
+              className="flex gap-2"
+              role="radiogroup"
+              aria-labelledby="transaction-type-label-edit"
+            >
               {TRANSACTION_TYPES.map((t) => (
                 <button
                   key={t}
                   type="button"
+                  role="radio"
+                  aria-checked={formType === t}
                   onClick={() => setFormType(t)}
                   className={clsx(
                     "flex-1 rounded-lg py-2 text-sm font-medium transition-all",
                     formType === t
                       ? "bg-primary/15 text-primary ring-1 ring-primary"
-                      : "bg-bg-app text-text-secondary hover:bg-white/5",
+                      : "bg-bg-app text-text-secondary hover:bg-overlay/5",
                   )}
                 >
                   {t === "INCOME" ? "Income" : t === "EXPENSE" ? "Expense" : "Transfer"}

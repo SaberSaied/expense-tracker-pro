@@ -22,7 +22,7 @@ export interface StatCardProps {
 /**
  * Glassmorphic KPI metric card for dashboard statistics.
  */
-export const StatCard: React.FC<StatCardProps> = ({
+export const StatCard = React.memo(function StatCard({
   title,
   value,
   subtext,
@@ -30,9 +30,9 @@ export const StatCard: React.FC<StatCardProps> = ({
   trend = "neutral",
   iconBg = "bg-primary/15",
   iconColor = "text-primary",
-}) => {
+}: StatCardProps) {
   return (
-    <div className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150">
+    <div className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150 animate-[rise-in_0.3s_ease-out]">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm text-text-secondary">{title}</span>
         <div
@@ -59,4 +59,4 @@ export const StatCard: React.FC<StatCardProps> = ({
       </p>
     </div>
   );
-};
+});

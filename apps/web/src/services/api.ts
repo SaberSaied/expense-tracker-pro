@@ -2,7 +2,7 @@
  * HTTP API client with automatic JWT token injection and error handling.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
 
 // ─── Token Management ─────────────────────────────────────────
 
@@ -43,7 +43,7 @@ export class ApiError extends Error {
     statusCode: number,
     error: string,
     message: string,
-    details?: Record<string, string[]>
+    details?: Record<string, string[]>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -103,6 +103,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
+  // 204 No Content has no body — return undefined instead of parsing
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const data = await response.json();
 
   if (!response.ok) {
@@ -110,7 +115,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
       data.statusCode ?? response.status,
       data.error ?? "Request Failed",
       data.message ?? "An unexpected error occurred",
-      data.details
+      data.details,
     );
   }
 
@@ -119,7 +124,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 async function attemptTokenRefresh(): Promise<boolean> {
   const refreshToken = tokenStorage.getRefreshToken();
-  if (!refreshToken) return false;
+  if (!refreshToken) {
+    notifySessionExpired();
+    return false;
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -130,6 +138,7 @@ async function attemptTokenRefresh(): Promise<boolean> {
 
     if (!response.ok) {
       tokenStorage.clear();
+      notifySessionExpired();
       return false;
     }
 
@@ -139,7 +148,18 @@ async function attemptTokenRefresh(): Promise<boolean> {
     return true;
   } catch {
     tokenStorage.clear();
+    notifySessionExpired();
     return false;
+  }
+}
+
+/**
+ * Broadcasts a session-expired event so the router can redirect
+ * the user to the Unauthorized page.
+ */
+function notifySessionExpired() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("app:unauthorized"));
   }
 }
 

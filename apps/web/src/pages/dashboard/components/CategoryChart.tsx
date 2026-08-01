@@ -7,6 +7,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { ChartDataPoint } from "@/types";
+import { usePrefersReducedMotion } from "@/hooks";
 
 interface CategoryChartProps {
   data: ChartDataPoint[];
@@ -21,6 +22,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
   data,
   totalSpent,
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
   return (
     <div className="glass rounded-xl p-5">
       <h3 className="text-base font-semibold text-text-primary mb-4">
@@ -28,7 +30,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
       </h3>
       <div className="relative h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart accessibilityLayer>
             <Pie
               data={data}
               cx="50%"
@@ -39,6 +41,9 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
               dataKey="value"
               nameKey="label"
               stroke="none"
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color ?? "#6366F1"} />
@@ -46,10 +51,10 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
             </Pie>
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(217, 33%, 17%)",
-                border: "1px solid hsl(215, 25%, 27%)",
+                backgroundColor: "var(--color-bg-elevated)",
+                border: "1px solid var(--color-border-card)",
                 borderRadius: "12px",
-                color: "hsl(210, 40%, 98%)",
+                color: "var(--color-text-primary)",
                 fontSize: "13px",
                 padding: "8px 12px",
               }}

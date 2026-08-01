@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const formatSchema = z.enum(["csv", "pdf"]).optional().default("csv");
+export const formatSchema = z.enum(["csv", "pdf", "xlsx"]).optional().default("csv");
 
 export const orientationSchema = z.enum(["portrait", "landscape"]).optional().default("portrait");
 
@@ -21,6 +21,19 @@ export const columnsSchema = z
   .optional();
 
 const uuidField = () => z.string().uuid("Invalid UUID").optional();
+
+/** Positive integer string coercion for pagination */
+const positiveIntString = (max?: number) =>
+  z
+    .string()
+    .regex(/^\d+$/, "Must be a positive integer")
+    .transform(Number)
+    .pipe(
+      max
+        ? z.number().int().positive().max(max)
+        : z.number().int().positive()
+    )
+    .optional();
 
 export const exportTransactionsQuerySchema = z.object({
   format: formatSchema,
@@ -48,6 +61,8 @@ export const exportTransactionsQuerySchema = z.object({
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, "Invalid maxAmount")
     .optional(),
+  page: positiveIntString(),
+  limit: positiveIntString(10000),
 });
 
 export const exportReportQuerySchema = z.object({

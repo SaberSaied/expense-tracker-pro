@@ -60,20 +60,55 @@ export const budgetService = {
     return budgetRepository.getInsights(userId);
   },
 
+  /**
+   * Generate persistent notification records for budget events (warning threshold,
+   * over-budget, expiring soon, period ended).
+   *
+   * Respects the user's notification preferences:
+   * - `enabled` — global toggle (skips everything when disabled)
+   * - `budgetAlerts` — gates BUDGET_WARNING notifications
+   * - `budgetCriticalAlerts` — gates BUDGET_CRITICAL notifications
+   * - `channels.inApp` — gates in-app notification creation
+   *
+   * Notifications are BATCHED into a single createMany call (instead of N
+   * sequential inserts) and carry a stable dedupKey per budget+event, so the
+   * unique (userId, dedupKey) constraint prevents duplicates even when this
+   * runs concurrently (e.g. via the background jobs scheduler).
+   */
   async generateAlerts(userId: string) {
     const budgets = await budgetRepository.findAllByUser(userId);
     if (budgets.length === 0) {
       return { generated: 0, alerts: [] };
     }
 
+    // Respect the user's notification preferences
+    const prefs = await notificationRepository.findPreferences(userId);
+    const notificationsDisabled =
+      prefs.enabled === false || prefs.channels?.inApp === false;
+
+    // When notifications are globally disabled, report the scan result without creating any
+    if (notificationsDisabled) {
+      return { generated: 0, alerts: [], suppressedByPreferences: true };
+    }
+
     const now = new Date();
     const generated: Array<{ type: string; budgetId: string; categoryName: string }> = [];
-    const existingNotifications = await notificationRepository.findRecentByTypes(
+    const toCreate: Array<{
+      type: string;
+      title: string;
+      message: string;
+      dedupKey: string;
+    }> = [];
+
+    // In-memory gate: only one alert per type per 24h window (mirrors the
+    // historical dedup semantics). The DB unique (userId, dedupKey) constraint
+    // adds a second layer so concurrent runs can't double-insert either.
+    const recentNotifications = await notificationRepository.findRecentByTypes(
       userId,
       ["BUDGET_WARNING", "BUDGET_CRITICAL"],
       new Date(now.getTime() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000)
     );
-    const recentAlertTypes = new Set(existingNotifications.map((n) => n.type));
+    const recentAlertTypes = new Set(recentNotifications.map((n) => n.type));
 
     for (const budget of budgets) {
       const category = budget.category;
@@ -88,12 +123,13 @@ export const budgetService = {
       const isActive = now >= budget.startDate && now <= end;
 
       // 1. Budget almost exhausted (warning threshold reached, < 100%)
-      if (isActive && progress >= budget.alertThreshold && progress < 100) {
+      if (isActive && progress >= budget.alertThreshold && progress < 100 && prefs.budgetAlerts !== false) {
         if (!recentAlertTypes.has("BUDGET_WARNING")) {
-          await notificationRepository.create(userId, {
+          toCreate.push({
             type: "BUDGET_WARNING",
             title: `Budget Almost Exhausted: ${categoryName}`,
             message: `You've used ${progress}% of your $${budget.targetAmount} budget for ${categoryName}. $${Math.max(0, budget.targetAmount - spent)} remaining (${daysRemaining} days left).`,
+            dedupKey: `budget:${budget.id}:almost-exhausted`,
           });
           generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
           recentAlertTypes.add("BUDGET_WARNING");
@@ -101,13 +137,14 @@ export const budgetService = {
       }
 
       // 2. Budget exceeded (spent > targetAmount)
-      if (spent > budget.targetAmount) {
+      if (spent > budget.targetAmount && prefs.budgetCriticalAlerts !== false) {
         const overBy = spent - budget.targetAmount;
         if (!recentAlertTypes.has("BUDGET_CRITICAL")) {
-          await notificationRepository.create(userId, {
+          toCreate.push({
             type: "BUDGET_CRITICAL",
             title: `Budget Exceeded: ${categoryName}`,
             message: `You've exceeded your $${budget.targetAmount} budget for ${categoryName} by $${overBy.toFixed(2)} (${progress}% of limit used).`,
+            dedupKey: `budget:${budget.id}:exceeded`,
           });
           generated.push({ type: "BUDGET_CRITICAL", budgetId: budget.id, categoryName });
           recentAlertTypes.add("BUDGET_CRITICAL");
@@ -115,13 +152,14 @@ export const budgetService = {
       }
 
       // 3. Budget expired (period ended)
-      if (isExpired && !isActive) {
+      if (isExpired && !isActive && prefs.budgetAlerts !== false) {
         if (!recentAlertTypes.has("BUDGET_WARNING")) {
           const totalSpent = spent;
-          await notificationRepository.create(userId, {
+          toCreate.push({
             type: "BUDGET_WARNING",
             title: `Budget Period Ended: ${categoryName}`,
             message: `The budget period for ${categoryName} has ended. You spent $${totalSpent.toFixed(2)} of your $${budget.targetAmount} limit (${progress}%).`,
+            dedupKey: `budget:${budget.id}:period-ended`,
           });
           generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
           recentAlertTypes.add("BUDGET_WARNING");
@@ -129,17 +167,23 @@ export const budgetService = {
       }
 
       // 4. Upcoming budget expiration (3 days or fewer remaining)
-      if (isActive && daysRemaining > 0 && daysRemaining <= EXPIRATION_WARNING_DAYS) {
+      if (isActive && daysRemaining > 0 && daysRemaining <= EXPIRATION_WARNING_DAYS && prefs.budgetAlerts !== false) {
         if (!recentAlertTypes.has("BUDGET_WARNING")) {
-          await notificationRepository.create(userId, {
+          toCreate.push({
             type: "BUDGET_WARNING",
             title: `Budget Expiring Soon: ${categoryName}`,
             message: `Your ${categoryName} budget ends in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""}. You've used ${progress}% of your $${budget.targetAmount} limit.`,
+            dedupKey: `budget:${budget.id}:expiring-soon`,
           });
           generated.push({ type: "BUDGET_WARNING", budgetId: budget.id, categoryName });
           recentAlertTypes.add("BUDGET_WARNING");
         }
       }
+    }
+
+    // Single batched insert; duplicates are skipped at the DB level.
+    if (toCreate.length > 0) {
+      await notificationRepository.createMany(userId, toCreate);
     }
 
     return { generated: generated.length, alerts: generated };

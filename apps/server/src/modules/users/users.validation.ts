@@ -11,7 +11,13 @@ export const updateProfileSchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens")
     .optional(),
   bio: z.string().max(500).optional(),
-  avatarUrl: z.string().url("Invalid URL").optional(),
+  avatarUrl: z
+    .string()
+    .optional()
+    .refine(
+      (v) => v === undefined || v === "" || /^https?:\/\//.test(v) || v.startsWith("/uploads/"),
+      "Invalid avatar URL (must be an http(s) URL or an app /uploads path)"
+    ),
   theme: z.enum(["dark", "light", "system"]).optional(),
   timeZone: z.string().min(1, "Time zone is required").max(50).optional(),
   currency: z.string().length(3, "Currency must be a 3-letter code").optional(),

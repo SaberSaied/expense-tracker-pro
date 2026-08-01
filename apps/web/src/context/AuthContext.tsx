@@ -18,6 +18,8 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
+  /** Clears the local session without calling the API — used on session expiry. */
+  clearSession: () => void;
   refreshProfile: () => Promise<void>;
 }
 
@@ -26,19 +28,21 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // ─── Provider ─────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true, // Start loading until we check for existing session
+  const [state, setState] = useState<AuthState>(() => {
+    // Start loading only when a stored token exists — otherwise skip the
+    // mount check entirely and avoid a synchronous setState in an effect.
+    const hasToken = !!tokenStorage.getAccessToken();
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: hasToken,
+    };
   });
 
   // Check for existing session on mount
   useEffect(() => {
     const token = tokenStorage.getAccessToken();
-    if (!token) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      return;
-    }
+    if (!token) return;
 
     // Try to load the user profile with the stored token
     authApi
@@ -77,6 +81,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ user: null, isAuthenticated: false, isLoading: false });
   }, []);
 
+  const clearSession = useCallback(() => {
+    tokenStorage.clear();
+    setState({ user: null, isAuthenticated: false, isLoading: false });
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     try {
       const user = await authApi.getProfile();
@@ -97,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        clearSession,
         refreshProfile,
       }}
     >

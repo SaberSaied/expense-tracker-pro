@@ -1,0 +1,67 @@
+import type { Response, NextFunction } from "express";
+import { jobsService } from "./jobs.service";
+import { sendSuccess } from "@/common/responses";
+import { UnauthorizedError } from "@/common/errors";
+import { env } from "@/config/env";
+import type { Request } from "express";
+import type { JobName } from "./jobs.types";
+
+/**
+ * Guard for the manual-run endpoints. A JOBS_TRIGGER_TOKEN must be configured
+ * and supplied via the `x-jobs-token` header — prevents arbitrary users from
+ * triggering system-wide jobs.
+ */
+function requireJobsToken(req: Request): void {
+  const token = env.JOBS_TRIGGER_TOKEN;
+  if (!token) {
+    throw new UnauthorizedError(
+      "JOBS_TRIGGER_TOKEN is not configured on this server"
+    );
+  }
+  const supplied = req.headers["x-jobs-token"];
+  if (supplied !== token) {
+    throw new UnauthorizedError("Invalid jobs trigger token");
+  }
+}
+
+export const jobsController = {
+  /**
+   * POST /api/v1/jobs/run-all
+   * Runs every background job (budgets, reminders, bills, monthly summaries).
+   */
+  async runAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      requireJobsToken(req);
+      const result = await jobsService.runAll();
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * POST /api/v1/jobs/run/:name
+   * Runs a single background job by name.
+   */
+  async runOne(req: Request, res: Response, next: NextFunction) {
+    try {
+      requireJobsToken(req);
+      const name = req.params.name as JobName;
+      // Query values are validated & coerced by runJobQuerySchema middleware.
+      const { windowDays, year, month, retentionDays } = req.query as Record<
+        string,
+        number | undefined
+      >;
+
+      const result = await jobsService.run(name, {
+        windowDays,
+        year,
+        month,
+        retentionDays,
+      });
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
+    }
+  },
+};

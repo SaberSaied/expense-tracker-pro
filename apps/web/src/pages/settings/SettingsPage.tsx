@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { clsx } from "clsx";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useTheme } from "@/hooks";
 import { profileApi } from "@/services/profile";
 import { ApiError } from "@/services/api";
 
@@ -39,13 +39,12 @@ function getNotifPrefs(user: ReturnType<typeof useAuth>["user"]) {
  */
 export const SettingsPage: React.FC = () => {
   const { user, logout, refreshProfile } = useAuth();
+  const { preference, setPreference } = useTheme();
   const navigate = useNavigate();
 
   const prefs = getNotifPrefs(user);
 
-  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>(
-    (user?.theme as ThemeOption) ?? "dark"
-  );
+  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>(preference);
   const [currency, setCurrency] = useState(user?.currency ?? "USD");
   const [language, setLanguage] = useState(user?.language ?? "en-US");
   const [dateFormat, setDateFormat] = useState(user?.dateFormat ?? "YYYY-MM-DD");
@@ -57,6 +56,40 @@ export const SettingsPage: React.FC = () => {
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [prefsLoading, setPrefsLoading] = useState(false);
 
+  // Radio group roving-tabindex refs (APG radiogroup pattern).
+  const themeRadioRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Apply the theme immediately (DOM + localStorage) and mirror it into the
+  // form so the saved preference stays in sync.
+  const selectTheme = (value: ThemeOption) => {
+    setSelectedTheme(value);
+    setPreference(value);
+  };
+
+  // Arrow/Home/End keys move selection & focus between theme radios (WCAG 2.1.1).
+  const handleThemeRadioKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const currentIndex = themeOptions.findIndex((o) => o.value === selectedTheme);
+    let nextIndex: number;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (currentIndex + 1) % themeOptions.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (currentIndex - 1 + themeOptions.length) % themeOptions.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = themeOptions.length - 1;
+    } else {
+      return;
+    }
+    const next = themeOptions[nextIndex];
+    selectTheme(next.value);
+    themeRadioRefs.current[nextIndex]?.focus();
+  };
+
   // Password confirmation state for destructive actions
   const [confirmPassword, setConfirmPassword] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -64,7 +97,6 @@ export const SettingsPage: React.FC = () => {
   // Sync form state when user data loads asynchronously
   useEffect(() => {
     if (user) {
-      setSelectedTheme((user?.theme as ThemeOption) ?? "dark");
       setCurrency(user?.currency ?? "USD");
       setLanguage(user?.language ?? "en-US");
       setDateFormat(user?.dateFormat ?? "YYYY-MM-DD");
@@ -75,6 +107,12 @@ export const SettingsPage: React.FC = () => {
       setWeeklyDigest(syncedPrefs.weeklyDigest);
     }
   }, [user]);
+
+  // The theme picker follows the applied preference (source of truth), so an
+  // unsaved pick is never silently reverted by a profile refresh.
+  useEffect(() => {
+    setSelectedTheme(preference);
+  }, [preference]);
 
   const handleSavePreferences = async () => {
     setPrefsLoading(true);
@@ -148,7 +186,7 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-2xl space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
       <div>
-        <h2 className="text-xl font-bold text-text-primary">Settings</h2>
+        <h2 className="page-title font-bold text-text-primary">Settings</h2>
         <p className="text-sm text-text-secondary mt-1">
           Configure your workspace preferences
         </p>
@@ -159,11 +197,26 @@ export const SettingsPage: React.FC = () => {
         <h3 className="text-base font-semibold text-text-primary mb-4">
           Visual Theme & Appearance
         </h3>
-        <div className="grid grid-cols-3 gap-3">
-          {themeOptions.map((opt) => (
+        <div
+          className="grid grid-cols-3 gap-3"
+          role="radiogroup"
+          aria-labelledby="theme-picker-label"
+          onKeyDown={handleThemeRadioKeyDown}
+        >
+          <span id="theme-picker-label" className="sr-only">
+            Visual theme
+          </span>
+          {themeOptions.map((opt, i) => (
             <button
               key={opt.value}
-              onClick={() => setSelectedTheme(opt.value)}
+              type="button"
+              role="radio"
+              aria-checked={selectedTheme === opt.value}
+              tabIndex={selectedTheme === opt.value ? 0 : -1}
+              ref={(el) => {
+                themeRadioRefs.current[i] = el;
+              }}
+              onClick={() => selectTheme(opt.value)}
               className={clsx(
                 "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
                 selectedTheme === opt.value

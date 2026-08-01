@@ -13,9 +13,9 @@ interface RecentTransactionsProps {
  * Recent transactions ledger widget — displays the latest transactions fetched from the API.
  * Backend already sorts by newest and limits to 5 results.
  */
-export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
+export const RecentTransactions = React.memo(function RecentTransactions({
   transactions,
-}) => {
+}: RecentTransactionsProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -57,7 +57,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
               key={txn.id}
               className={clsx(
                 "flex items-center gap-4 py-3 px-3 -mx-3 rounded-lg",
-                "hover:bg-white/3 transition-colors group",
+                "hover:bg-overlay/3 transition-colors group",
               )}
             >
               {/* Category icon */}
@@ -107,7 +107,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
 
               {/* Actions */}
               <button
-                className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all"
                 aria-label={`Actions for ${txn.description}`}
               >
                 <MoreHorizontal className="size-4" />
@@ -118,4 +118,4 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
       </div>
     </div>
   );
-};
+});

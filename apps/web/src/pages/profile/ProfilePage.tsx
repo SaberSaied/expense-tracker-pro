@@ -151,7 +151,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="max-w-2xl space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
       <div>
-        <h2 className="text-xl font-bold text-text-primary">Profile</h2>
+        <h2 className="page-title font-bold text-text-primary">Profile</h2>
         <p className="text-sm text-text-secondary mt-1">
           Manage your personal information and security
         </p>
@@ -160,12 +160,14 @@ export const ProfilePage: React.FC = () => {
       {/* Avatar Section */}
       <div className="glass rounded-xl p-6">
         <h3 className="text-base font-semibold text-text-primary mb-4">Avatar</h3>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="relative">
             {hasAvatar ? (
               <img
                 src={user!.avatarUrl!}
                 alt={displayName}
+                loading="lazy"
+                decoding="async"
                 className="size-20 rounded-full object-cover border-2 border-border-card"
               />
             ) : (
@@ -286,8 +288,8 @@ export const ProfilePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowCurrentPw(!showCurrentPw)}
-                className="text-text-muted hover:text-text-primary transition-colors"
-                aria-label={showCurrentPw ? "Hide" : "Show"}
+                className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
+                aria-label={showCurrentPw ? "Hide current password" : "Show current password"}
               >
                 {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -304,8 +306,8 @@ export const ProfilePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowNewPw(!showNewPw)}
-                className="text-text-muted hover:text-text-primary transition-colors"
-                aria-label={showNewPw ? "Hide" : "Show"}
+                className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
+                aria-label={showNewPw ? "Hide new password" : "Show new password"}
               >
                 {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>

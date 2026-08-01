@@ -42,8 +42,24 @@
   /* ── Text Colors ── */
   --color-text-primary: hsl(210, 40%, 98%);
   --color-text-secondary: hsl(215, 20%, 65%);
-  --color-text-muted: hsl(215, 16%, 47%);
+  /* hsl(215, 16%, 60%) ≈ 4.9:1 on bg-card and 5.9:1 on bg-app — meets WCAG 2.1 AA (4.5:1)
+     for normal text on both surfaces. Previously 47% lightness failed AA (~3.1–3.8:1). */
+  --color-text-muted: hsl(215, 16%, 60%);
   --color-text-inverse: hsl(222, 47%, 11%);
+
+  /* ── Theme-adaptive overlay surfaces ──
+     Dark theme uses white-based overlays; the light theme below overrides
+     these to dark-based equivalents so hover/selected states stay visible. */
+  --color-overlay: hsl(0, 0%, 100%);
+  --color-glass-heavy: rgba(30, 41, 59, 0.85);
+
+  /* ── Chart / skeleton / scrollbar support tokens ── */
+  --color-chart-grid: rgba(255, 255, 255, 0.06);
+  --color-chart-axis: hsl(215, 16%, 60%);
+  --color-skeleton-base: rgba(255, 255, 255, 0.05);
+  --color-skeleton-highlight: rgba(255, 255, 255, 0.12);
+  --color-scrollbar-thumb: hsl(215, 20%, 35%);
+  --color-scrollbar-thumb-hover: hsl(215, 20%, 45%);
 
   /* ── Typography ── */
   --font-sans: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
@@ -132,6 +148,84 @@
     font-synthesis: none;
   }
 
+  /* ════════════════════════════════════════════════════════════════════════
+     Light Theme — [data-theme="light"] overrides the design tokens above.
+     Applied to <html> by the theme engine (utils/theme.ts).
+     ════════════════════════════════════════════════════════════════════════ */
+  [data-theme="light"] {
+    color-scheme: light;
+
+    /* Brand core colors — slightly deepened for AA contrast on white */
+    --color-primary: hsl(160, 84%, 32%);
+    --color-primary-hover: hsl(160, 84%, 27%);
+    --color-primary-light: hsl(160, 84%, 92%);
+    --color-secondary: hsl(238, 83%, 58%);
+    --color-secondary-hover: hsl(238, 83%, 50%);
+    --color-accent: hsl(190, 95%, 40%);
+
+    /* Semantic state colors — deepened for AA contrast on white */
+    --color-success: hsl(142, 71%, 40%);
+    --color-success-bg: hsl(142, 71%, 95%);
+    --color-warning: hsl(38, 92%, 45%);
+    --color-warning-bg: hsl(38, 92%, 95%);
+    --color-error: hsl(346, 84%, 55%);
+    --color-error-bg: hsl(346, 84%, 95%);
+    --color-info: hsl(199, 89%, 42%);
+    --color-info-bg: hsl(199, 89%, 95%);
+
+    /* Surfaces */
+    --color-bg-app: hsl(210, 40%, 98%);
+    --color-bg-card: hsl(0, 0%, 100%);
+    --color-bg-card-glass: rgba(255, 255, 255, 0.85);
+    --color-bg-elevated: hsl(0, 0%, 100%);
+    --color-bg-input: hsl(214, 32%, 94%);
+
+    /* Borders */
+    --color-border-card: hsl(214, 32%, 89%);
+    --color-border-glass: rgba(0, 0, 0, 0.08);
+    --color-border-input: hsl(214, 32%, 82%);
+    --color-border-focus: hsl(160, 84%, 32%);
+    --color-border-error: hsl(346, 84%, 55%);
+
+    /* Text */
+    --color-text-primary: hsl(222, 47%, 11%);
+    --color-text-secondary: hsl(215, 16%, 42%);
+    /* hsl(215, 16%, 42%) ≈ 7.2:1 on white — passes WCAG AA with margin.
+       Muted is one step lighter (47%) so it stays visually distinct from
+       secondary while still ≥ 4.5:1 on white (≈ 4.75:1). */
+    --color-text-muted: hsl(215, 16%, 47%);
+    --color-text-inverse: hsl(0, 0%, 100%);
+
+    /* Theme-adaptive overlays — dark-based in light mode */
+    --color-overlay: hsl(0, 0%, 0%);
+    --color-glass-heavy: rgba(255, 255, 255, 0.9);
+
+    /* Chart / skeleton / scrollbar support tokens */
+    --color-chart-grid: rgba(15, 23, 42, 0.1);
+    --color-chart-axis: hsl(215, 16%, 42%);
+    --color-skeleton-base: rgba(15, 23, 42, 0.06);
+    --color-skeleton-highlight: rgba(15, 23, 42, 0.14);
+    --color-scrollbar-thumb: hsl(214, 32%, 75%);
+    --color-scrollbar-thumb-hover: hsl(214, 32%, 65%);
+
+    /* Shadows — lighter, softer in light mode */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07),
+      0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.18);
+    --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 20px -3px rgba(16, 185, 129, 0.2),
+      0 4px 6px -2px rgba(0, 0, 0, 0.06);
+    --shadow-dropdown: 0 10px 20px -3px rgba(0, 0, 0, 0.12),
+      0 4px 6px -2px rgba(0, 0, 0, 0.06);
+    --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
+  }
+
   body {
     margin: 0;
     padding: 0;
@@ -140,6 +234,13 @@
     background-color: var(--color-bg-app);
     color: var(--color-text-primary);
     line-height: 1.5;
+    /* Prevent horizontal scroll from wide grids/tables on small viewports */
+    overflow-x: clip;
+  }
+
+  /* Prevent any unintended horizontal page scroll */
+  html {
+    overflow-x: clip;
   }
 
   #root {
@@ -150,10 +251,18 @@
     flex-direction: column;
   }
 
-  /* ── Focus-visible defaults (accessibility) ── */
+  /* ── Focus-visible defaults (accessibility) ──
+     Dual-layer high-visibility focus ring per the design guidelines.
+     No !important so component-level focus rings (e.g. Checkbox) can override. */
   :focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+  }
+
+  /* Remove the outline only when the focus is not keyboard-driven (WCAG 2.4.7) */
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 
   /* ── Scrollbar styling ── */
@@ -167,12 +276,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(215, 20%, 35%);
+    background-color: var(--color-scrollbar-thumb);
     border-radius: var(--radius-full);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(215, 20%, 45%);
+    background-color: var(--color-scrollbar-thumb-hover);
   }
 }
 
@@ -190,10 +299,10 @@
   }
 
   .glass-heavy {
-    background: rgba(30, 41, 59, 0.85);
+    background: var(--color-glass-heavy);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--color-border-glass);
   }
 
   /* ── Tabular numbers for financial data ── */
@@ -201,13 +310,44 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ── Skeleton shimmer ── */
+  /* ── Skip link: visually hidden until keyboard focus (WCAG 2.4.1) ── */
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 9999;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-200%);
+    opacity: 0;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    opacity: 1;
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 2px;
+  }
+
+  /* ── Fluid page title sizing (mobile → desktop) ── */
+  .page-title {
+    font-size: clamp(1.375rem, 2.5vw + 0.75rem, 1.75rem);
+    line-height: 1.25;
+  }
+
+  /* ── Skeleton shimmer (theme-adaptive via tokens) ── */
   .skeleton {
     background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.05) 25%,
-      rgba(255, 255, 255, 0.12) 37%,
-      rgba(255, 255, 255, 0.05) 63%
+      var(--color-skeleton-base) 25%,
+      var(--color-skeleton-highlight) 37%,
+      var(--color-skeleton-base) 63%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite ease-in-out;
@@ -220,11 +360,63 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* ── List windowing (perf) ──
+     Add .list-window to a long list container to let the browser skip
+     layout/paint work for rows scrolled out of view (lightweight
+     virtualization without a dependency). */
+  .list-window {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 64px;
+  }
+
+  /* ── Staggered card entrance ──
+     Add .stagger-reveal to a grid/list whose children should cascade in.
+     Wrapped in a no-preference media query so the incremental delays never
+     delay content for users who prefer reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .stagger-reveal > * {
+      animation: rise-in 0.3s ease-out backwards;
+    }
+    .stagger-reveal > *:nth-child(2) {
+      animation-delay: 40ms;
+    }
+    .stagger-reveal > *:nth-child(3) {
+      animation-delay: 80ms;
+    }
+    .stagger-reveal > *:nth-child(4) {
+      animation-delay: 120ms;
+    }
+    .stagger-reveal > *:nth-child(5) {
+      animation-delay: 160ms;
+    }
+    .stagger-reveal > *:nth-child(6) {
+      animation-delay: 200ms;
+    }
+    .stagger-reveal > *:nth-child(7) {
+      animation-delay: 240ms;
+    }
+    .stagger-reveal > *:nth-child(8) {
+      animation-delay: 280ms;
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    Keyframe Animations
    ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Accessibility: respect reduced-motion preferences ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 @keyframes shimmer {
   0% {
@@ -277,5 +469,60 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Exit animations (mirror the entrance keyframes) ── */
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
   }
 }

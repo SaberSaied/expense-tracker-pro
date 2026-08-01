@@ -24,8 +24,10 @@ export interface SelectProps
  * Accessible dropdown select with glassmorphic styling.
  */
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className, id, ...props }, ref) => {
+  ({ label, error, options, placeholder, required, className, id, ...props }, ref) => {
     const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    // Guard against label-less selects so error ids never collide as "undefined-error".
+    const errorId = error && selectId ? `${selectId}-error` : undefined;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -41,6 +43,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={selectId}
+            required={required || undefined}
             className={clsx(
               "w-full appearance-none rounded-lg bg-bg-input border px-3 py-2.5 pr-10 text-sm text-text-primary",
               "transition-all duration-150 ease-standard",
@@ -50,6 +53,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               className,
             )}
             aria-invalid={!!error}
+            aria-required={required || undefined}
+            aria-describedby={errorId}
             {...props}
           >
             {placeholder && (
@@ -66,7 +71,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-text-muted pointer-events-none" />
         </div>
         {error && (
-          <p className="text-xs text-error" role="alert">
+          <p id={errorId} className="text-xs text-error" role="alert">
             {error}
           </p>
         )}

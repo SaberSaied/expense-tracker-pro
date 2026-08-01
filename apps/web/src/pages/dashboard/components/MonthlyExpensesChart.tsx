@@ -15,6 +15,7 @@ import type { MonthlyExpensesDataPoint, DateRangePreset } from "@/services/dashb
 import { DateRangeFilter } from "./DateRangeFilter";
 import type { DateRangeFilterValue } from "./DateRangeFilter";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { usePrefersReducedMotion } from "@/hooks";
 
 // ─── Custom Tooltip ────────────────────────────────────────────
 
@@ -66,7 +67,8 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload, label }) => {
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const MonthlyExpensesChart: React.FC = () => {
+export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [dateFilter, setDateFilter] = useState<DateRangeFilterValue>({ range: "this_year" });
   const [chartData, setChartData] = useState<MonthlyExpensesDataPoint[]>([]);
   const [summary, setSummary] = useState<{
@@ -170,7 +172,7 @@ export const MonthlyExpensesChart: React.FC = () => {
           <p className="text-sm text-text-muted">
             No expenses recorded yet for this period
           </p>
-          <p className="text-xs text-text-muted/60">
+          <p className="text-xs text-text-muted">
             Add expense transactions to see your monthly expense trends
           </p>
         </div>
@@ -205,7 +207,7 @@ export const MonthlyExpensesChart: React.FC = () => {
       {/* Summary Stats */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 pb-4 border-b border-border-glass">
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Total Spent
             </p>
@@ -213,7 +215,7 @@ export const MonthlyExpensesChart: React.FC = () => {
               {formatCurrency(summary.totalExpenses)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Monthly Avg
             </p>
@@ -221,7 +223,7 @@ export const MonthlyExpensesChart: React.FC = () => {
               {formatCurrency(summary.averageMonthly)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Active Months
             </p>
@@ -229,7 +231,7 @@ export const MonthlyExpensesChart: React.FC = () => {
               {summary.monthsWithData} / {summary.totalMonths}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               {trendDirection === "up" ? "Trending Up" : trendDirection === "down" ? "Trending Down" : "Trend"}
             </p>
@@ -251,6 +253,7 @@ export const MonthlyExpensesChart: React.FC = () => {
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
+            accessibilityLayer
             data={chartData}
             margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
           >
@@ -262,19 +265,19 @@ export const MonthlyExpensesChart: React.FC = () => {
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.04)"
+              stroke="var(--color-chart-grid)"
               vertical={false}
             />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
-              axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
+              axisLine={{ stroke: "var(--color-chart-grid)" }}
               tickLine={false}
               interval="preserveStartEnd"
               minTickGap={40}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
@@ -282,7 +285,7 @@ export const MonthlyExpensesChart: React.FC = () => {
             />
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ stroke: "rgba(255,255,255,0.08)", strokeDasharray: "3 3" }}
+              cursor={{ stroke: "var(--color-chart-grid)", strokeDasharray: "3 3" }}
             />
             <Area
               type="monotone"
@@ -291,8 +294,11 @@ export const MonthlyExpensesChart: React.FC = () => {
               stroke="#F59E0B"
               strokeWidth={2.5}
               fill="url(#monthlyExpenseGradient)"
-              dot={{ r: 3, fill: "#F59E0B", strokeWidth: 2, stroke: "#1E293B" }}
+              dot={{ r: 3, fill: "#F59E0B", strokeWidth: 2, stroke: "var(--color-bg-card)" }}
               activeDot={{ r: 5, fill: "#F59E0B", strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -329,4 +335,4 @@ export const MonthlyExpensesChart: React.FC = () => {
       )}
     </div>
   );
-};
+});

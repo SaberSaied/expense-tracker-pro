@@ -163,8 +163,11 @@ export const authService = {
     // Store the hashed token and expiry
     await authRepository.storeResetToken(user.id, resetTokenHash, resetTokenExpiresAt);
 
-    // In production, send this token via email (SMTP). For now, log it.
-    console.log(`\n🔐 Password reset token for ${email}: ${resetToken}\n`);
+    // In production, send this token via email (SMTP). Only log reset
+    // tokens outside production so they never leak into production logs.
+    if (env.NODE_ENV !== "production") {
+      console.log(`\n🔐 Password reset token for ${email}: ${resetToken}\n`);
+    }
 
     return { message: "If an account exists, a reset link has been sent." };
   },

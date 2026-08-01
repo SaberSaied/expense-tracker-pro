@@ -42,7 +42,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
       {activeBudgets.length > 0 && (
         <>
           {/* Overall summary */}
-          <div className="flex items-center justify-between mt-3 mb-4 p-3 rounded-lg bg-white/3">
+          <div className="flex items-center justify-between mt-3 mb-4 p-3 rounded-lg bg-overlay/3">
             <div className="space-y-0.5">
               <p className="text-xs text-text-muted">Total Budgeted</p>
               <p className="text-sm font-semibold text-text-primary tabular-nums">

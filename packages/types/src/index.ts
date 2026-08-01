@@ -20,6 +20,10 @@ export const NOTIFICATION_TYPES = [
   "BUDGET_CRITICAL",
   "EXPORT_COMPLETE",
   "WEEKLY_DIGEST",
+  "REMINDER",
+  "MONTHLY_SUMMARY",
+  "BILL_DUE_SOON",
+  "BILL_OVERDUE",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

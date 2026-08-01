@@ -23,6 +23,7 @@ import type { CategoryDistribution, CategoryDistributionSummary, DateRangePreset
 import { DateRangeFilter } from "./DateRangeFilter";
 import type { DateRangeFilterValue } from "./DateRangeFilter";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { usePrefersReducedMotion } from "@/hooks";
 
 // ─── Custom Doughnut Tooltip ────────────────────────────────────
 
@@ -49,7 +50,8 @@ const DoughnutTooltip: React.FC<DoughnutTooltipProps> = ({ active, payload, labe
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const CategoryDistributionChart: React.FC = () => {
+export const CategoryDistributionChart = React.memo(function CategoryDistributionChart() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [dateFilter, setDateFilter] = useState<DateRangeFilterValue>({ range: "this_year" });
   const [distribution, setDistribution] = useState<CategoryDistribution[]>([]);
   const [summary, setSummary] = useState<CategoryDistributionSummary | null>(null);
@@ -146,7 +148,7 @@ export const CategoryDistributionChart: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
           <Layers className="size-10 text-text-muted/40" />
           <p className="text-sm text-text-muted">No expenses categorized yet</p>
-          <p className="text-xs text-text-muted/60">
+          <p className="text-xs text-text-muted">
             Add expense transactions with categories to see your distribution
           </p>
         </div>
@@ -197,7 +199,7 @@ export const CategoryDistributionChart: React.FC = () => {
       {/* Summary Stats */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 pb-4 border-b border-border-glass">
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Total Spent
             </p>
@@ -205,7 +207,7 @@ export const CategoryDistributionChart: React.FC = () => {
               {formatCurrency(summary.totalSpent)}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Categories
             </p>
@@ -213,7 +215,7 @@ export const CategoryDistributionChart: React.FC = () => {
               {summary.categoryCount}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Transactions
             </p>
@@ -221,7 +223,7 @@ export const CategoryDistributionChart: React.FC = () => {
               {summary.transactionCount}
             </p>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+          <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
               Avg / Category
             </p>
@@ -238,7 +240,7 @@ export const CategoryDistributionChart: React.FC = () => {
         <div className="sm:col-span-2">
           <div className="relative h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart accessibilityLayer>
                 <Pie
                   data={pieData}
                   cx="50%"
@@ -249,6 +251,9 @@ export const CategoryDistributionChart: React.FC = () => {
                   dataKey="value"
                   nameKey="label"
                   stroke="none"
+                  animationDuration={500}
+                  animationEasing="ease-out"
+                  isAnimationActive={!prefersReducedMotion}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color ?? "#6366F1"} />
@@ -287,6 +292,7 @@ export const CategoryDistributionChart: React.FC = () => {
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
+                  accessibilityLayer
                   data={distribution}
                   layout="vertical"
                   margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
@@ -294,30 +300,30 @@ export const CategoryDistributionChart: React.FC = () => {
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.04)"
+                    stroke="var(--color-chart-grid)"
                     horizontal={false}
                   />
                   <XAxis
                     type="number"
-                    tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
-                    axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                    tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
+                    axisLine={{ stroke: "var(--color-chart-grid)" }}
                     tickLine={false}
                     tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                   />
                   <YAxis
                     type="category"
                     dataKey="categoryName"
-                    tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+                    tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
                     axisLine={false}
                     tickLine={false}
                     width={80}
                   />
                   <BarTooltip
                     contentStyle={{
-                      backgroundColor: "hsl(217, 33%, 17%)",
-                      border: "1px solid hsl(215, 25%, 27%)",
+                      backgroundColor: "var(--color-bg-elevated)",
+                      border: "1px solid var(--color-border-card)",
                       borderRadius: "12px",
-                      color: "hsl(210, 40%, 98%)",
+                      color: "var(--color-text-primary)",
                       fontSize: "13px",
                       padding: "8px 12px",
                     }}
@@ -329,6 +335,9 @@ export const CategoryDistributionChart: React.FC = () => {
                     name="totalSpent"
                     radius={[0, 4, 4, 0]}
                     maxBarSize={16}
+                    animationDuration={500}
+                    animationEasing="ease-out"
+                    isAnimationActive={!prefersReducedMotion}
                   >
                     {distribution.map((entry, index) => (
                       <Cell
@@ -358,7 +367,7 @@ export const CategoryDistributionChart: React.FC = () => {
           {distribution.map((cat) => (
             <div
               key={cat.categoryId}
-              className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+              className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-lg hover:bg-overlay/[0.03] transition-colors"
             >
               <div className="col-span-4 flex items-center gap-2 min-w-0">
                 <span
@@ -412,4 +421,4 @@ export const CategoryDistributionChart: React.FC = () => {
       )}
     </div>
   );
-};
+});

@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { corsOptions, helmetOptions, logger, env } from "./config";
+import { apiLimiter } from "./config/rate-limit";
 import { errorHandler, notFoundHandler } from "./common/middleware";
 import { routes } from "./routes";
 import { API_PREFIX } from "./common/constants";
@@ -13,6 +14,23 @@ import { UPLOADS_DIR } from "./common/utils/upload";
 
 export function createApp(): Application {
   const app = express();
+
+  // ─── Trust Proxy ──────────────────────────────────────────
+  // Behind a single reverse proxy (nginx/caddy) trust the first hop so the
+  // rate limiters key on real client IPs instead of the proxy's shared IP.
+  // Never `true` — that would let anyone spoof X-Forwarded-For and bypass
+  // rate limiting (express-rate-limit v8 also refuses permissive trust).
+  // env.ts validates TRUST_PROXY and rejects the permissive "true" value.
+  const trustProxyValue =
+    env.TRUST_PROXY ?? (env.NODE_ENV === "production" ? "1" : "false");
+  app.set(
+    "trust proxy",
+    trustProxyValue === "false"
+      ? false
+      : /^\d+$/.test(trustProxyValue)
+        ? parseInt(trustProxyValue, 10)
+        : trustProxyValue
+  );
 
   // ─── Security Middleware ──────────────────────────────────
   app.use(helmet(helmetOptions));
@@ -35,6 +53,9 @@ export function createApp(): Application {
   if (env.NODE_ENV !== "test") {
     app.use(morgan("combined", { stream: logger.stream }));
   }
+
+  // ─── Rate Limiting ────────────────────────────────────────
+  app.use(API_PREFIX, apiLimiter);
 
   // ─── Health Check ─────────────────────────────────────────
   app.get(`${API_PREFIX}/health`, async (_req, res) => {

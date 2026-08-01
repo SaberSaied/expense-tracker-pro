@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { clsx } from "clsx";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/services/api";
+import { ValidationErrors } from "@/components/ui/ValidationErrors";
+import { extractFieldErrors, focusFirstInvalidField } from "@/utils/errors";
 
 /**
  * Register page — onboards new users and creates a workspace account.
@@ -21,6 +23,7 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -37,6 +40,12 @@ export const RegisterPage: React.FC = () => {
     if (score <= 3) return { level: score, label: "Medium", color: "bg-warning" };
     return { level: score, label: "Strong", color: "bg-success" };
   }, [password]);
+
+  // When validation errors appear, move focus to the first invalid field so
+  // keyboard & screen-reader users can locate and fix it (WCAG 3.3.1).
+  useEffect(() => {
+    if (fieldErrors) focusFirstInvalidField("register-form");
+  }, [fieldErrors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +67,8 @@ export const RegisterPage: React.FC = () => {
       toast.success("Account created successfully!");
       navigate("/dashboard", { replace: true });
     } catch (err) {
+      const fieldErrors = extractFieldErrors(err);
+      if (fieldErrors) setFieldErrors(fieldErrors);
       const message =
         err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
       toast.error("Registration failed", { description: message });
@@ -75,6 +86,8 @@ export const RegisterPage: React.FC = () => {
         </p>
       </div>
 
+      <ValidationErrors errors={fieldErrors} onDismiss={() => setFieldErrors(undefined)} />
+
       <Input
         label="Full Name"
         type="text"
@@ -82,6 +95,7 @@ export const RegisterPage: React.FC = () => {
         value={name}
         onChange={(e) => setName(e.target.value)}
         leftIcon={<User className="size-4" />}
+        error={fieldErrors?.name?.[0]}
         autoComplete="name"
         required
       />
@@ -93,7 +107,9 @@ export const RegisterPage: React.FC = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         leftIcon={<Mail className="size-4" />}
+        error={fieldErrors?.email?.[0]}
         autoComplete="email"
+        name="email"
         required
       />
 
@@ -109,18 +125,20 @@ export const RegisterPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
+            className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
-          }
-          autoComplete="new-password"
-          required
-        />
+          }        error={fieldErrors?.password?.[0]}
+        autoComplete="new-password"
+        name="password"
+        required
+      />
         {password && (
           <div className="space-y-1">
-            <div className="flex gap-1">
+            {/* Decorative strength meter segments — hidden from the a11y tree */}
+            <div className="flex gap-1" aria-hidden="true">
               {[1, 2, 3, 4, 5].map((seg) => (
                 <div
                   key={seg}
@@ -128,12 +146,13 @@ export const RegisterPage: React.FC = () => {
                     "h-1 flex-1 rounded-full transition-colors",
                     seg <= passwordStrength.level
                       ? passwordStrength.color
-                      : "bg-white/10",
+                      : "bg-overlay/10",
                   )}
                 />
               ))}
             </div>
-            <p className="text-xs text-text-muted">
+            {/* Announced politely to screen readers when it changes (WCAG 4.1.3) */}
+            <p className="text-xs text-text-muted" aria-live="polite">
               Strength:{" "}
               <span
                 className={clsx(

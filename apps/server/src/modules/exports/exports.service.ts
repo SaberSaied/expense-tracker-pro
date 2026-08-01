@@ -2,7 +2,7 @@ import { reportRepository } from "../reports/reports.repository";
 import { reportService } from "../reports/reports.service";
 import { budgetRepository } from "../budgets/budgets.repository";
 import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
-import type { ExportTransactionsQuery, ColumnName, SortField } from "./exports.types";
+import type { ExportTransactionsQuery, ExportTransactionsResult, ColumnName } from "./exports.types";
 
 // ─── CSV Escaping Helpers ──────────────────────────────────────
 
@@ -88,25 +88,28 @@ function buildCsvRow(
     .join(",");
 }
 
-/** Apply sort order to transactions. */
-function sortTransactions<T extends { date: Date; amount: number; description: string; type: string }>(
-  transactions: T[],
-  sortBy?: SortField,
-  sortOrder?: "asc" | "desc"
-): T[] {
-  const dir = sortOrder === "asc" ? 1 : -1;
-  const field = sortBy ?? "date";
+/**
+ * Build the common DB filters from export query params.
+ * Resolves budgetId to categoryId if the budget belongs to this user.
+ */
+async function buildDbFilters(userId: string, filters: ExportTransactionsQuery): Promise<Record<string, unknown>> {
+  const dbFilters: Record<string, unknown> = {};
 
-  return [...transactions].sort((a, b) => {
-    let cmp = 0;
-    switch (field) {
-      case "date": cmp = a.date.getTime() - b.date.getTime(); break;
-      case "amount": cmp = a.amount - b.amount; break;
-      case "description": cmp = a.description.localeCompare(b.description); break;
-      case "type": cmp = a.type.localeCompare(b.type); break;
+  if (filters.startDate) dbFilters.startDate = new Date(filters.startDate);
+  if (filters.endDate) dbFilters.endDate = new Date(filters.endDate);
+  if (filters.categoryId) dbFilters.categoryId = filters.categoryId;
+  if (filters.paymentMethodId) dbFilters.paymentMethodId = filters.paymentMethodId;
+  if (filters.type) dbFilters.type = filters.type;
+  if (filters.minAmount !== undefined) dbFilters.minAmount = filters.minAmount;
+  if (filters.maxAmount !== undefined) dbFilters.maxAmount = filters.maxAmount;
+  if (filters.budgetId) {
+    const budget = await budgetRepository.findById(filters.budgetId);
+    if (budget && budget.userId === userId) {
+      dbFilters.categoryId = budget.categoryId;
     }
-    return cmp * dir;
-  });
+  }
+
+  return dbFilters;
 }
 
 // ─── Public Export Functions ───────────────────────────────────
@@ -114,42 +117,42 @@ function sortTransactions<T extends { date: Date; amount: number; description: s
 export const exportService = {
   /**
    * Generate a CSV string for transactions matching the given filters.
-   * Supports column selection and sort order.
+   * Supports column selection, sort order, and pagination.
+   * Returns the CSV string along with pagination metadata.
    */
   async generateTransactionsCsv(
     userId: string,
     filters: ExportTransactionsQuery
-  ): Promise<string> {
-    const dbFilters: Record<string, unknown> = {};
+  ): Promise<ExportTransactionsResult> {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 1000;
+    const skip = (page - 1) * limit;
 
-    if (filters.startDate) dbFilters.startDate = new Date(filters.startDate);
-    if (filters.endDate) dbFilters.endDate = new Date(filters.endDate);
-    if (filters.categoryId) dbFilters.categoryId = filters.categoryId;
-    if (filters.paymentMethodId) dbFilters.paymentMethodId = filters.paymentMethodId;
-    if (filters.type) dbFilters.type = filters.type;
-    if (filters.minAmount !== undefined) dbFilters.minAmount = filters.minAmount;
-    if (filters.maxAmount !== undefined) dbFilters.maxAmount = filters.maxAmount;
-    if (filters.budgetId) {
-      const budget = await budgetRepository.findById(filters.budgetId);
-      if (budget && budget.userId === userId) {
-        dbFilters.categoryId = budget.categoryId;
-      }
-    }
+    const dbFilters = await buildDbFilters(userId, filters);
+
+    // Fetch total count separately for pagination metadata
+    const totalCount = await reportRepository.countCustomTransactions(
+      userId,
+      dbFilters as Parameters<typeof reportRepository.countCustomTransactions>[1]
+    );
+
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
     const transactions = await reportRepository.findCustomTransactions(
       userId,
-      dbFilters as Parameters<typeof reportRepository.findCustomTransactions>[1]
+      dbFilters as Parameters<typeof reportRepository.findCustomTransactions>[1],
+      { skip, take: limit },
+      { sortBy: filters.sortBy, sortOrder: filters.sortOrder }
     );
-
-    // Apply sort order
-    const sorted = sortTransactions(transactions, filters.sortBy, filters.sortOrder);
 
     // Apply column selection
     const cols = resolveColumns(filters.columns);
     const headerRow = buildCsvHeaders(cols);
-    const dataRows = sorted.map((tx) => buildCsvRow(cols, tx));
+    const dataRows = transactions.map((tx) => buildCsvRow(cols, tx));
 
-    return [headerRow, ...dataRows].join("\n");
+    const csv = [headerRow, ...dataRows].join("\n");
+
+    return { csv, totalCount, page, limit: Math.min(limit, totalCount), totalPages };
   },
 
   /**

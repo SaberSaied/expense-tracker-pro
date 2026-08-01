@@ -38,11 +38,11 @@ interface DateRangeFilterProps {
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
+export const DateRangeFilter = React.memo(function DateRangeFilter({
   value,
   onChange,
   className,
-}) => {
+}: DateRangeFilterProps) {
   const [showCustom, setShowCustom] = useState(value.range === "custom");
 
   const handlePresetClick = useCallback(
@@ -79,14 +79,16 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       {PRESETS.map((preset) => (
         <button
           key={preset.value}
+          type="button"
           onClick={() => handlePresetClick(preset.value)}
+          aria-pressed={value.range === preset.value}
           className={clsx(
             "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap",
             value.range === preset.value && preset.value !== "custom"
               ? "bg-primary text-text-inverse shadow-sm"
               : preset.value === "custom" && value.range === "custom"
                 ? "bg-primary/15 text-primary border border-primary/30"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/5",
+                : "text-text-secondary hover:text-text-primary hover:bg-overlay/5",
           )}
         >
           {preset.label}
@@ -116,7 +118,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       )}
     </div>
   );
-};
+});
 
 // ─── Helper to get human-readable label for current filter ─────
 

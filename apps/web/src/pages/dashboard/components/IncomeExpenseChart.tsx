@@ -17,6 +17,7 @@ import type { IncomeExpenseChartDataPoint, DateRangePreset } from "@/services/da
 import { DateRangeFilter } from "./DateRangeFilter";
 import type { DateRangeFilterValue } from "./DateRangeFilter";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { usePrefersReducedMotion } from "@/hooks";
 
 // ─── Custom Tooltip ────────────────────────────────────────────
 
@@ -99,7 +100,8 @@ const CustomLegend: React.FC = () => (
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const IncomeExpenseChart: React.FC = () => {
+export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [dateFilter, setDateFilter] = useState<DateRangeFilterValue>({ range: "this_year" });
   const [chartData, setChartData] = useState<IncomeExpenseChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -190,7 +192,7 @@ export const IncomeExpenseChart: React.FC = () => {
           <p className="text-sm text-text-muted">
             No transaction data yet for this period
           </p>
-          <p className="text-xs text-text-muted/60">
+          <p className="text-xs text-text-muted">
             Add transactions to see your income vs expenses chart
           </p>
         </div>
@@ -259,6 +261,7 @@ export const IncomeExpenseChart: React.FC = () => {
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
+            accessibilityLayer
             data={chartData}
             margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
             barGap={2}
@@ -279,25 +282,25 @@ export const IncomeExpenseChart: React.FC = () => {
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.04)"
+              stroke="var(--color-chart-grid)"
               vertical={false}
             />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
-              axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
+              axisLine={{ stroke: "var(--color-chart-grid)" }}
               tickLine={false}
               interval="preserveStartEnd"
               minTickGap={40}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+              tick={{ fontSize: 10, fill: "var(--color-chart-axis)" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
               width={40}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--color-chart-grid)" }} />
             <Legend content={<CustomLegend />} />
             <Bar
               dataKey="income"
@@ -306,6 +309,9 @@ export const IncomeExpenseChart: React.FC = () => {
               radius={[4, 4, 0, 0]}
               maxBarSize={24}
               filter="url(#barShadow)"
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
             <Bar
               dataKey="expense"
@@ -314,6 +320,9 @@ export const IncomeExpenseChart: React.FC = () => {
               radius={[4, 4, 0, 0]}
               maxBarSize={24}
               filter="url(#barShadow)"
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
             <Line
               type="monotone"
@@ -323,6 +332,9 @@ export const IncomeExpenseChart: React.FC = () => {
               strokeWidth={2.5}
               dot={{ r: 3, fill: "#06B6D4", strokeWidth: 2, stroke: "#06B6D4" }}
               activeDot={{ r: 5, fill: "#06B6D4", strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={500}
+              animationEasing="ease-out"
+              isAnimationActive={!prefersReducedMotion}
             />
           </BarChart>
         </ResponsiveContainer>
@@ -359,4 +371,4 @@ export const IncomeExpenseChart: React.FC = () => {
       )}
     </div>
   );
-};
+});

@@ -342,7 +342,7 @@ async function runTests() {
   assert(txnList != null, "Transactions array exists");
   assert(txnList!.length >= 5, `At least 5 transactions returned (got ${txnList!.length})`);
   assert(list.json.meta != null, "Pagination metadata returned");
-  assert(list.json.meta!.total >= 5, "Meta.total >= 5");
+  assert(Number(list.json.meta!.total) >= 5, "Meta.total >= 5");
   assert(list.json.meta!.page === 1, "Meta.page defaults to 1");
   assert(list.json.meta!.limit === 20, "Meta.limit defaults to 20");
 
@@ -516,7 +516,7 @@ async function runTests() {
     userTokens?.accessToken
   );
   assert(dateFilter.status === 200, "Date range filter returns 200");
-  assert(dateFilter.json.meta!.total >= 3, "July date range finds 3+ transactions");
+  assert(Number(dateFilter.json.meta!.total) >= 3, "July date range finds 3+ transactions");
 
   // Filter by amount range
   const amountFilter = await request(
@@ -625,7 +625,7 @@ async function runTests() {
   assert(page1.status === 200, "Page 1 returns 200");
   assert(page1.json.meta!.page === 1, "Meta.page is 1");
   assert(page1.json.meta!.limit === 2, "Meta.limit is 2");
-  assert(page1.json.meta!.total >= 5, "Meta.total >= 5");
+  assert(Number(page1.json.meta!.total) >= 5, "Meta.total >= 5");
   assert(page1.json.meta!.hasPrevPage === false, "Page 1 hasPrevPage=false");
   assert(page1.json.meta!.hasNextPage === true, "Page 1 hasNextPage=true");
   const page1List = (page1.json.data?.transactions ?? []) as Array<Record<string, unknown>>;

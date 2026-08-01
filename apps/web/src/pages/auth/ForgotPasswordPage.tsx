@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { authApi } from "@/services/auth";
 import { ApiError } from "@/services/api";
+import { ValidationErrors } from "@/components/ui/ValidationErrors";
+import { extractFieldErrors, focusFirstInvalidField } from "@/utils/errors";
 
 /**
  * Forgot password page — initiates password recovery via email.
@@ -15,6 +17,13 @@ export const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
+
+  // When validation errors appear, move focus to the first invalid field so
+  // keyboard & screen-reader users can locate and fix it (WCAG 3.3.1).
+  useEffect(() => {
+    if (fieldErrors) focusFirstInvalidField("forgot-password-form");
+  }, [fieldErrors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +34,8 @@ export const ForgotPasswordPage: React.FC = () => {
       toast.success("Email sent", { description: result.message });
       setIsSuccess(true);
     } catch (err) {
+      const fieldErrors = extractFieldErrors(err);
+      if (fieldErrors) setFieldErrors(fieldErrors);
       const message =
         err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
       toast.error("Request failed", { description: message });
@@ -63,6 +74,8 @@ export const ForgotPasswordPage: React.FC = () => {
         </p>
       </div>
 
+      <ValidationErrors errors={fieldErrors} onDismiss={() => setFieldErrors(undefined)} />
+
       <Input
         label="Email Address"
         type="email"
@@ -70,7 +83,9 @@ export const ForgotPasswordPage: React.FC = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         leftIcon={<Mail className="size-4" />}
+        error={fieldErrors?.email?.[0]}
         autoComplete="email"
+        name="email"
         required
       />
 

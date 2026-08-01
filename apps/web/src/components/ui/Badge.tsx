@@ -18,7 +18,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: "bg-white/10 text-text-secondary",
+  default: "bg-overlay/10 text-text-secondary",
   success: "bg-success/15 text-success",
   warning: "bg-warning/15 text-warning",
   error: "bg-error/15 text-error",
@@ -29,13 +29,13 @@ const variantStyles: Record<BadgeVariant, string> = {
 /**
  * Status or category badge with color variants.
  */
-export const Badge: React.FC<BadgeProps> = ({
+export const Badge = React.memo(function Badge({
   variant = "default",
   dot = false,
   className,
   children,
   ...props
-}) => {
+}: BadgeProps) {
   return (
     <span
       className={clsx(
@@ -51,4 +51,4 @@ export const Badge: React.FC<BadgeProps> = ({
       {children}
     </span>
   );
-};
+});

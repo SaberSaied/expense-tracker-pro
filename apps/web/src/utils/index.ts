@@ -2,4 +2,4 @@
  * Frontend utility helper functions.
  */
 
-export {};
+export { extractFieldErrors } from "./errors";

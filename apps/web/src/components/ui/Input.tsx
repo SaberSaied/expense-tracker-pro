@@ -20,10 +20,14 @@ export interface InputProps
  */
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    { label, error, leftIcon, rightIcon, helperText, className, id, ...props },
+    { label, error, leftIcon, rightIcon, helperText, required, className, id, ...props },
     ref,
   ) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    // Guard against label-less, id-less inputs so aria ids never collide as
+    // "undefined-error" / "undefined-helper" (WCAG 1.3.1).
+    const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+    const errorId = error && inputId ? `${inputId}-error` : undefined;
+    const helperId = helperText && inputId ? `${inputId}-helper` : undefined;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -33,6 +37,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className="text-sm font-medium text-text-secondary"
           >
             {label}
+            {required && (
+              <span className="text-error ml-0.5" aria-hidden="true">
+                {" "}
+                *
+              </span>
+            )}
           </label>
         )}
         <div className="relative">
@@ -44,6 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            required={required || undefined}
             className={clsx(
               "w-full rounded-lg bg-bg-input border px-3 py-2.5 text-sm text-text-primary",
               "placeholder:text-text-muted",
@@ -56,8 +67,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               className,
             )}
             aria-invalid={!!error}
+            aria-required={required || undefined}
             aria-describedby={
-              error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
+              error ? errorId : helperText ? helperId : undefined
             }
             {...props}
           />
@@ -67,17 +79,17 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && (
+        {error && errorId && (
           <p
-            id={`${inputId}-error`}
+            id={errorId}
             className="text-xs text-error flex items-center gap-1"
             role="alert"
           >
             {error}
           </p>
         )}
-        {!error && helperText && (
-          <p id={`${inputId}-helper`} className="text-xs text-text-muted">
+        {!error && helperText && helperId && (
+          <p id={helperId} className="text-xs text-text-muted">
             {helperText}
           </p>
         )}

@@ -35,6 +35,14 @@ export type { SkeletonProps } from "./ui/Skeleton";
 export { EmptyState } from "./ui/EmptyState";
 export type { EmptyStateProps } from "./ui/EmptyState";
 
+export { ErrorPage } from "./ui/ErrorPage";
+export type { ErrorPageProps } from "./ui/ErrorPage";
+
+export { ValidationErrors } from "./ui/ValidationErrors";
+export type { ValidationErrorsProps } from "./ui/ValidationErrors";
+
+export { ErrorBoundary } from "./ErrorBoundary";
+
 export { ConfirmDialog } from "./ui/ConfirmDialog";
 export type { ConfirmDialogProps } from "./ui/ConfirmDialog";
 

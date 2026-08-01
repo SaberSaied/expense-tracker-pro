@@ -20,14 +20,14 @@ export interface ProgressBarProps {
  * Animated progress bar with dynamic color thresholds.
  * < 70% → emerald (success), 70-89% → amber (warning), ≥ 90% → red (error).
  */
-export const ProgressBar: React.FC<ProgressBarProps> = ({
+export const ProgressBar = React.memo(function ProgressBar({
   value,
   max = 100,
   size = "md",
   color,
   showLabel = false,
   label = "Progress",
-}) => {
+}: ProgressBarProps) {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
   const autoColor =
@@ -55,7 +55,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       )}
       <div
         className={clsx(
-          "w-full rounded-full bg-white/5 overflow-hidden",
+          "w-full rounded-full bg-overlay/5 overflow-hidden",
           heightStyles[size],
         )}
         role="progressbar"
@@ -75,4 +75,4 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       </div>
     </div>
   );
-};
+});

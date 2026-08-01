@@ -204,7 +204,7 @@ async function runTests() {
   assert(typeof dailyReport!.expenses === "number", "Daily report includes expenses");
   assert(typeof dailyReport!.balance === "number", "Daily report includes balance");
   assert(typeof dailyReport!.transactionCount === "number", "Daily report includes transaction count");
-  assert(dailyReport!.transactionCount >= 2, "Daily report has 2+ transactions");
+  assert(Number(dailyReport!.transactionCount) >= 2, "Daily report has 2+ transactions");
   assert(Array.isArray(dailyReport!.transactions), "Daily report includes transactions array");
   assert(Array.isArray(dailyReport!.spendingByCategory), "Daily report includes category breakdown");
 
@@ -240,7 +240,7 @@ async function runTests() {
   assert(typeof weeklyReport!.income === "number", "Weekly report includes income");
   assert(typeof weeklyReport!.expenses === "number", "Weekly report includes expenses");
   assert(typeof weeklyReport!.balance === "number", "Weekly report includes balance");
-  assert(weeklyReport!.transactionCount >= 2, "Weekly report has 2+ transactions");
+  assert(Number(weeklyReport!.transactionCount) >= 2, "Weekly report has 2+ transactions");
   assert(Array.isArray(weeklyReport!.dailyBreakdown), "Weekly report has dailyBreakdown");
   assert((weeklyReport!.dailyBreakdown as Array<unknown>).length === 7, "Weekly report has 7 daily breakdowns");
   assert(Array.isArray(weeklyReport!.transactions), "Weekly report has transactions array");
@@ -282,7 +282,7 @@ async function runTests() {
   assert(typeof monthlyReport!.expenses === "number", "Monthly report includes expenses");
   assert(typeof monthlyReport!.netSavings === "number", "Monthly report includes netSavings");
   assert(typeof monthlyReport!.transactionCount === "number", "Monthly report includes transactionCount");
-  assert(monthlyReport!.transactionCount >= 2, "Monthly report has 2+ transactions");
+  assert(Number(monthlyReport!.transactionCount) >= 2, "Monthly report has 2+ transactions");
   assert(Array.isArray(monthlyReport!.categorySummary), "Monthly report includes categorySummary");
   assert(Array.isArray(monthlyReport!.paymentMethodSummary), "Monthly report includes paymentMethodSummary");
   assert(Array.isArray(monthlyReport!.budgetPerformance), "Monthly report includes budgetPerformance");
@@ -327,7 +327,7 @@ async function runTests() {
   assert(typeof yearlyReport!.expenses === "number", "Yearly report includes expenses");
   assert(typeof yearlyReport!.netSavings === "number", "Yearly report includes netSavings");
   assert(typeof yearlyReport!.transactionCount === "number", "Yearly report includes transactionCount");
-  assert(yearlyReport!.transactionCount >= 2, "Yearly report has 2+ transactions");
+  assert(Number(yearlyReport!.transactionCount) >= 2, "Yearly report has 2+ transactions");
   assert(Array.isArray(yearlyReport!.monthlyComparison), "Yearly report includes monthlyComparison");
   assert((yearlyReport!.monthlyComparison as Array<unknown>).length === 12, "Yearly report has 12 monthly comparisons");
   assert(Array.isArray(yearlyReport!.topCategories), "Yearly report includes topCategories");
@@ -371,7 +371,7 @@ async function runTests() {
   assert(catSummaryData!.endDate != null, "Category summary has endDate");
   assert(typeof catSummaryData!.grandTotal === "number", "Category summary has grandTotal");
   assert(typeof catSummaryData!.categoryCount === "number", "Category summary has categoryCount");
-  assert(catSummaryData!.categoryCount >= 1, "Category summary has at least 1 category");
+  assert(Number(catSummaryData!.categoryCount) >= 1, "Category summary has at least 1 category");
   assert(Array.isArray(catSummaryData!.categories), "Category summary has categories array");
   const categories = catSummaryData!.categories as Array<Record<string, unknown>>;
   if (categories.length > 0) {
@@ -451,7 +451,7 @@ async function runTests() {
   );
   assert(customType.status === 200, "Custom report with type filter returns 200");
   const incomeReport = customType.json.data?.report as Record<string, unknown> | undefined;
-  assert(incomeReport!.income > 0, "Income type filter shows income transactions");
+  assert(Number(incomeReport!.income) > 0, "Income type filter shows income transactions");
 
   // Custom report with type EXPENSE filter
   const customExpense = await request(
@@ -462,7 +462,7 @@ async function runTests() {
   );
   assert(customExpense.status === 200, "Custom report with expense filter returns 200");
   const expenseReport = customExpense.json.data?.report as Record<string, unknown> | undefined;
-  assert(expenseReport!.expenses > 0, "Expense type filter shows expense transactions");
+  assert(Number(expenseReport!.expenses) > 0, "Expense type filter shows expense transactions");
 
   // Custom report with category filter
   const customCat = await request(
@@ -536,9 +536,9 @@ async function runTests() {
   assert(typeof summaryData!.averageTransactionAmount === "number", "Summary has averageTransactionAmount");
   assert(typeof summaryData!.averageIncome === "number", "Summary has averageIncome");
   assert(typeof summaryData!.averageExpense === "number", "Summary has averageExpense");
-  assert(summaryData!.transactionCount >= 2, "Summary has 2+ transactions");
-  assert(summaryData!.income > 0, "Summary has income > 0");
-  assert(summaryData!.netBalance > 0, "Summary has positive net balance (income > expenses)");
+  assert(Number(summaryData!.transactionCount) >= 2, "Summary has 2+ transactions");
+  assert(Number(summaryData!.income) > 0, "Summary has income > 0");
+  assert(Number(summaryData!.netBalance) > 0, "Summary has positive net balance (income > expenses)");
 
   // Summary with date range
   const summaryFiltered = await request(
@@ -569,8 +569,8 @@ async function runTests() {
   assert(typeof incomeVsExpense.expenseCount === "number", "incomeVsExpense has expenseCount");
   assert(typeof incomeVsExpense.incomePercentage === "number", "incomeVsExpense has incomePercentage");
   assert(typeof incomeVsExpense.expensePercentage === "number", "incomeVsExpense has expensePercentage");
-  assert(incomeVsExpense.incomeCount >= 1, "incomeVsExpense has at least 1 income");
-  assert(incomeVsExpense.expenseCount >= 1, "incomeVsExpense has at least 1 expense");
+  assert(Number(incomeVsExpense.incomeCount) >= 1, "incomeVsExpense has at least 1 income");
+  assert(Number(incomeVsExpense.expenseCount) >= 1, "incomeVsExpense has at least 1 expense");
 
   // Check largest/smallest transactions
   const largest = breakdownData!.largestTransaction as Record<string, unknown> | null;

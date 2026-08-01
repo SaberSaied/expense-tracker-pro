@@ -15,6 +15,24 @@ export interface ExportTransactionsQuery {
   columns?: ColumnName[];
   sortBy?: SortField;
   sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+export interface ExportTransactionsResult {
+  csv: string;
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ExportTransactionsXlsxResult {
+  buffer: Buffer;
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface ExportReportQuery {

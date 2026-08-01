@@ -14,11 +14,11 @@ export interface PaginationProps {
 /**
  * Page navigation component with prev/next buttons and numbered pages.
  */
-export const Pagination: React.FC<PaginationProps> = ({
+export const Pagination = React.memo(function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-}) => {
+}: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const getPageNumbers = (): (number | "ellipsis")[] => {
@@ -52,7 +52,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage <= 1}
         className={clsx(
           buttonBase,
-          "text-text-secondary hover:text-text-primary hover:bg-white/5",
+          "text-text-secondary hover:text-text-primary hover:bg-overlay/5",
           "disabled:opacity-30 disabled:pointer-events-none",
         )}
         aria-label="Previous page"
@@ -76,7 +76,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               buttonBase,
               page === currentPage
                 ? "bg-primary text-text-inverse"
-                : "text-text-secondary hover:text-text-primary hover:bg-white/5",
+                : "text-text-secondary hover:text-text-primary hover:bg-overlay/5",
             )}
             aria-current={page === currentPage ? "page" : undefined}
           >
@@ -90,7 +90,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage >= totalPages}
         className={clsx(
           buttonBase,
-          "text-text-secondary hover:text-text-primary hover:bg-white/5",
+          "text-text-secondary hover:text-text-primary hover:bg-overlay/5",
           "disabled:opacity-30 disabled:pointer-events-none",
         )}
         aria-label="Next page"
@@ -99,4 +99,4 @@ export const Pagination: React.FC<PaginationProps> = ({
       </button>
     </nav>
   );
-};
+});

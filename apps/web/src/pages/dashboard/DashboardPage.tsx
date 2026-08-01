@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -29,11 +30,14 @@ import type { DashboardOverview } from "@/services/dashboard";
  * Route: /dashboard
  */
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOverview = async () => {
+  // Stable callback so the effect below and the refresh/retry buttons share
+  // one identity — avoids re-running the fetch when unrelated state changes.
+  const fetchOverview = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -44,11 +48,11 @@ export const DashboardPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOverview();
-  }, []);
+  }, [fetchOverview]);
 
   // ─── Loading State ────────────────────────────────────────────
 
@@ -56,7 +60,7 @@ export const DashboardPage: React.FC = () => {
     return (
       <div className="space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
         {/* Skeleton stat cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-reveal">
           <StatCardSkeleton />
           <StatCardSkeleton />
           <StatCardSkeleton />
@@ -77,14 +81,14 @@ export const DashboardPage: React.FC = () => {
           ))}
         </div>
         {/* Skeleton monthly overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-reveal">
           <StatCardSkeleton />
           <StatCardSkeleton />
           <StatCardSkeleton />
           <StatCardSkeleton />
         </div>
         {/* Skeleton charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 stagger-reveal">
           <div className="lg:col-span-8">
             <div className="glass rounded-xl p-5 space-y-4">
               <Skeleton width="w-32" height="h-5" />
@@ -128,6 +132,8 @@ export const DashboardPage: React.FC = () => {
           icon={Wallet}
           title="Welcome! Start Tracking Your Finances"
           description="Add your first income or expense transaction to see your financial dashboard come to life."
+          actionLabel="+ Add Your First Transaction"
+          onAction={() => navigate("/expenses")}
           iconColor="text-primary"
         />
       </div>
@@ -147,14 +153,14 @@ export const DashboardPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Financial Overview</h1>
-          <p className="text-sm text-text-muted mt-1">
+          <h2 className="page-title font-bold text-text-primary">Financial Overview</h2>
+          <p className="text-sm text-text-secondary mt-1">
             Your all-time financial health at a glance
           </p>
         </div>
         <button
           onClick={fetchOverview}
-          className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all"
+          className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-all"
           aria-label="Refresh dashboard data"
         >
           <RefreshCw className="size-4" />
@@ -162,7 +168,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-reveal">
         <StatCard
           title="Total Income"
           value={formatCurrency(overview.totalIncome)}
@@ -229,7 +235,7 @@ export const DashboardPage: React.FC = () => {
             </span>
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-reveal">
           <StatCard
             title="Monthly Income"
             value={formatCurrency(overview.monthlyIncome)}
@@ -282,7 +288,7 @@ export const DashboardPage: React.FC = () => {
       </section>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 stagger-reveal">
         <div className="lg:col-span-7">
           <IncomeExpenseChart />
         </div>
@@ -292,7 +298,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Monthly Expenses & Budget Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 stagger-reveal">
         <div className="lg:col-span-8">
           <MonthlyExpensesChart />
         </div>
@@ -302,14 +308,14 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Cash Flow Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 stagger-reveal">
         <div className="lg:col-span-12">
           <CashFlowChart />
         </div>
       </div>
 
       {/* Account Overview & Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 stagger-reveal">
         <div className="lg:col-span-6">
           <AccountOverview
             methods={overview.spendingByPaymentMethod}

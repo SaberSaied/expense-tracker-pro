@@ -22,14 +22,14 @@ const sizeStyles = {
 /**
  * Circular avatar with optional image and fallback initials.
  */
-export const Avatar: React.FC<AvatarProps> = ({
+export const Avatar = React.memo(function Avatar({
   src,
   alt = "User avatar",
   initials,
   size = "md",
   className,
   ...props
-}) => {
+}: AvatarProps) {
   return (
     <div
       className={clsx(
@@ -45,11 +45,13 @@ export const Avatar: React.FC<AvatarProps> = ({
         <img
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           className="size-full object-cover"
         />
       ) : (
-        <span aria-label={alt}>{initials ?? "?"}</span>
+        <span role="img" aria-label={alt}>{initials ?? "?"}</span>
       )}
     </div>
   );
-};
+});

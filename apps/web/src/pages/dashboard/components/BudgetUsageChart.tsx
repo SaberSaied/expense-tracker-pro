@@ -54,7 +54,7 @@ function getStatusBorder(status: "on_track" | "warning" | "critical"): string {
 
 // ─── Component ─────────────────────────────────────────────────
 
-export const BudgetUsageChart: React.FC = () => {
+export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
   const [currentMonth, setCurrentMonth] = useState(() => getMonthKey(new Date()));
   const [budgets, setBudgets] = useState<BudgetUsageData[]>([]);
   const [summary, setSummary] = useState<BudgetUsageSummary | null>(null);
@@ -155,7 +155,7 @@ export const BudgetUsageChart: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
           <Wallet className="size-10 text-text-muted/40" />
           <p className="text-sm text-text-muted">No budgets set for {periodLabel}</p>
-          <p className="text-xs text-text-muted/60">
+          <p className="text-xs text-text-muted">
             Create budgets to track your spending limits
           </p>
         </div>
@@ -182,7 +182,7 @@ export const BudgetUsageChart: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={goToPrevMonth}
-            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all"
+            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-all"
             aria-label="Previous month"
           >
             <TrendingDown className="size-3.5 rotate-90" />
@@ -192,7 +192,7 @@ export const BudgetUsageChart: React.FC = () => {
           </span>
           <button
             onClick={goToNextMonth}
-            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all"
+            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-all"
             disabled={currentMonth >= getMonthKey(new Date())}
             aria-label="Next month"
           >
@@ -226,7 +226,7 @@ export const BudgetUsageChart: React.FC = () => {
           </div>
 
           {/* Overall progress bar */}
-          <div className="h-3 rounded-full bg-white/5 overflow-hidden mb-3">
+          <div className="h-3 rounded-full bg-overlay/5 overflow-hidden mb-3">
             <div
               className={clsx(
                 "h-full rounded-full transition-all duration-500",
@@ -320,7 +320,7 @@ export const BudgetUsageChart: React.FC = () => {
             </div>
 
             {/* Progress bar */}
-            <div className="h-2 rounded-full bg-white/5 overflow-hidden mb-2.5">
+            <div className="h-2 rounded-full bg-overlay/5 overflow-hidden mb-2.5">
               <div
                 className={clsx(
                   "h-full rounded-full transition-all duration-500",
@@ -377,4 +377,4 @@ export const BudgetUsageChart: React.FC = () => {
       </div>
     </div>
   );
-};
+});

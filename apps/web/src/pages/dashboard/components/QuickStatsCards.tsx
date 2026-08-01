@@ -25,7 +25,7 @@ interface StatItem {
 /**
  * Quick statistics grid — displays aggregate counts and extremes at a glance.
  */
-export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ stats }) => {
+export const QuickStatsCards = React.memo(function QuickStatsCards({ stats }: QuickStatsCardsProps) {
   const formatCurrency = (value: number) =>
     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -75,7 +75,7 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 stagger-reveal">
       {items.map((item) => (
         <div
           key={item.label}
@@ -83,6 +83,7 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ stats }) => {
             "glass rounded-xl p-4",
             "hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150",
             "flex flex-col items-center text-center gap-2",
+            "animate-[rise-in_0.3s_ease-out]",
           )}
         >
           <div
@@ -105,4 +106,4 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ stats }) => {
       ))}
     </div>
   );
-};
+});

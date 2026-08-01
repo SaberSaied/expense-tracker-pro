@@ -34,7 +34,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isLoading = false,
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-md"
+      ariaLabel={title}
+    >
       <div className="flex flex-col items-center text-center">
         <div className="size-14 rounded-2xl bg-error/15 flex items-center justify-center mb-4">
           <AlertTriangle className="size-7 text-error" />

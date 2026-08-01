@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/services/api";
+import { ValidationErrors } from "@/components/ui/ValidationErrors";
+import { extractFieldErrors, focusFirstInvalidField } from "@/utils/errors";
 
 /**
  * Login page — authenticates existing users via email and password.
@@ -17,8 +19,15 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // When validation errors appear, move focus to the first invalid field so
+  // keyboard & screen-reader users can locate and fix it (WCAG 3.3.1).
+  useEffect(() => {
+    if (fieldErrors) focusFirstInvalidField("login-form");
+  }, [fieldErrors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +38,8 @@ export const LoginPage: React.FC = () => {
       toast.success("Welcome back!");
       navigate("/dashboard", { replace: true });
     } catch (err) {
+      const fieldErrors = extractFieldErrors(err);
+      if (fieldErrors) setFieldErrors(fieldErrors);
       const message =
         err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
       toast.error("Login failed", { description: message });
@@ -46,6 +57,8 @@ export const LoginPage: React.FC = () => {
         </p>
       </div>
 
+      <ValidationErrors errors={fieldErrors} onDismiss={() => setFieldErrors(undefined)} />
+
       <Input
         label="Email Address"
         type="email"
@@ -53,7 +66,9 @@ export const LoginPage: React.FC = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         leftIcon={<Mail className="size-4" />}
+        error={fieldErrors?.email?.[0]}
         autoComplete="email"
+        name="email"
         required
       />
 
@@ -68,13 +83,15 @@ export const LoginPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="text-text-muted hover:text-text-primary transition-colors"
+            className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
+        error={fieldErrors?.password?.[0]}
         autoComplete="current-password"
+        name="password"
         required
       />
 

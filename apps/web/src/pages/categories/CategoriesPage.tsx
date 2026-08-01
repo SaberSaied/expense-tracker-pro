@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { toast } from "sonner";
-import { Plus, FolderPlus, Pencil, Trash2, Search, X, Check } from "lucide-react";
+import { Plus, FolderPlus, Pencil, Trash2, Search, SearchX, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -91,6 +91,10 @@ export const CategoriesPage: React.FC = () => {
   const systemCategories = categories.filter((c) => c.isSystem);
   const customCategories = categories.filter((c) => !c.isSystem);
 
+  // Active search with zero matches — show a dedicated empty state instead
+  const hasActiveSearch = debouncedQuery.trim().length > 0;
+  const noSearchResults = hasActiveSearch && categories.length === 0;
+
   const openCreateModal = () => {
     setSelectedCategory(null);
     setFormName("");
@@ -167,7 +171,7 @@ export const CategoriesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-8 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
+      <div className="space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-7 w-40" />
@@ -175,7 +179,7 @@ export const CategoriesPage: React.FC = () => {
           </div>
           <Skeleton className="h-10 w-36 rounded-lg" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="glass rounded-xl p-5">
               <div className="flex items-center gap-3 mb-4">
@@ -195,10 +199,10 @@ export const CategoriesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
+    <div className="space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-text-primary">Categories</h2>
+          <h2 className="page-title font-bold text-text-primary">Categories</h2>
           <p className="text-sm text-text-secondary mt-1">
             Organize your expenses into categories
           </p>
@@ -208,18 +212,20 @@ export const CategoriesPage: React.FC = () => {
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-muted pointer-events-none" />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search categories..."
+              aria-label="Search categories"
               className="w-full sm:w-56 rounded-lg border border-border-card bg-bg-app pl-9 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                aria-label="Clear search"
               >
-                <X className="size-4" />
+                <X className="size-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -229,40 +235,53 @@ export const CategoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {systemCategories.length > 0 && (
-        <section>
-          <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-4">
-            System Categories
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {systemCategories.map((cat) => (
-              <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
-            ))}
-          </div>
-        </section>
-      )}
+      {noSearchResults ? (
+        <EmptyState
+          icon={SearchX}
+          title="No Matching Categories"
+          description={`No categories match "${debouncedQuery}". Try a different keyword.`}
+          actionLabel="Clear Search"
+          onAction={() => setSearchQuery("")}
+          iconColor="text-text-muted"
+        />
+      ) : (
+        <>
+          {systemCategories.length > 0 && (
+            <section>
+              <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-4">
+                System Categories
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
+                {systemCategories.map((cat) => (
+                  <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
+                ))}
+              </div>
+            </section>
+          )}
 
-      <section>
-        <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-4">
-          Custom Categories
-        </h3>
-        {customCategories.length === 0 ? (
-          <EmptyState
-            icon={FolderPlus}
-            title="No Custom Categories Yet"
-            description="Create custom categories tailored to your unique financial tracking needs."
-            actionLabel="+ Create Your First Category"
-            onAction={openCreateModal}
-            iconColor="text-secondary"
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {customCategories.map((cat) => (
-              <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
-            ))}
-          </div>
-        )}
-      </section>
+          <section>
+            <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-4">
+              Custom Categories
+            </h3>
+            {customCategories.length === 0 ? (
+              <EmptyState
+                icon={FolderPlus}
+                title="No Custom Categories Yet"
+                description="Create custom categories tailored to your unique financial tracking needs."
+                actionLabel="+ Create Your First Category"
+                onAction={openCreateModal}
+                iconColor="text-secondary"
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
+                {customCategories.map((cat) => (
+                  <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
 
       <Modal
         isOpen={showCreateModal}
@@ -298,6 +317,7 @@ export const CategoriesPage: React.FC = () => {
                   setFormColor(val);
                 }}
                 placeholder="#6366F1"
+                aria-label="Category color (hex code)"
                 pattern="^#[0-9a-fA-F]{6}$"
                 maxLength={7}
                 className={clsx(
@@ -329,6 +349,7 @@ export const CategoriesPage: React.FC = () => {
                     )}
                     style={{ backgroundColor: color }}
                     aria-label={"Select color " + color}
+                    aria-pressed={isSelected}
                   />
                 );
               })}
@@ -349,10 +370,11 @@ export const CategoriesPage: React.FC = () => {
                       "flex flex-col items-center gap-1 rounded-xl p-2.5 transition-all",
                       isSelected
                         ? "bg-primary/15 ring-2 ring-primary ring-offset-1 ring-offset-bg-app scale-105"
-                        : "hover:bg-white/5 hover:scale-105",
+                        : "hover:bg-overlay/5 hover:scale-105",
                     )}
                     title={opt.label}
                     aria-label={`Select icon: ${opt.label}`}
+                    aria-pressed={isSelected}
                   >
                     <CategoryIcon
                       name={opt.value}
@@ -417,7 +439,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onEdit, onDelete 
     </div>
 
     {!category.isSystem && (
-      <div className="flex items-center gap-2 pt-3 border-t border-border-card/50 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 pt-3 border-t border-border-card/50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-150">
         <Button
           variant="ghost"
           size="sm"
