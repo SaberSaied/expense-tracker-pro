@@ -6,15 +6,11 @@
       "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**"]
+        "includeFiles": ["dist/**"],
+        "maxDuration": 30
       }
     }
   ],
-  "functions": {
-    "api/index.ts": {
-      "maxDuration": 30
-    }
-  },
   "routes": [
     {
       "src": "/(.*)",
