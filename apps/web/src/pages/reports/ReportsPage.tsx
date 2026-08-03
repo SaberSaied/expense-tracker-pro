@@ -684,10 +684,7 @@ export const ReportsPage: React.FC = () => {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-text-secondary"
-              id="export-format-label"
-            >
+            <label className="text-sm font-medium text-text-secondary" id="export-format-label">
               File Format
             </label>
             <div

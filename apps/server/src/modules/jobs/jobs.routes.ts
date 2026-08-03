@@ -5,17 +5,21 @@ import { jobNameParamSchema, runJobQuerySchema } from "./jobs.validation";
 
 const router: Router = Router();
 
-// ─── Manual job triggers (guarded by JOBS_TRIGGER_TOKEN) ────
-router.post(
-  "/run-all",
-  asyncHandler(jobsController.runAll)
-);
+// ─── Job triggers (guarded by JOBS_TRIGGER_TOKEN) ───────────
+router.get("/run-all", asyncHandler(jobsController.runAll));
+router.post("/run-all", asyncHandler(jobsController.runAll));
 
+router.get(
+  "/run/:name",
+  validate(jobNameParamSchema, "params"),
+  validate(runJobQuerySchema, "query"),
+  asyncHandler(jobsController.runOne),
+);
 router.post(
   "/run/:name",
   validate(jobNameParamSchema, "params"),
   validate(runJobQuerySchema, "query"),
-  asyncHandler(jobsController.runOne)
+  asyncHandler(jobsController.runOne),
 );
 
 export { router as jobsRoutes };

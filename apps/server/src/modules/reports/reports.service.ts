@@ -38,16 +38,20 @@ export const reportService = {
     const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Go back to Monday
     const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + mondayOffset);
-    const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6, 23, 59, 59, 999);
+    const sunday = new Date(
+      monday.getFullYear(),
+      monday.getMonth(),
+      monday.getDate() + 6,
+      23,
+      59,
+      59,
+      999,
+    );
 
     const startDateStr = monday.toISOString().slice(0, 10);
     const endDateStr = sunday.toISOString().slice(0, 10);
 
-    const transactions = await reportRepository.findTransactionsInRange(
-      userId,
-      monday,
-      sunday
-    );
+    const transactions = await reportRepository.findTransactionsInRange(userId, monday, sunday);
 
     const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -74,7 +78,14 @@ export const reportService = {
     let totalExpenses = 0;
     const categoryMap = new Map<
       string,
-      { categoryId: string; categoryName: string; categoryColor: string; categoryIcon: string; total: number; count: number }
+      {
+        categoryId: string;
+        categoryName: string;
+        categoryColor: string;
+        categoryIcon: string;
+        total: number;
+        count: number;
+      }
     >();
 
     const mappedTransactions = transactions.map((tx) => {
@@ -119,13 +130,9 @@ export const reportService = {
       };
     });
 
-    const dailyBreakdown = Array.from(dayMap.values()).sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+    const dailyBreakdown = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-    const spendingByCategory = Array.from(categoryMap.values()).sort(
-      (a, b) => b.total - a.total
-    );
+    const spendingByCategory = Array.from(categoryMap.values()).sort((a, b) => b.total - a.total);
 
     return {
       startDate: startDateStr,
@@ -153,8 +160,18 @@ export const reportService = {
     ]);
 
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const label = `${MONTH_NAMES[month - 1]} ${year}`;
     const monthStr = `${year}-${String(month).padStart(2, "0")}`;
@@ -162,24 +179,30 @@ export const reportService = {
     // ─── Combined aggregation (single pass through transactions) ───
     let totalIncome = 0;
     let totalExpenses = 0;
-    const categoryMap = new Map<string, {
-      categoryId: string;
-      categoryName: string;
-      categoryColor: string;
-      categoryIcon: string;
-      total: number;
-      count: number;
-    }>();
-    const pmMap = new Map<string, {
-      paymentMethodId: string;
-      paymentMethodName: string;
-      paymentMethodType: string;
-      paymentMethodIcon: string;
-      paymentMethodColor: string;
-      totalExpense: number;
-      totalIncome: number;
-      transactionCount: number;
-    }>();
+    const categoryMap = new Map<
+      string,
+      {
+        categoryId: string;
+        categoryName: string;
+        categoryColor: string;
+        categoryIcon: string;
+        total: number;
+        count: number;
+      }
+    >();
+    const pmMap = new Map<
+      string,
+      {
+        paymentMethodId: string;
+        paymentMethodName: string;
+        paymentMethodType: string;
+        paymentMethodIcon: string;
+        paymentMethodColor: string;
+        totalExpense: number;
+        totalIncome: number;
+        transactionCount: number;
+      }
+    >();
     // Track spending by category for budget performance (eliminates second pass)
     const budgetSpendingMap = new Map<string, number>();
 
@@ -191,7 +214,7 @@ export const reportService = {
         totalExpenses += tx.amount;
         budgetSpendingMap.set(
           tx.categoryId,
-          (budgetSpendingMap.get(tx.categoryId) ?? 0) + tx.amount
+          (budgetSpendingMap.get(tx.categoryId) ?? 0) + tx.amount,
         );
       }
 
@@ -238,10 +261,7 @@ export const reportService = {
     const categorySummary = Array.from(categoryMap.values())
       .map((cat) => ({
         ...cat,
-        percentage:
-          totalExpenses > 0
-            ? Math.round((cat.total / totalExpenses) * 100)
-            : 0,
+        percentage: totalExpenses > 0 ? Math.round((cat.total / totalExpenses) * 100) : 0,
       }))
       .sort((a, b) => b.total - a.total);
 
@@ -267,9 +287,8 @@ export const reportService = {
     // Use budgetSpendingMap from the single pass (eliminates redundant second pass)
     const budgetPerformance = scopedBudgets.map((budget) => {
       const spent = budgetSpendingMap.get(budget.categoryId) ?? 0;
-      const percentage = budget.targetAmount > 0
-        ? Math.round((spent / budget.targetAmount) * 100)
-        : 0;
+      const percentage =
+        budget.targetAmount > 0 ? Math.round((spent / budget.targetAmount) * 100) : 0;
 
       let status: "on_track" | "warning" | "critical" = "on_track";
       if (percentage >= 100) {
@@ -305,8 +324,18 @@ export const reportService = {
 
   async getYearlyReport(userId: string, year: number) {
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     // Fetch transactions and budgets in parallel
@@ -357,7 +386,7 @@ export const reportService = {
         totalExpenses += tx.amount;
         yearlyExpensesByCategory.set(
           tx.categoryId,
-          (yearlyExpensesByCategory.get(tx.categoryId) ?? 0) + tx.amount
+          (yearlyExpensesByCategory.get(tx.categoryId) ?? 0) + tx.amount,
         );
       }
 
@@ -399,10 +428,7 @@ export const reportService = {
     const topCategories = Array.from(categoryMap.values())
       .map((cat) => ({
         ...cat,
-        percentage:
-          totalExpenses > 0
-            ? Math.round((cat.total / totalExpenses) * 100)
-            : 0,
+        percentage: totalExpenses > 0 ? Math.round((cat.total / totalExpenses) * 100) : 0,
       }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
@@ -418,9 +444,8 @@ export const reportService = {
 
     const budgetPerformance = scopedBudgets.map((budget) => {
       const spent = yearlyExpensesByCategory.get(budget.categoryId) ?? 0;
-      const percentage = budget.targetAmount > 0
-        ? Math.round((spent / budget.targetAmount) * 100)
-        : 0;
+      const percentage =
+        budget.targetAmount > 0 ? Math.round((spent / budget.targetAmount) * 100) : 0;
 
       let status: "on_track" | "warning" | "critical" = "on_track";
       if (percentage >= 100) {
@@ -471,10 +496,7 @@ export const reportService = {
     const catLookup = new Map(userCategories.map((c) => [c.id, c]));
 
     // ─── Category breakdown ───
-    const totalExpenses = categoryGroup.reduce(
-      (sum, g) => sum + (g._sum.amount ?? 0),
-      0
-    );
+    const totalExpenses = categoryGroup.reduce((sum, g) => sum + (g._sum.amount ?? 0), 0);
 
     const categoryBreakdown = categoryGroup
       .map((g) => {
@@ -486,9 +508,8 @@ export const reportService = {
           categoryIcon: cat?.icon ?? "Tag",
           total: g._sum.amount ?? 0,
           count: g._count,
-          percentage: totalExpenses > 0
-            ? Math.round(((g._sum.amount ?? 0) / totalExpenses) * 100)
-            : 0,
+          percentage:
+            totalExpenses > 0 ? Math.round(((g._sum.amount ?? 0) / totalExpenses) * 100) : 0,
         };
       })
       .sort((a, b) => b.total - a.total);
@@ -598,9 +619,7 @@ export const reportService = {
       incomeCount,
       expenseCount,
       averageTransactionAmount:
-        totalCount > 0
-          ? Math.round(((totalIncome + totalExpenses) / totalCount) * 100) / 100
-          : 0,
+        totalCount > 0 ? Math.round(((totalIncome + totalExpenses) / totalCount) * 100) / 100 : 0,
       averageIncome: incomeCount > 0 ? Math.round((totalIncome / incomeCount) * 100) / 100 : 0,
       averageExpense: expenseCount > 0 ? Math.round((totalExpenses / expenseCount) * 100) / 100 : 0,
     };
@@ -616,7 +635,7 @@ export const reportService = {
       type?: "INCOME" | "EXPENSE" | "TRANSFER";
       minAmount?: number;
       maxAmount?: number;
-    }
+    },
   ) {
     const dbFilters: {
       startDate?: Date;
@@ -684,8 +703,7 @@ export const reportService = {
       };
     });
 
-    const spendingByCategory = Array.from(categoryMap.values())
-      .sort((a, b) => b.total - a.total);
+    const spendingByCategory = Array.from(categoryMap.values()).sort((a, b) => b.total - a.total);
 
     return {
       filters,
@@ -749,9 +767,7 @@ export const reportService = {
       };
     });
 
-    const spendingByCategory = Array.from(categoryMap.values()).sort(
-      (a, b) => b.total - a.total
-    );
+    const spendingByCategory = Array.from(categoryMap.values()).sort((a, b) => b.total - a.total);
 
     return {
       date: dateStr,

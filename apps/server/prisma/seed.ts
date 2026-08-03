@@ -52,22 +52,22 @@ async function main() {
 
   // ─── Categories ───────────────────────────────────────────
   const systemCategories = [
-    { name: "Food & Dining",      icon: "UtensilsCrossed", color: "#F59E0B", isSystem: true },
-    { name: "Transportation",     icon: "Car",            color: "#06B6D4", isSystem: true },
-    { name: "Housing & Rent",     icon: "Home",           color: "#8B5CF6", isSystem: true },
-    { name: "Utilities",          icon: "Zap",            color: "#10B981", isSystem: true },
-    { name: "Entertainment",      icon: "Film",           color: "#F43F5E", isSystem: true },
-    { name: "Healthcare",         icon: "Heart",          color: "#EC4899", isSystem: true },
-    { name: "Shopping",           icon: "ShoppingBag",    color: "#F97316", isSystem: true },
-    { name: "Education",          icon: "BookOpen",       color: "#A855F7", isSystem: true },
-    { name: "Travel",             icon: "Plane",          color: "#14B8A6", isSystem: true },
-    { name: "Personal Care",      icon: "Sparkles",       color: "#E879F9", isSystem: true },
-    { name: "Groceries",          icon: "Apple",          color: "#22C55E", isSystem: true },
-    { name: "Subscriptions",      icon: "Repeat",         color: "#3B82F6", isSystem: true },
-    { name: "Insurance",          icon: "Shield",         color: "#64748B", isSystem: true },
-    { name: "Savings & Investments", icon: "TrendingUp",  color: "#10B981", isSystem: true },
-    { name: "Income",             icon: "Briefcase",      color: "#22C55E", isSystem: true },
-    { name: "Other",              icon: "MoreHorizontal", color: "#94A3B8", isSystem: true },
+    { name: "Food & Dining", icon: "UtensilsCrossed", color: "#F59E0B", isSystem: true },
+    { name: "Transportation", icon: "Car", color: "#06B6D4", isSystem: true },
+    { name: "Housing & Rent", icon: "Home", color: "#8B5CF6", isSystem: true },
+    { name: "Utilities", icon: "Zap", color: "#10B981", isSystem: true },
+    { name: "Entertainment", icon: "Film", color: "#F43F5E", isSystem: true },
+    { name: "Healthcare", icon: "Heart", color: "#EC4899", isSystem: true },
+    { name: "Shopping", icon: "ShoppingBag", color: "#F97316", isSystem: true },
+    { name: "Education", icon: "BookOpen", color: "#A855F7", isSystem: true },
+    { name: "Travel", icon: "Plane", color: "#14B8A6", isSystem: true },
+    { name: "Personal Care", icon: "Sparkles", color: "#E879F9", isSystem: true },
+    { name: "Groceries", icon: "Apple", color: "#22C55E", isSystem: true },
+    { name: "Subscriptions", icon: "Repeat", color: "#3B82F6", isSystem: true },
+    { name: "Insurance", icon: "Shield", color: "#64748B", isSystem: true },
+    { name: "Savings & Investments", icon: "TrendingUp", color: "#10B981", isSystem: true },
+    { name: "Income", icon: "Briefcase", color: "#22C55E", isSystem: true },
+    { name: "Other", icon: "MoreHorizontal", color: "#94A3B8", isSystem: true },
   ];
 
   const categories: Record<string, string> = {};
@@ -80,10 +80,22 @@ async function main() {
 
   // Custom categories
   const customCat1 = await prisma.category.create({
-    data: { name: "SaaS Subscriptions", icon: "Cloud", color: "#6366F1", isSystem: false, userId: user.id },
+    data: {
+      name: "SaaS Subscriptions",
+      icon: "Cloud",
+      color: "#6366F1",
+      isSystem: false,
+      userId: user.id,
+    },
   });
   const customCat2 = await prisma.category.create({
-    data: { name: "Client Dinners", icon: "Wine", color: "#D946EF", isSystem: false, userId: user.id },
+    data: {
+      name: "Client Dinners",
+      icon: "Wine",
+      color: "#D946EF",
+      isSystem: false,
+      userId: user.id,
+    },
   });
   categories["SaaS Subscriptions"] = customCat1.id;
   categories["Client Dinners"] = customCat2.id;
@@ -92,10 +104,22 @@ async function main() {
 
   // ─── Payment Methods ──────────────────────────────────────
   const pmCredit = await prisma.paymentMethod.create({
-    data: { type: "CREDIT_CARD", name: "Chase Sapphire", isDefault: true, lastFour: "4523", userId: user.id },
+    data: {
+      type: "CREDIT_CARD",
+      name: "Chase Sapphire",
+      isDefault: true,
+      lastFour: "4523",
+      userId: user.id,
+    },
   });
   const pmDebit = await prisma.paymentMethod.create({
-    data: { type: "DEBIT_CARD", name: "Bank of America Checking", isDefault: false, lastFour: "7890", userId: user.id },
+    data: {
+      type: "DEBIT_CARD",
+      name: "Bank of America Checking",
+      isDefault: false,
+      lastFour: "7890",
+      userId: user.id,
+    },
   });
   const pmBank = await prisma.paymentMethod.create({
     data: { type: "BANK_TRANSFER", name: "Wells Fargo Savings", isDefault: false, userId: user.id },
@@ -107,20 +131,121 @@ async function main() {
 
   // ─── Transactions ─────────────────────────────────────────
   const txData = [
-    { amount: 1500.00, description: "Monthly Rent — Apartment",             date: new Date("2026-07-01"), categoryId: categories["Housing & Rent"],     paymentMethodId: pmBank.id,   type: "EXPENSE" as const },
-    { amount: 142.50,  description: "Whole Foods Market",                   date: new Date("2026-07-27"), categoryId: categories["Food & Dining"],      paymentMethodId: pmCredit.id, type: "EXPENSE" as const, notes: "Weekly grocery run" },
-    { amount: 24.00,   description: "Uber Ride — Downtown",                 date: new Date("2026-07-26"), categoryId: categories["Transportation"],     paymentMethodId: pmDebit.id,  type: "EXPENSE" as const },
-    { amount: 89.99,   description: "Electric Power Bill",                  date: new Date("2026-07-15"), categoryId: categories["Utilities"],          paymentMethodId: pmBank.id,   type: "EXPENSE" as const },
-    { amount: 45.00,   description: "Netflix + Spotify Combo",              date: new Date("2026-07-20"), categoryId: categories["Entertainment"],      paymentMethodId: pmCredit.id, type: "EXPENSE" as const },
-    { amount: 65.00,   description: "Starbucks — Team Coffee",              date: new Date("2026-07-25"), categoryId: categories["Food & Dining"],      paymentMethodId: pmCredit.id, type: "EXPENSE" as const, notes: "Friday office treat" },
-    { amount: 35.50,   description: "Gas Station Fill-Up",                  date: new Date("2026-07-22"), categoryId: categories["Transportation"],     paymentMethodId: pmDebit.id,  type: "EXPENSE" as const },
-    { amount: 14.99,   description: "GitHub Pro Plan",                      date: new Date("2026-07-01"), categoryId: categories["SaaS Subscriptions"],  paymentMethodId: pmCredit.id, type: "EXPENSE" as const },
-    { amount: 220.00,  description: "Water + Internet Bundle",              date: new Date("2026-07-10"), categoryId: categories["Utilities"],          paymentMethodId: pmBank.id,   type: "EXPENSE" as const },
-    { amount: 78.00,   description: "Dental Checkup Co-pay",                date: new Date("2026-07-18"), categoryId: categories["Healthcare"],         paymentMethodId: pmDebit.id,  type: "EXPENSE" as const },
-    { amount: 55.00,   description: "Italian Restaurant — Client Meet",     date: new Date("2026-07-24"), categoryId: categories["Client Dinners"],     paymentMethodId: pmCredit.id, type: "EXPENSE" as const, notes: "Prospect meeting dinner" },
-    { amount: 150.52,  description: "Costco Bulk Groceries",                date: new Date("2026-07-20"), categoryId: categories["Groceries"],          paymentMethodId: pmCredit.id, type: "EXPENSE" as const },
-    { amount: 5200.00, description: "Freelance Project — Q3 Website Build", date: new Date("2026-07-15"), categoryId: categories["Income"],             paymentMethodId: pmBank.id,   type: "INCOME" as const },
-    { amount: 200.00,  description: "Transfer to Savings",                  date: new Date("2026-07-16"), categoryId: categories["Savings & Investments"], paymentMethodId: pmBank.id, type: "TRANSFER" as const },
+    {
+      amount: 1500.0,
+      description: "Monthly Rent — Apartment",
+      date: new Date("2026-07-01"),
+      categoryId: categories["Housing & Rent"],
+      paymentMethodId: pmBank.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 142.5,
+      description: "Whole Foods Market",
+      date: new Date("2026-07-27"),
+      categoryId: categories["Food & Dining"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+      notes: "Weekly grocery run",
+    },
+    {
+      amount: 24.0,
+      description: "Uber Ride — Downtown",
+      date: new Date("2026-07-26"),
+      categoryId: categories["Transportation"],
+      paymentMethodId: pmDebit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 89.99,
+      description: "Electric Power Bill",
+      date: new Date("2026-07-15"),
+      categoryId: categories["Utilities"],
+      paymentMethodId: pmBank.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 45.0,
+      description: "Netflix + Spotify Combo",
+      date: new Date("2026-07-20"),
+      categoryId: categories["Entertainment"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 65.0,
+      description: "Starbucks — Team Coffee",
+      date: new Date("2026-07-25"),
+      categoryId: categories["Food & Dining"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+      notes: "Friday office treat",
+    },
+    {
+      amount: 35.5,
+      description: "Gas Station Fill-Up",
+      date: new Date("2026-07-22"),
+      categoryId: categories["Transportation"],
+      paymentMethodId: pmDebit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 14.99,
+      description: "GitHub Pro Plan",
+      date: new Date("2026-07-01"),
+      categoryId: categories["SaaS Subscriptions"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 220.0,
+      description: "Water + Internet Bundle",
+      date: new Date("2026-07-10"),
+      categoryId: categories["Utilities"],
+      paymentMethodId: pmBank.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 78.0,
+      description: "Dental Checkup Co-pay",
+      date: new Date("2026-07-18"),
+      categoryId: categories["Healthcare"],
+      paymentMethodId: pmDebit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 55.0,
+      description: "Italian Restaurant — Client Meet",
+      date: new Date("2026-07-24"),
+      categoryId: categories["Client Dinners"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+      notes: "Prospect meeting dinner",
+    },
+    {
+      amount: 150.52,
+      description: "Costco Bulk Groceries",
+      date: new Date("2026-07-20"),
+      categoryId: categories["Groceries"],
+      paymentMethodId: pmCredit.id,
+      type: "EXPENSE" as const,
+    },
+    {
+      amount: 5200.0,
+      description: "Freelance Project — Q3 Website Build",
+      date: new Date("2026-07-15"),
+      categoryId: categories["Income"],
+      paymentMethodId: pmBank.id,
+      type: "INCOME" as const,
+    },
+    {
+      amount: 200.0,
+      description: "Transfer to Savings",
+      date: new Date("2026-07-16"),
+      categoryId: categories["Savings & Investments"],
+      paymentMethodId: pmBank.id,
+      type: "TRANSFER" as const,
+    },
   ];
 
   for (const tx of txData) {
@@ -141,14 +266,39 @@ async function main() {
 
   // ─── Budgets ──────────────────────────────────────────────
   const budgets = [
-    { targetAmount: 1000, categoryId: categories["Food & Dining"],         startDate: new Date("2026-07-01") },
-    { targetAmount: 600,  categoryId: categories["Transportation"],        startDate: new Date("2026-07-01") },
-    { targetAmount: 1500, categoryId: categories["Housing & Rent"],        startDate: new Date("2026-07-01"), alertThreshold: 90 },
-    { targetAmount: 400,  categoryId: categories["Utilities"],             startDate: new Date("2026-07-01") },
-    { targetAmount: 300,  categoryId: categories["Entertainment"],         startDate: new Date("2026-07-01") },
-    { targetAmount: 500,  categoryId: categories["Healthcare"],            startDate: new Date("2026-07-01") },
-    { targetAmount: 200,  categoryId: categories["SaaS Subscriptions"],    startDate: new Date("2026-07-01") },
-    { targetAmount: 300,  categoryId: categories["Client Dinners"],        startDate: new Date("2026-07-01") },
+    {
+      targetAmount: 1000,
+      categoryId: categories["Food & Dining"],
+      startDate: new Date("2026-07-01"),
+    },
+    {
+      targetAmount: 600,
+      categoryId: categories["Transportation"],
+      startDate: new Date("2026-07-01"),
+    },
+    {
+      targetAmount: 1500,
+      categoryId: categories["Housing & Rent"],
+      startDate: new Date("2026-07-01"),
+      alertThreshold: 90,
+    },
+    { targetAmount: 400, categoryId: categories["Utilities"], startDate: new Date("2026-07-01") },
+    {
+      targetAmount: 300,
+      categoryId: categories["Entertainment"],
+      startDate: new Date("2026-07-01"),
+    },
+    { targetAmount: 500, categoryId: categories["Healthcare"], startDate: new Date("2026-07-01") },
+    {
+      targetAmount: 200,
+      categoryId: categories["SaaS Subscriptions"],
+      startDate: new Date("2026-07-01"),
+    },
+    {
+      targetAmount: 300,
+      categoryId: categories["Client Dinners"],
+      startDate: new Date("2026-07-01"),
+    },
   ];
 
   for (const b of budgets) {
@@ -167,9 +317,30 @@ async function main() {
 
   // ─── Savings Goals ────────────────────────────────────────
   const goals = [
-    { name: "Emergency Fund",       targetAmount: 10000, currentAmount: 3200, deadline: new Date("2027-06-30"), icon: "Shield",        color: "#10B981" },
-    { name: "New Laptop",           targetAmount: 2500,  currentAmount: 1200, deadline: new Date("2026-12-31"), icon: "Laptop",        color: "#6366F1" },
-    { name: "Summer Vacation 2027", targetAmount: 4000,  currentAmount: 800,  deadline: new Date("2027-05-31"), icon: "Palmtree",      color: "#06B6D4" },
+    {
+      name: "Emergency Fund",
+      targetAmount: 10000,
+      currentAmount: 3200,
+      deadline: new Date("2027-06-30"),
+      icon: "Shield",
+      color: "#10B981",
+    },
+    {
+      name: "New Laptop",
+      targetAmount: 2500,
+      currentAmount: 1200,
+      deadline: new Date("2026-12-31"),
+      icon: "Laptop",
+      color: "#6366F1",
+    },
+    {
+      name: "Summer Vacation 2027",
+      targetAmount: 4000,
+      currentAmount: 800,
+      deadline: new Date("2027-05-31"),
+      icon: "Palmtree",
+      color: "#06B6D4",
+    },
   ];
 
   for (const g of goals) {
@@ -181,10 +352,30 @@ async function main() {
 
   // ─── Notifications ────────────────────────────────────────
   const notifications = [
-    { type: "BUDGET_WARNING" as const,  title: "Budget Alert",           message: "You've used 82% of your Food & Dining budget for July.",     read: false },
-    { type: "BUDGET_CRITICAL" as const, title: "Budget Critical",        message: "You've exceeded 100% of your Housing & Rent budget for July.", read: true },
-    { type: "EXPORT_COMPLETE" as const, title: "Export Ready",           message: "Your CSV export of June transactions is ready to download.",   read: true },
-    { type: "WEEKLY_DIGEST" as const,   title: "Weekly Digest",          message: "You spent $1,245 this week — 12% more than last week.",        read: false },
+    {
+      type: "BUDGET_WARNING" as const,
+      title: "Budget Alert",
+      message: "You've used 82% of your Food & Dining budget for July.",
+      read: false,
+    },
+    {
+      type: "BUDGET_CRITICAL" as const,
+      title: "Budget Critical",
+      message: "You've exceeded 100% of your Housing & Rent budget for July.",
+      read: true,
+    },
+    {
+      type: "EXPORT_COMPLETE" as const,
+      title: "Export Ready",
+      message: "Your CSV export of June transactions is ready to download.",
+      read: true,
+    },
+    {
+      type: "WEEKLY_DIGEST" as const,
+      title: "Weekly Digest",
+      message: "You spent $1,245 this week — 12% more than last week.",
+      read: false,
+    },
   ];
 
   for (const n of notifications) {

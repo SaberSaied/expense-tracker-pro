@@ -2,7 +2,11 @@ import { reportRepository } from "../reports/reports.repository";
 import { reportService } from "../reports/reports.service";
 import { budgetRepository } from "../budgets/budgets.repository";
 import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
-import type { ExportTransactionsQuery, ExportTransactionsResult, ColumnName } from "./exports.types";
+import type {
+  ExportTransactionsQuery,
+  ExportTransactionsResult,
+  ColumnName,
+} from "./exports.types";
 
 // ─── CSV Escaping Helpers ──────────────────────────────────────
 
@@ -69,20 +73,29 @@ function buildCsvRow(
     category: { name: string };
     paymentMethod?: { name: string } | null;
     notes?: string | null;
-  }
+  },
 ): string {
   return cols
     .map((col) => {
       switch (col.key) {
-        case "id": return escapeCsv(tx.id);
-        case "date": return escapeCsv(formatDate(tx.date));
-        case "type": return escapeCsv(tx.type);
-        case "amount": return formatAmount(tx.amount);
-        case "description": return escapeCsv(tx.description);
-        case "category": return escapeCsv(tx.category.name);
-        case "paymentmethod": return escapeCsv(tx.paymentMethod?.name ?? "");
-        case "notes": return escapeCsv(tx.notes ?? "");
-        default: return "";
+        case "id":
+          return escapeCsv(tx.id);
+        case "date":
+          return escapeCsv(formatDate(tx.date));
+        case "type":
+          return escapeCsv(tx.type);
+        case "amount":
+          return formatAmount(tx.amount);
+        case "description":
+          return escapeCsv(tx.description);
+        case "category":
+          return escapeCsv(tx.category.name);
+        case "paymentmethod":
+          return escapeCsv(tx.paymentMethod?.name ?? "");
+        case "notes":
+          return escapeCsv(tx.notes ?? "");
+        default:
+          return "";
       }
     })
     .join(",");
@@ -92,7 +105,10 @@ function buildCsvRow(
  * Build the common DB filters from export query params.
  * Resolves budgetId to categoryId if the budget belongs to this user.
  */
-async function buildDbFilters(userId: string, filters: ExportTransactionsQuery): Promise<Record<string, unknown>> {
+async function buildDbFilters(
+  userId: string,
+  filters: ExportTransactionsQuery,
+): Promise<Record<string, unknown>> {
   const dbFilters: Record<string, unknown> = {};
 
   if (filters.startDate) dbFilters.startDate = new Date(filters.startDate);
@@ -122,7 +138,7 @@ export const exportService = {
    */
   async generateTransactionsCsv(
     userId: string,
-    filters: ExportTransactionsQuery
+    filters: ExportTransactionsQuery,
   ): Promise<ExportTransactionsResult> {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 1000;
@@ -133,7 +149,7 @@ export const exportService = {
     // Fetch total count separately for pagination metadata
     const totalCount = await reportRepository.countCustomTransactions(
       userId,
-      dbFilters as Parameters<typeof reportRepository.countCustomTransactions>[1]
+      dbFilters as Parameters<typeof reportRepository.countCustomTransactions>[1],
     );
 
     const totalPages = Math.max(1, Math.ceil(totalCount / limit));
@@ -142,7 +158,7 @@ export const exportService = {
       userId,
       dbFilters as Parameters<typeof reportRepository.findCustomTransactions>[1],
       { skip, take: limit },
-      { sortBy: filters.sortBy, sortOrder: filters.sortOrder }
+      { sortBy: filters.sortBy, sortOrder: filters.sortOrder },
     );
 
     // Apply column selection
@@ -169,7 +185,7 @@ export const exportService = {
       endDate?: string;
       budgetId?: string;
       savingsGoalId?: string;
-    }
+    },
   ): Promise<string> {
     // Fetch savings goal info if provided
     let goalInfo: Record<string, unknown> | null = null;
@@ -190,13 +206,23 @@ export const exportService = {
 
     switch (query.type) {
       case "daily":
-        return this.generateDailyReportCsv(userId, query.date ?? new Date().toISOString().slice(0, 10));
+        return this.generateDailyReportCsv(
+          userId,
+          query.date ?? new Date().toISOString().slice(0, 10),
+        );
 
       case "weekly":
-        return this.generateWeeklyReportCsv(userId, query.date ?? new Date().toISOString().slice(0, 10));
+        return this.generateWeeklyReportCsv(
+          userId,
+          query.date ?? new Date().toISOString().slice(0, 10),
+        );
 
       case "monthly":
-        return this.generateMonthlyReportCsv(userId, query.year ?? new Date().getFullYear(), query.month ?? new Date().getMonth() + 1);
+        return this.generateMonthlyReportCsv(
+          userId,
+          query.year ?? new Date().getFullYear(),
+          query.month ?? new Date().getMonth() + 1,
+        );
 
       case "yearly":
         return this.generateYearlyReportCsv(userId, query.year ?? new Date().getFullYear());
@@ -229,16 +255,18 @@ export const exportService = {
     ];
 
     for (const tx of report.transactions) {
-      lines.push([
-        escapeCsv(tx.id),
-        escapeCsv(formatDate(tx.date)),
-        escapeCsv(tx.type),
-        formatAmount(tx.amount),
-        escapeCsv(tx.description),
-        escapeCsv(tx.categoryName),
-        "",
-        "",
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(tx.id),
+          escapeCsv(formatDate(tx.date)),
+          escapeCsv(tx.type),
+          formatAmount(tx.amount),
+          escapeCsv(tx.description),
+          escapeCsv(tx.categoryName),
+          "",
+          "",
+        ].join(","),
+      );
     }
 
     return lines.join("\n");
@@ -262,36 +290,38 @@ export const exportService = {
     ];
 
     for (const day of report.dailyBreakdown) {
-      lines.push([
-        escapeCsv(day.date),
-        escapeCsv(day.dayName),
-        formatAmount(day.income),
-        formatAmount(day.expenses),
-        String(day.transactionCount),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(day.date),
+          escapeCsv(day.dayName),
+          formatAmount(day.income),
+          formatAmount(day.expenses),
+          String(day.transactionCount),
+        ].join(","),
+      );
     }
 
     lines.push("", "--- Transactions ---", buildCsvHeaders(ALL_COLUMNS));
     for (const tx of report.transactions) {
-      lines.push([
-        escapeCsv(tx.id),
-        escapeCsv(formatDate(tx.date)),
-        escapeCsv(tx.type),
-        formatAmount(tx.amount),
-        escapeCsv(tx.description),
-        escapeCsv(tx.categoryName),
-        "",
-        "",
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(tx.id),
+          escapeCsv(formatDate(tx.date)),
+          escapeCsv(tx.type),
+          formatAmount(tx.amount),
+          escapeCsv(tx.description),
+          escapeCsv(tx.categoryName),
+          "",
+          "",
+        ].join(","),
+      );
     }
 
     lines.push("", "--- Spending by Category ---", "Category,Total,Count");
     for (const cat of report.spendingByCategory) {
-      lines.push([
-        escapeCsv(cat.categoryName),
-        formatAmount(cat.total),
-        String(cat.count),
-      ].join(","));
+      lines.push(
+        [escapeCsv(cat.categoryName), formatAmount(cat.total), String(cat.count)].join(","),
+      );
     }
 
     return lines.join("\n");
@@ -314,37 +344,43 @@ export const exportService = {
     // Category summary
     lines.push("", "--- Category Summary ---", "Category,Total,Count,% of Expenses");
     for (const cat of report.categorySummary) {
-      lines.push([
-        escapeCsv(cat.categoryName),
-        formatAmount(cat.total),
-        String(cat.count),
-        `${cat.percentage}%`,
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(cat.categoryName),
+          formatAmount(cat.total),
+          String(cat.count),
+          `${cat.percentage}%`,
+        ].join(","),
+      );
     }
 
     // Payment method summary
     lines.push("", "--- Payment Method Summary ---", "Method,Income,Expense,Net,Transactions");
     for (const pm of report.paymentMethodSummary) {
-      lines.push([
-        escapeCsv(pm.paymentMethodName),
-        formatAmount(pm.totalIncome),
-        formatAmount(pm.totalExpense),
-        formatAmount(pm.netAmount),
-        String(pm.transactionCount),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(pm.paymentMethodName),
+          formatAmount(pm.totalIncome),
+          formatAmount(pm.totalExpense),
+          formatAmount(pm.netAmount),
+          String(pm.transactionCount),
+        ].join(","),
+      );
     }
 
     // Budget performance
     lines.push("", "--- Budget Performance ---", "Category,Budgeted,Spent,Remaining,% Used,Status");
     for (const bp of report.budgetPerformance) {
-      lines.push([
-        escapeCsv(bp.categoryName),
-        formatAmount(bp.budgeted),
-        formatAmount(bp.spent),
-        formatAmount(bp.remaining),
-        `${bp.percentage}%`,
-        escapeCsv(bp.status),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(bp.categoryName),
+          formatAmount(bp.budgeted),
+          formatAmount(bp.spent),
+          formatAmount(bp.remaining),
+          `${bp.percentage}%`,
+          escapeCsv(bp.status),
+        ].join(","),
+      );
     }
 
     return lines.join("\n");
@@ -367,36 +403,42 @@ export const exportService = {
     // Monthly comparison
     lines.push("", "--- Monthly Comparison ---", "Month,Income,Expenses,Net");
     for (const mc of report.monthlyComparison) {
-      lines.push([
-        escapeCsv(mc.label),
-        formatAmount(mc.income),
-        formatAmount(mc.expenses),
-        formatAmount(mc.net),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(mc.label),
+          formatAmount(mc.income),
+          formatAmount(mc.expenses),
+          formatAmount(mc.net),
+        ].join(","),
+      );
     }
 
     // Top categories
     lines.push("", "--- Top Categories ---", "Category,Total,Count,% of Expenses");
     for (const cat of report.topCategories) {
-      lines.push([
-        escapeCsv(cat.categoryName),
-        formatAmount(cat.total),
-        String(cat.count),
-        `${cat.percentage}%`,
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(cat.categoryName),
+          formatAmount(cat.total),
+          String(cat.count),
+          `${cat.percentage}%`,
+        ].join(","),
+      );
     }
 
     // Budget performance
     lines.push("", "--- Budget Performance ---", "Category,Budgeted,Spent,Remaining,% Used,Status");
     for (const bp of report.budgetPerformance) {
-      lines.push([
-        escapeCsv(bp.categoryName),
-        formatAmount(bp.budgeted),
-        formatAmount(bp.spent),
-        formatAmount(bp.remaining),
-        `${bp.percentage}%`,
-        escapeCsv(bp.status),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(bp.categoryName),
+          formatAmount(bp.budgeted),
+          formatAmount(bp.spent),
+          formatAmount(bp.remaining),
+          `${bp.percentage}%`,
+          escapeCsv(bp.status),
+        ].join(","),
+      );
     }
 
     return lines.join("\n");
@@ -404,7 +446,12 @@ export const exportService = {
 
   // ─── Summary CSV ────────────────────────────────────────────
 
-  async generateSummaryCsv(userId: string, startDate?: string, endDate?: string, goalInfo?: Record<string, unknown> | null): Promise<string> {
+  async generateSummaryCsv(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+    goalInfo?: Record<string, unknown> | null,
+  ): Promise<string> {
     const summary = await reportService.getSummary(userId, startDate, endDate);
 
     const lines: string[] = [
@@ -453,7 +500,11 @@ export const exportService = {
 
   // ─── Breakdown CSV ──────────────────────────────────────────
 
-  async generateBreakdownCsv(userId: string, startDate?: string, endDate?: string): Promise<string> {
+  async generateBreakdownCsv(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<string> {
     const breakdown = await reportService.getBreakdown(userId, startDate, endDate);
 
     const lines: string[] = [
@@ -473,24 +524,28 @@ export const exportService = {
     // Category breakdown
     lines.push("", "--- Category Breakdown ---", "Category,Total,Count,%");
     for (const cat of breakdown.categoryBreakdown) {
-      lines.push([
-        escapeCsv(cat.categoryName),
-        formatAmount(cat.total),
-        String(cat.count),
-        `${cat.percentage}%`,
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(cat.categoryName),
+          formatAmount(cat.total),
+          String(cat.count),
+          `${cat.percentage}%`,
+        ].join(","),
+      );
     }
 
     // Payment method breakdown
     lines.push("", "--- Payment Method Breakdown ---", "Method,Income,Expense,Net,Transactions");
     for (const pm of breakdown.paymentMethodBreakdown) {
-      lines.push([
-        escapeCsv(pm.paymentMethodName),
-        formatAmount(pm.totalIncome),
-        formatAmount(pm.totalExpense),
-        formatAmount(pm.netAmount),
-        String(pm.transactionCount),
-      ].join(","));
+      lines.push(
+        [
+          escapeCsv(pm.paymentMethodName),
+          formatAmount(pm.totalIncome),
+          formatAmount(pm.totalExpense),
+          formatAmount(pm.netAmount),
+          String(pm.transactionCount),
+        ].join(","),
+      );
     }
 
     // Largest / Smallest transactions
@@ -502,7 +557,7 @@ export const exportService = {
         `Description,${escapeCsv(breakdown.largestTransaction.description)}`,
         `Category,${escapeCsv(breakdown.largestTransaction.categoryName)}`,
         `Type,${escapeCsv(breakdown.largestTransaction.type)}`,
-        `Date,${formatDate(breakdown.largestTransaction.date)}`
+        `Date,${formatDate(breakdown.largestTransaction.date)}`,
       );
     }
 
@@ -514,7 +569,7 @@ export const exportService = {
         `Description,${escapeCsv(breakdown.smallestTransaction.description)}`,
         `Category,${escapeCsv(breakdown.smallestTransaction.categoryName)}`,
         `Type,${escapeCsv(breakdown.smallestTransaction.type)}`,
-        `Date,${formatDate(breakdown.smallestTransaction.date)}`
+        `Date,${formatDate(breakdown.smallestTransaction.date)}`,
       );
     }
 

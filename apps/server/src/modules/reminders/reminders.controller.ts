@@ -7,8 +7,10 @@ import type { ReminderQueryFilters } from "./reminders.types";
 export const reminderController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { type, frequency, enabled, sortBy, sortOrder } =
-        req.query as Record<string, string | undefined>;
+      const { type, frequency, enabled, sortBy, sortOrder } = req.query as Record<
+        string,
+        string | undefined
+      >;
 
       const filters: ReminderQueryFilters = {
         type: type as ReminderQueryFilters["type"],

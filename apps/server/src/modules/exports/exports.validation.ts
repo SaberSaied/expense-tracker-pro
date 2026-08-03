@@ -6,12 +6,21 @@ export const orientationSchema = z.enum(["portrait", "landscape"]).optional().de
 
 export const sortOrderSchema = z.enum(["asc", "desc"]).optional().default("desc");
 
-export const sortBySchema = z.enum(["date", "amount", "description", "type"]).optional().default("date");
+export const sortBySchema = z
+  .enum(["date", "amount", "description", "type"])
+  .optional()
+  .default("date");
 
 /** Valid column names for transaction exports */
 export const transactionColumnSchema = z.enum([
-  "id", "date", "type", "amount", "description",
-  "category", "paymentmethod", "notes",
+  "id",
+  "date",
+  "type",
+  "amount",
+  "description",
+  "category",
+  "paymentmethod",
+  "notes",
 ]);
 
 export const columnsSchema = z
@@ -28,11 +37,7 @@ const positiveIntString = (max?: number) =>
     .string()
     .regex(/^\d+$/, "Must be a positive integer")
     .transform(Number)
-    .pipe(
-      max
-        ? z.number().int().positive().max(max)
-        : z.number().int().positive()
-    )
+    .pipe(max ? z.number().int().positive().max(max) : z.number().int().positive())
     .optional();
 
 export const exportTransactionsQuerySchema = z.object({
@@ -72,8 +77,14 @@ export const exportReportQuerySchema = z.object({
   sortBy: sortBySchema,
   sortOrder: sortOrderSchema,
   type: z.enum(["daily", "weekly", "monthly", "yearly", "summary", "breakdown"]),
-  year: z.string().regex(/^\d{4}$/, "Invalid year format (YYYY)").optional(),
-  month: z.string().regex(/^(0[1-9]|1[0-2])$/, "Invalid month format (01-12)").optional(),
+  year: z
+    .string()
+    .regex(/^\d{4}$/, "Invalid year format (YYYY)")
+    .optional(),
+  month: z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])$/, "Invalid month format (01-12)")
+    .optional(),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")

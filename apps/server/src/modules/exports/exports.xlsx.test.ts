@@ -48,7 +48,7 @@ async function request(
   method: string,
   path: string,
   reqBody?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; buffer: Buffer; contentType: string; disposition?: string }> {
   const headers: Record<string, string> = {};
   if (reqBody !== undefined) headers["Content-Type"] = "application/json";
@@ -166,11 +166,12 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
   const pmJson = JSON.parse(pm.buffer.toString());
-  testPaymentMethodId = (pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string ?? null;
+  testPaymentMethodId =
+    ((pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string) ?? null;
   assert(testPaymentMethodId != null, "Payment method has ID");
 
   // Create transactions
@@ -181,13 +182,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market",
       date: today,
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx1.status === 201, "Created expense transaction");
 
@@ -196,12 +197,12 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "Monthly Paycheck",
       date: today,
       categoryId: incomeCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx2.status === 201, "Created income transaction");
 
@@ -212,19 +213,22 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=xlsx",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxTx.status === 200, "Export transactions XLSX returns 200");
   assert(
     xlsxTx.contentType.includes("openxmlformats") || xlsxTx.contentType.includes("octet-stream"),
-    `Content-Type includes openxmlformats (got: ${xlsxTx.contentType})`
+    `Content-Type includes openxmlformats (got: ${xlsxTx.contentType})`,
   );
   assert(isXlsxSignature(xlsxTx.buffer), "XLSX starts with PK (ZIP) signature");
   assert(hasReasonableSize(xlsxTx.buffer), "XLSX buffer has reasonable size");
   assert(xlsxContains(xlsxTx.buffer, "Transactions"), "XLSX has Transactions worksheet");
   assert(xlsxContains(xlsxTx.buffer, "42.50"), "XLSX contains expense amount 42.50");
   assert(xlsxContains(xlsxTx.buffer, "5000"), "XLSX contains income amount 5000");
-  assert(xlsxContains(xlsxTx.buffer, "Whole Foods Market"), "XLSX contains transaction description");
+  assert(
+    xlsxContains(xlsxTx.buffer, "Whole Foods Market"),
+    "XLSX contains transaction description",
+  );
   assert(xlsxContains(xlsxTx.buffer, "Monthly Paycheck"), "XLSX contains income description");
 
   const txSheetNames = getSheetNames(xlsxTx.buffer);
@@ -238,7 +242,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=xlsx",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxTxExplicit.status === 200, "Explicit format=xlsx returns 200");
   assert(isXlsxSignature(xlsxTxExplicit.buffer), "Explicit xlsx has valid signature");
@@ -251,18 +255,21 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=xlsx&type=EXPENSE",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxExpense.status === 200, "XLSX expense filter returns 200");
   assert(xlsxContains(xlsxExpense.buffer, "42.50"), "XLSX expense filter contains 42.50");
-  assert(!xlsxContains(xlsxExpense.buffer, "Paycheck"), "XLSX expense filter does not contain income");
+  assert(
+    !xlsxContains(xlsxExpense.buffer, "Paycheck"),
+    "XLSX expense filter does not contain income",
+  );
 
   // Filter by category
   const xlsxCat = await request(
     "GET",
     `/exports/transactions?format=xlsx&categoryId=${testCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxCat.status === 200, "XLSX category filter returns 200");
   assert(xlsxContains(xlsxCat.buffer, "Food"), "XLSX category filter contains Food");
@@ -274,7 +281,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=daily&format=xlsx&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxDaily.status === 200, "Export daily report XLSX returns 200");
   assert(isXlsxSignature(xlsxDaily.buffer), "Daily report XLSX has valid signature");
@@ -293,7 +300,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=weekly&format=xlsx&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxWeekly.status === 200, "Export weekly report XLSX returns 200");
   assert(isXlsxSignature(xlsxWeekly.buffer), "Weekly report XLSX has valid signature");
@@ -314,7 +321,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=monthly&format=xlsx&year=${thisYear}&month=${thisMonth}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxMonthly.status === 200, "Export monthly report XLSX returns 200");
   assert(isXlsxSignature(xlsxMonthly.buffer), "Monthly report XLSX has valid signature");
@@ -329,12 +336,15 @@ async function runTests() {
     "GET",
     `/exports/reports?type=yearly&format=xlsx&year=${thisYear}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxYearly.status === 200, "Export yearly report XLSX returns 200");
   assert(isXlsxSignature(xlsxYearly.buffer), "Yearly report XLSX has valid signature");
   assert(xlsxContains(xlsxYearly.buffer, "Yearly Report"), "Yearly XLSX has report title");
-  assert(xlsxContains(xlsxYearly.buffer, "Monthly Comparison"), "Yearly XLSX has monthly comparison");
+  assert(
+    xlsxContains(xlsxYearly.buffer, "Monthly Comparison"),
+    "Yearly XLSX has monthly comparison",
+  );
   assert(xlsxContains(xlsxYearly.buffer, "Top Categories"), "Yearly XLSX has top categories");
 
   // ─── 9. Export Report - Summary (XLSX) ─────────────────────
@@ -344,7 +354,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=xlsx",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxSummary.status === 200, "Export summary XLSX returns 200");
   assert(isXlsxSignature(xlsxSummary.buffer), "Summary XLSX has valid signature");
@@ -353,24 +363,44 @@ async function runTests() {
   assert(xlsxContains(xlsxSummary.buffer, "42.50"), "Summary XLSX contains expenses");
 
   // ─── 10. Export Report - Breakdown (XLSX) ──────────────────
-  console.log("\n─── 10. Export Breakdown Report (GET /exports/reports?type=breakdown&format=xlsx) ───");
+  console.log(
+    "\n─── 10. Export Breakdown Report (GET /exports/reports?type=breakdown&format=xlsx) ───",
+  );
 
   const xlsxBreakdown = await request(
     "GET",
     "/exports/reports?type=breakdown&format=xlsx",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxBreakdown.status === 200, "Export breakdown XLSX returns 200");
   assert(isXlsxSignature(xlsxBreakdown.buffer), "Breakdown XLSX has valid signature");
-  assert(xlsxContains(xlsxBreakdown.buffer, "Income vs Expense"), "Breakdown XLSX has income/expense");
-  assert(xlsxContains(xlsxBreakdown.buffer, "Category Breakdown"), "Breakdown XLSX has category section");
-  assert(xlsxContains(xlsxBreakdown.buffer, "Payment Method Breakdown"), "Breakdown XLSX has payment method");
+  assert(
+    xlsxContains(xlsxBreakdown.buffer, "Income vs Expense"),
+    "Breakdown XLSX has income/expense",
+  );
+  assert(
+    xlsxContains(xlsxBreakdown.buffer, "Category Breakdown"),
+    "Breakdown XLSX has category section",
+  );
+  assert(
+    xlsxContains(xlsxBreakdown.buffer, "Payment Method Breakdown"),
+    "Breakdown XLSX has payment method",
+  );
 
   const breakdownSheetNames = getSheetNames(xlsxBreakdown.buffer);
-  assert(breakdownSheetNames.includes("Income vs Expense"), "Breakdown has 'Income vs Expense' worksheet");
-  assert(breakdownSheetNames.includes("Category Breakdown"), "Breakdown has 'Category Breakdown' worksheet");
-  assert(breakdownSheetNames.includes("Payment Methods"), "Breakdown has 'Payment Methods' worksheet");
+  assert(
+    breakdownSheetNames.includes("Income vs Expense"),
+    "Breakdown has 'Income vs Expense' worksheet",
+  );
+  assert(
+    breakdownSheetNames.includes("Category Breakdown"),
+    "Breakdown has 'Category Breakdown' worksheet",
+  );
+  assert(
+    breakdownSheetNames.includes("Payment Methods"),
+    "Breakdown has 'Payment Methods' worksheet",
+  );
   assert(breakdownSheetNames.includes("Extremes"), "Breakdown has 'Extremes' worksheet");
 
   // ─── 11. CSV Still Works ─────────────────────────────────────
@@ -392,21 +422,24 @@ async function runTests() {
       startDate: today,
       period: "MONTHLY",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
   const budgetJson = JSON.parse(budget.buffer.toString());
-  const budgetId = budgetJson.data?.budget?.id as string ?? budgetJson.data?.id as string;
+  const budgetId = (budgetJson.data?.budget?.id as string) ?? (budgetJson.data?.id as string);
 
   const xlsxBudget = await request(
     "GET",
     `/exports/transactions?format=xlsx&budgetId=${budgetId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxBudget.status === 200, "XLSX budget filter returns 200");
   assert(xlsxContains(xlsxBudget.buffer, "42.50"), "XLSX budget filter contains expense");
-  assert(!xlsxContains(xlsxBudget.buffer, "5000"), "XLSX budget filter does not contain income from other category");
+  assert(
+    !xlsxContains(xlsxBudget.buffer, "5000"),
+    "XLSX budget filter does not contain income from other category",
+  );
 
   // ─── 13. Savings Goal Filter (XLSX) ──────────────────────────
   console.log("\n─── 13. Savings Goal Filter (XLSX) ───");
@@ -420,20 +453,23 @@ async function runTests() {
       deadline: "2027-01-01",
       priority: "HIGH",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(goal.status === 201, "Savings goal created");
   const goalJson = JSON.parse(goal.buffer.toString());
-  const goalId = goalJson.data?.savingsGoal?.id as string ?? goalJson.data?.id as string;
+  const goalId = (goalJson.data?.savingsGoal?.id as string) ?? (goalJson.data?.id as string);
 
   const xlsxGoalSummary = await request(
     "GET",
     `/exports/reports?type=summary&format=xlsx&savingsGoalId=${goalId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(xlsxGoalSummary.status === 200, "XLSX savings goal on summary returns 200");
-  assert(xlsxContains(xlsxGoalSummary.buffer, "Savings Goal"), "XLSX summary includes goal section");
+  assert(
+    xlsxContains(xlsxGoalSummary.buffer, "Savings Goal"),
+    "XLSX summary includes goal section",
+  );
   assert(xlsxContains(xlsxGoalSummary.buffer, "Emergency Fund"), "XLSX summary contains goal name");
   assert(xlsxContains(xlsxGoalSummary.buffer, "10000"), "XLSX summary contains goal target");
 
@@ -443,47 +479,78 @@ async function runTests() {
   const fToday = new Date().toISOString().slice(0, 10);
 
   // Transactions: transactions-{date}.xlsx
-  const fnTx = await request("GET", "/exports/transactions?format=xlsx", undefined, userTokens?.accessToken);
-  assert(fnTx.disposition?.includes(`transactions-${fToday}.xlsx`),
-    `Filename is transactions-${fToday}.xlsx (got: ${fnTx.disposition})`);
+  const fnTx = await request(
+    "GET",
+    "/exports/transactions?format=xlsx",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnTx.disposition?.includes(`transactions-${fToday}.xlsx`),
+    `Filename is transactions-${fToday}.xlsx (got: ${fnTx.disposition})`,
+  );
 
   // Daily report: daily-report-{date}.xlsx
-  const fnDaily = await request("GET", `/exports/reports?type=daily&format=xlsx&date=${fToday}`, undefined, userTokens?.accessToken);
-  assert(fnDaily.disposition?.includes(`daily-report-${fToday}.xlsx`),
-    `Filename is daily-report-${fToday}.xlsx (got: ${fnDaily.disposition})`);
+  const fnDaily = await request(
+    "GET",
+    `/exports/reports?type=daily&format=xlsx&date=${fToday}`,
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnDaily.disposition?.includes(`daily-report-${fToday}.xlsx`),
+    `Filename is daily-report-${fToday}.xlsx (got: ${fnDaily.disposition})`,
+  );
 
   // Monthly report: monthly-report-{monthName}-{year}.xlsx
   const fMonth = now.getMonth() + 1;
   const fMonthName = [
-    "january", "february", "march", "april", "may", "june",
-    "july", "august", "september", "october", "november", "december",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
   ][fMonth - 1];
   const fnMonthly = await request(
     "GET",
     `/exports/reports?type=monthly&format=xlsx&year=${thisYear}&month=${String(fMonth).padStart(2, "0")}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnMonthly.disposition?.includes(`monthly-report-${fMonthName}-${thisYear}.xlsx`),
-    `Filename is monthly-report-${fMonthName}-${thisYear}.xlsx (got: ${fnMonthly.disposition})`
+    `Filename is monthly-report-${fMonthName}-${thisYear}.xlsx (got: ${fnMonthly.disposition})`,
   );
 
   // Summary report: summary-report-{date}.xlsx
-  const fnSummary = await request("GET", "/exports/reports?type=summary&format=xlsx", undefined, userTokens?.accessToken);
-  assert(fnSummary.disposition?.includes(`summary-report-${fToday}.xlsx`),
-    `Filename is summary-report-${fToday}.xlsx (got: ${fnSummary.disposition})`);
+  const fnSummary = await request(
+    "GET",
+    "/exports/reports?type=summary&format=xlsx",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnSummary.disposition?.includes(`summary-report-${fToday}.xlsx`),
+    `Filename is summary-report-${fToday}.xlsx (got: ${fnSummary.disposition})`,
+  );
 
   // Expenses with date range: expenses-{startDate}-to-{endDate}.xlsx
   const fnRange = await request(
     "GET",
     "/exports/transactions?format=xlsx&type=EXPENSE&startDate=2026-01-01&endDate=2026-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnRange.disposition?.includes("expenses-2026-01-01-to-2026-12-31.xlsx"),
-    `Filename is expenses-2026-01-01-to-2026-12-31.xlsx (got: ${fnRange.disposition})`
+    `Filename is expenses-2026-01-01-to-2026-12-31.xlsx (got: ${fnRange.disposition})`,
   );
 
   // ─── 15. Ownership Scoping ─────────────────────────────────
@@ -503,19 +570,22 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=xlsx",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondXlsx.status === 200, "Second user XLSX export returns 200");
   // Should be a valid workbook with headers but no data
   assert(isXlsxSignature(secondXlsx.buffer), "Second user XLSX has valid signature");
-  assert(!xlsxContains(secondXlsx.buffer, "Whole Foods Market"), "Second user XLSX does not have primary's transactions");
+  assert(
+    !xlsxContains(secondXlsx.buffer, "Whole Foods Market"),
+    "Second user XLSX does not have primary's transactions",
+  );
 
   // Second user's summary has zero values
   const secondSummary = await request(
     "GET",
     "/exports/reports?type=summary&format=xlsx",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondSummary.status === 200, "Second user summary XLSX returns 200");
   assert(xlsxContains(secondSummary.buffer, "0.00"), "Second user summary has zero amounts");
@@ -532,7 +602,12 @@ async function runTests() {
   // ─── 17. CSV and PDF Still Work Alongside XLSX ─────────────
   console.log("\n─── 17. CSV and PDF Still Work ───");
 
-  const csvDefault = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
+  const csvDefault = await request(
+    "GET",
+    "/exports/transactions",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(csvDefault.status === 200, "Default format (CSV) still works");
   assert(csvDefault.contentType.includes("text/csv"), "Default is still CSV");
 
@@ -540,7 +615,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=pdf",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pdfReport.status === 200, "PDF report still works");
 

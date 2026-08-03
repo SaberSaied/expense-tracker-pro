@@ -115,17 +115,11 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         {/* Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           {onRetry && (
-            <Button
-              variant="outline"
-              onClick={onRetry}
-              leftIcon={<RefreshCw className="size-4" />}
-            >
+            <Button variant="outline" onClick={onRetry} leftIcon={<RefreshCw className="size-4" />}>
               {retryLabel}
             </Button>
           )}
-          {onPrimary && primaryLabel && (
-            <Button onClick={onPrimary}>{primaryLabel}</Button>
-          )}
+          {onPrimary && primaryLabel && <Button onClick={onPrimary}>{primaryLabel}</Button>}
           {onSecondary && secondaryLabel && (
             <Button
               variant="ghost"

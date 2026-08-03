@@ -2,7 +2,11 @@ import { reminderRepository } from "./reminders.repository";
 import { notificationRepository } from "../notifications/notifications.repository";
 import { NotFoundError, ValidationError } from "@/common/errors";
 import { prisma } from "@/db/prisma";
-import type { CreateReminderInput, UpdateReminderInput, ReminderQueryFilters } from "./reminders.types";
+import type {
+  CreateReminderInput,
+  UpdateReminderInput,
+  ReminderQueryFilters,
+} from "./reminders.types";
 import type { ReminderFrequency } from "@/generated/prisma/client";
 
 /** Convert a YYYY-MM-DD string to a UTC-midnight Date. */
@@ -20,7 +24,7 @@ export function computeNextTriggerDate(
   frequency: ReminderFrequency,
   interval: number,
   dayOfWeek?: number,
-  dayOfMonth?: number
+  dayOfMonth?: number,
 ): Date {
   const next = new Date(from);
   const step = Math.max(1, interval || 1);
@@ -75,8 +79,7 @@ function buildReminderMessage(reminder: {
   if (reminder.message) return reminder.message;
 
   const amountText = reminder.amount != null ? ` $${Number(reminder.amount).toFixed(2)}` : "";
-  const context =
-    reminder.category?.name ?? reminder.savingsGoal?.name ?? null;
+  const context = reminder.category?.name ?? reminder.savingsGoal?.name ?? null;
   const contextText = context ? ` (${context})` : "";
 
   switch (reminder.type) {
@@ -135,7 +138,7 @@ export const reminderService = {
       frequency,
       interval,
       data.dayOfWeek,
-      data.dayOfMonth
+      data.dayOfMonth,
     );
 
     return reminderRepository.create(userId, {
@@ -220,7 +223,7 @@ export const reminderService = {
         frequency,
         interval,
         dayOfWeek ?? undefined,
-        dayOfMonth ?? undefined
+        dayOfMonth ?? undefined,
       );
     }
 
@@ -242,10 +245,7 @@ export const reminderService = {
    * Notifications are BATCHED into a single createMany call and carry a stable
    * dedupKey (per bill + day), so concurrent runs can't double-notify.
    */
-  async detectUpcomingBills(
-    userId: string,
-    options: { windowDays?: number } = {}
-  ) {
+  async detectUpcomingBills(userId: string, options: { windowDays?: number } = {}) {
     const windowDays = options.windowDays ?? 7;
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -253,8 +253,7 @@ export const reminderService = {
     horizon.setUTCDate(horizon.getUTCDate() + windowDays);
 
     const prefs = await notificationRepository.findPreferences(userId);
-    const notificationsDisabled =
-      prefs.enabled === false || prefs.channels?.inApp === false;
+    const notificationsDisabled = prefs.enabled === false || prefs.channels?.inApp === false;
 
     const bills = await reminderRepository.findUpcomingBills(userId, horizon);
 
@@ -263,7 +262,7 @@ export const reminderService = {
     const recent = await notificationRepository.findRecentByTypes(
       userId,
       ["BILL_DUE_SOON", "BILL_OVERDUE"],
-      since
+      since,
     );
     const recentTitles = new Set(recent.map((n) => n.title));
 
@@ -279,21 +278,37 @@ export const reminderService = {
     for (const bill of bills) {
       const isOverdue = bill.nextTriggerDate < today;
       const daysUntil = isOverdue
-        ? -Math.max(1, Math.ceil((today.getTime() - bill.nextTriggerDate.getTime()) / (1000 * 60 * 60 * 24)))
-        : Math.max(0, Math.ceil((bill.nextTriggerDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+        ? -Math.max(
+            1,
+            Math.ceil((today.getTime() - bill.nextTriggerDate.getTime()) / (1000 * 60 * 60 * 24)),
+          )
+        : Math.max(
+            0,
+            Math.ceil((bill.nextTriggerDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+          );
 
-      const title = isOverdue
-        ? `Overdue Bill: ${bill.title}`
-        : `Bill Due Soon: ${bill.title}`;
+      const title = isOverdue ? `Overdue Bill: ${bill.title}` : `Bill Due Soon: ${bill.title}`;
 
       if (notificationsDisabled) {
         suppressedByPreferences = true;
-        detected.push({ id: bill.id, title: bill.title, daysUntil, overdue: isOverdue, suppressed: true });
+        detected.push({
+          id: bill.id,
+          title: bill.title,
+          daysUntil,
+          overdue: isOverdue,
+          suppressed: true,
+        });
         continue;
       }
 
       if (recentTitles.has(title)) {
-        detected.push({ id: bill.id, title: bill.title, daysUntil, overdue: isOverdue, deduplicated: true });
+        detected.push({
+          id: bill.id,
+          title: bill.title,
+          daysUntil,
+          overdue: isOverdue,
+          deduplicated: true,
+        });
         continue;
       }
 
@@ -337,8 +352,7 @@ export const reminderService = {
     today.setUTCHours(0, 0, 0, 0);
 
     const prefs = await notificationRepository.findPreferences(userId);
-    const notificationsDisabled =
-      prefs.enabled === false || prefs.channels?.inApp === false;
+    const notificationsDisabled = prefs.enabled === false || prefs.channels?.inApp === false;
 
     const due = await reminderRepository.findDueByUser(userId, today);
 
@@ -354,7 +368,7 @@ export const reminderService = {
           reminder.frequency,
           reminder.interval,
           reminder.dayOfWeek ?? undefined,
-          reminder.dayOfMonth ?? undefined
+          reminder.dayOfMonth ?? undefined,
         );
 
         // Atomic guard: only advance if this reminder is still due, so

@@ -10,11 +10,7 @@ export const authRepository = {
     return prisma.user.findUnique({ where: { id } });
   },
 
-  async create(data: {
-    email: string;
-    passwordHash: string;
-    name?: string | null;
-  }) {
+  async create(data: { email: string; passwordHash: string; name?: string | null }) {
     return prisma.user.create({ data });
   },
 

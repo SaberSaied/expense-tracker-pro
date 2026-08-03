@@ -9,26 +9,28 @@ export const savingsGoalRepository = {
       priority?: string;
       sortBy?: string;
       sortOrder?: "asc" | "desc";
-    } = {}
+    } = {},
   ) {
     // Fetch goals with optional DB-level priority filter
     const goals = await prisma.savingsGoal.findMany({
-      where: { userId, ...(options.priority ? { priority: options.priority as GoalPriority } : {}) },
+      where: {
+        userId,
+        ...(options.priority ? { priority: options.priority as GoalPriority } : {}),
+      },
       orderBy: { createdAt: "desc" },
     });
 
     // Compute status and apply filter/sort
     let result = goals.map((goal) => ({
       ...goal,
-      progress: goal.targetAmount > 0
-        ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
-        : 0,
+      progress:
+        goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0,
       isCompleted: goal.currentAmount >= goal.targetAmount,
     }));
 
     if (options.status) {
       result = result.filter((g) =>
-        options.status === "completed" ? g.isCompleted : !g.isCompleted
+        options.status === "completed" ? g.isCompleted : !g.isCompleted,
       );
     }
 
@@ -53,8 +55,9 @@ export const savingsGoalRepository = {
           break;
         case "priority": {
           const priorityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-          cmp = (priorityOrder[a.priority as keyof typeof priorityOrder] ?? 3) -
-                (priorityOrder[b.priority as keyof typeof priorityOrder] ?? 3);
+          cmp =
+            (priorityOrder[a.priority as keyof typeof priorityOrder] ?? 3) -
+            (priorityOrder[b.priority as keyof typeof priorityOrder] ?? 3);
           break;
         }
         case "createdAt":
@@ -80,9 +83,8 @@ export const savingsGoalRepository = {
     const goal = await prisma.savingsGoal.findUnique({ where: { id } });
     if (!goal || goal.userId !== userId) return null;
 
-    const progress = goal.targetAmount > 0
-      ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
-      : 0;
+    const progress =
+      goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0;
     const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
     let daysRemaining: number | null = null;
 
@@ -115,29 +117,35 @@ export const savingsGoalRepository = {
     });
   },
 
-  async create(userId: string, data: {
-    name: string;
-    targetAmount: number;
-    currentAmount?: number;
-    deadline?: Date;
-    priority?: string;
-    icon?: string;
-    color?: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      name: string;
+      targetAmount: number;
+      currentAmount?: number;
+      deadline?: Date;
+      priority?: string;
+      icon?: string;
+      color?: string;
+    },
+  ) {
     return prisma.savingsGoal.create({
       data: { ...data, userId } as any,
     });
   },
 
-  async update(id: string, data: {
-    name?: string;
-    targetAmount?: number;
-    currentAmount?: number;
-    deadline?: Date | null;
-    priority?: string;
-    icon?: string;
-    color?: string;
-  }) {
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      targetAmount?: number;
+      currentAmount?: number;
+      deadline?: Date | null;
+      priority?: string;
+      icon?: string;
+      color?: string;
+    },
+  ) {
     return prisma.savingsGoal.update({ where: { id }, data } as any);
   },
 
@@ -190,23 +198,33 @@ export const savingsGoalRepository = {
     const goalsAtRisk = goals
       .filter((g) => {
         if (!g.deadline || g.currentAmount >= g.targetAmount) return false;
-        const daysElapsed = Math.ceil((now.getTime() - g.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        const daysElapsed = Math.ceil(
+          (now.getTime() - g.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+        );
         if (daysElapsed <= 0) return false;
         const savingsRatePerDay = g.currentAmount / daysElapsed;
-        const daysUntilDeadline = Math.ceil((g.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilDeadline = Math.ceil(
+          (g.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
         if (daysUntilDeadline <= 0) return true; // Already past deadline but not completed
         const projectedAtDeadline = g.currentAmount + savingsRatePerDay * daysUntilDeadline;
         return projectedAtDeadline < g.targetAmount;
       })
       .map((g) => {
-        const daysElapsed = Math.ceil((now.getTime() - g.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        const daysElapsed = Math.ceil(
+          (now.getTime() - g.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+        );
         const savingsRatePerDay = daysElapsed > 0 ? g.currentAmount / daysElapsed : 0;
-        const daysUntilDeadline = Math.ceil((g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        const projectedAtDeadline = g.currentAmount + savingsRatePerDay * Math.max(0, daysUntilDeadline);
+        const daysUntilDeadline = Math.ceil(
+          (g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        const projectedAtDeadline =
+          g.currentAmount + savingsRatePerDay * Math.max(0, daysUntilDeadline);
         const shortfall = Math.max(0, g.targetAmount - projectedAtDeadline);
-        const requiredDaily = daysUntilDeadline > 0
-          ? Math.max(0, g.targetAmount - g.currentAmount) / daysUntilDeadline
-          : Infinity;
+        const requiredDaily =
+          daysUntilDeadline > 0
+            ? Math.max(0, g.targetAmount - g.currentAmount) / daysUntilDeadline
+            : Infinity;
 
         return {
           id: g.id,
@@ -235,7 +253,7 @@ export const savingsGoalRepository = {
 
     if (goals.length > 0) {
       const largest = goals.reduce((prev, curr) =>
-        curr.targetAmount > prev.targetAmount ? curr : prev
+        curr.targetAmount > prev.targetAmount ? curr : prev,
       );
       largestGoal = {
         id: largest.id,
@@ -263,7 +281,7 @@ export const savingsGoalRepository = {
         return currDuration < prevDuration ? curr : prev;
       });
       const daysToComplete = Math.ceil(
-        (fastest.completedAt!.getTime() - fastest.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        (fastest.completedAt!.getTime() - fastest.createdAt.getTime()) / (1000 * 60 * 60 * 24),
       );
       fastestCompleted = {
         id: fastest.id,
@@ -277,7 +295,9 @@ export const savingsGoalRepository = {
     // ── 5. Average monthly savings needed (for active goals with deadlines) ──
     const activeWithDeadlines = goals.filter((g) => {
       if (!g.deadline || g.currentAmount >= g.targetAmount) return false;
-      const daysUntilDeadline = Math.ceil((g.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilDeadline = Math.ceil(
+        (g.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
       return daysUntilDeadline > 0;
     });
 
@@ -285,17 +305,22 @@ export const savingsGoalRepository = {
     if (activeWithDeadlines.length > 0) {
       const totalMonthlyNeeded = activeWithDeadlines.reduce((sum, g) => {
         const remaining = g.targetAmount - g.currentAmount;
-        const daysUntilDeadline = Math.ceil((g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilDeadline = Math.ceil(
+          (g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
         const monthsRemaining = Math.max(1, daysUntilDeadline / 30);
         return sum + remaining / monthsRemaining;
       }, 0);
-      averageMonthlySavingsNeeded = Math.round((totalMonthlyNeeded / activeWithDeadlines.length) * 100) / 100;
+      averageMonthlySavingsNeeded =
+        Math.round((totalMonthlyNeeded / activeWithDeadlines.length) * 100) / 100;
     }
 
     // ── Per-goal monthly savings breakdown ──
     const monthlySavingsPerGoal = activeWithDeadlines.map((g) => {
       const remaining = g.targetAmount - g.currentAmount;
-      const daysUntilDeadline = Math.ceil((g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilDeadline = Math.ceil(
+        (g.deadline!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
       const monthsRemaining = Math.max(1, daysUntilDeadline / 30);
       return {
         id: g.id,
@@ -323,21 +348,14 @@ export const savingsGoalRepository = {
     });
 
     const totalGoals = goals.length;
-    const completedGoals = goals.filter(
-      (g) => g.currentAmount >= g.targetAmount
-    ).length;
+    const completedGoals = goals.filter((g) => g.currentAmount >= g.targetAmount).length;
     const activeGoals = totalGoals - completedGoals;
     const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
     const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0);
-    const overallPercentage =
-      totalTarget > 0
-        ? Math.round((totalSaved / totalTarget) * 100)
-        : 0;
+    const overallPercentage = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
     // Closest goal to completion among active goals
-    const activeGoalList = goals.filter(
-      (g) => g.currentAmount < g.targetAmount
-    );
+    const activeGoalList = goals.filter((g) => g.currentAmount < g.targetAmount);
     let closestGoal: {
       id: string;
       name: string;

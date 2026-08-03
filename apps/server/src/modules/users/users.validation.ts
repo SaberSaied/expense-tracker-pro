@@ -8,7 +8,10 @@ export const updateProfileSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be at most 30 characters")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens")
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Username can only contain letters, numbers, underscores, and hyphens",
+    )
     .optional(),
   bio: z.string().max(500).optional(),
   avatarUrl: z
@@ -16,7 +19,7 @@ export const updateProfileSchema = z.object({
     .optional()
     .refine(
       (v) => v === undefined || v === "" || /^https?:\/\//.test(v) || v.startsWith("/uploads/"),
-      "Invalid avatar URL (must be an http(s) URL or an app /uploads path)"
+      "Invalid avatar URL (must be an http(s) URL or an app /uploads path)",
     ),
   theme: z.enum(["dark", "light", "system"]).optional(),
   timeZone: z.string().min(1, "Time zone is required").max(50).optional(),

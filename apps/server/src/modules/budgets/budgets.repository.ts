@@ -56,7 +56,7 @@ export async function computeSpending(
   userId: string,
   categoryId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<number> {
   const result = await prisma.transaction.aggregate({
     where: {
@@ -105,7 +105,7 @@ async function enrichBudgets(
     startDate: Date;
     categoryId: string;
     category: { id: string; name: string; icon: string; color: string };
-  }>
+  }>,
 ): Promise<EnrichedBudget[]> {
   if (budgets.length === 0) return [];
 
@@ -117,7 +117,7 @@ async function enrichBudgets(
       const end = computePeriodEnd(budget.startDate, budget.period);
       const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
       return { id: budget.id, end, spent };
-    })
+    }),
   );
 
   const spendingMap = new Map(spendingResults.map((r) => [r.id, { end: r.end, spent: r.spent }]));
@@ -129,11 +129,10 @@ async function enrichBudgets(
     };
 
     const isActive = now >= budget.startDate && now <= end;
-    const progress = budget.targetAmount > 0
-      ? Math.round((spent / budget.targetAmount) * 100)
-      : 0;
+    const progress = budget.targetAmount > 0 ? Math.round((spent / budget.targetAmount) * 100) : 0;
     const daysRemaining = computeDaysRemaining(budget.startDate, end);
-    const totalDays = Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays =
+      Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const daysElapsed = Math.max(0, totalDays - daysRemaining);
 
     return {
@@ -174,7 +173,7 @@ export const budgetRepository = {
       endDate?: Date;
       sortBy?: string;
       sortOrder?: "asc" | "desc";
-    } = {}
+    } = {},
   ) {
     const where: Prisma.BudgetWhereInput = { userId };
 
@@ -211,12 +210,10 @@ export const budgetRepository = {
           const end = computePeriodEnd(budget.startDate, budget.period);
           const isActive = now >= budget.startDate && now <= end;
           return { budget, isActive };
-        })
+        }),
       );
       return filtered
-        .filter(({ isActive }) =>
-          options.status === "active" ? isActive : !isActive
-        )
+        .filter(({ isActive }) => (options.status === "active" ? isActive : !isActive))
         .map(({ budget }) => budget);
     }
 
@@ -236,10 +233,7 @@ export const budgetRepository = {
     });
   },
 
-  async getBudgetWithProgress(
-    userId: string,
-    budgetId: string
-  ) {
+  async getBudgetWithProgress(userId: string, budgetId: string) {
     const budget = await prisma.budget.findUnique({
       where: { id: budgetId },
       include: { category: true },
@@ -251,11 +245,10 @@ export const budgetRepository = {
     const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
     const now = new Date();
     const isActive = now >= budget.startDate && now <= end;
-    const progress = budget.targetAmount > 0
-      ? Math.round((spent / budget.targetAmount) * 100)
-      : 0;
+    const progress = budget.targetAmount > 0 ? Math.round((spent / budget.targetAmount) * 100) : 0;
     const daysRemaining = computeDaysRemaining(budget.startDate, end);
-    const totalDays = Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays =
+      Math.ceil((end.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const daysElapsed = Math.max(0, totalDays - daysRemaining);
 
     return {
@@ -309,9 +302,7 @@ export const budgetRepository = {
       totalBudgeted,
       totalSpent,
       totalRemaining: Math.max(0, totalBudgeted - totalSpent),
-      overallProgress: totalBudgeted > 0
-        ? Math.round((totalSpent / totalBudgeted) * 100)
-        : 0,
+      overallProgress: totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0,
       budgets: enriched.map((b) => ({
         id: b.id,
         category: b.category,
@@ -401,7 +392,9 @@ export const budgetRepository = {
     // Sort: most severe first, then by progress descending
     const severityOrder = { over_budget: 0, critical: 1, warning: 2 };
     alerts.sort((a, b) => {
-      const sevDiff = severityOrder[a.severity as keyof typeof severityOrder] - severityOrder[b.severity as keyof typeof severityOrder];
+      const sevDiff =
+        severityOrder[a.severity as keyof typeof severityOrder] -
+        severityOrder[b.severity as keyof typeof severityOrder];
       if (sevDiff !== 0) return sevDiff;
       return (b.progress as number) - (a.progress as number);
     });
@@ -456,7 +449,10 @@ export const budgetRepository = {
     }
 
     // 1. Highest spending budget
-    const highestSpending = enriched.reduce((max, b) => (b.spent > max.spent ? b : max), enriched[0]);
+    const highestSpending = enriched.reduce(
+      (max, b) => (b.spent > max.spent ? b : max),
+      enriched[0],
+    );
 
     // 2. Lowest spending budget (among active budgets, or all if none active)
     const candidates = enriched.filter((b) => b.isActive);
@@ -466,13 +462,11 @@ export const budgetRepository = {
     // 3. Closest budget to limit (highest progress)
     const closestToLimit = enriched.reduce(
       (closest, b) => (b.progress > closest.progress ? b : closest),
-      enriched[0]
+      enriched[0],
     );
 
     // 4. Overall utilization
-    const utilizationRate = totalBudgeted > 0
-      ? Math.round((totalSpent / totalBudgeted) * 100)
-      : 0;
+    const utilizationRate = totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0;
 
     return {
       highestSpending: {
@@ -521,13 +515,16 @@ export const budgetRepository = {
     };
   },
 
-  async create(userId: string, data: {
-    targetAmount: number;
-    alertThreshold?: number;
-    period?: string;
-    startDate: Date;
-    categoryId: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      targetAmount: number;
+      alertThreshold?: number;
+      period?: string;
+      startDate: Date;
+      categoryId: string;
+    },
+  ) {
     return prisma.budget.create({
       data: {
         targetAmount: data.targetAmount,

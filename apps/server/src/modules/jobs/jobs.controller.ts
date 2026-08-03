@@ -14,11 +14,15 @@ import type { JobName } from "./jobs.types";
 function requireJobsToken(req: Request): void {
   const token = env.JOBS_TRIGGER_TOKEN;
   if (!token) {
-    throw new UnauthorizedError(
-      "JOBS_TRIGGER_TOKEN is not configured on this server"
-    );
+    throw new UnauthorizedError("JOBS_TRIGGER_TOKEN is not configured on this server");
   }
-  const supplied = req.headers["x-jobs-token"];
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+  const supplied =
+    (req.headers["x-jobs-token"] as string | undefined) ??
+    bearerToken ??
+    (req.query.token as string | undefined);
+
   if (supplied !== token) {
     throw new UnauthorizedError("Invalid jobs trigger token");
   }

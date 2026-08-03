@@ -16,8 +16,16 @@ router.post("/register", validate(registerSchema), asyncHandler(authController.r
 router.post("/login", validate(loginSchema), asyncHandler(authController.login));
 router.post("/refresh", asyncHandler(authController.refreshToken));
 router.post("/logout", asyncHandler(authController.logout));
-router.post("/forgot-password", validate(forgotPasswordSchema), asyncHandler(authController.forgotPassword));
-router.post("/reset-password", validate(resetPasswordSchema), asyncHandler(authController.resetPassword));
+router.post(
+  "/forgot-password",
+  validate(forgotPasswordSchema),
+  asyncHandler(authController.forgotPassword),
+);
+router.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  asyncHandler(authController.resetPassword),
+);
 
 // ─── Protected Routes ─────────────────────────────────────────
 router.get("/me", authMiddleware, asyncHandler(authController.getProfile));

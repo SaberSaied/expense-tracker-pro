@@ -8,8 +8,10 @@ export interface SelectOption {
   icon?: React.ReactNode;
 }
 
-export interface SelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children"> {
+export interface SelectProps extends Omit<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
+  "children"
+> {
   /** Label text displayed above the select. */
   label?: string;
   /** Error message displayed below the select. */
@@ -32,10 +34,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label
-            htmlFor={selectId}
-            className="text-sm font-medium text-text-secondary"
-          >
+          <label htmlFor={selectId} className="text-sm font-medium text-text-secondary">
             {label}
           </label>
         )}

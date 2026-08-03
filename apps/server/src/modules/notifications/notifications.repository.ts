@@ -35,7 +35,7 @@ export const notificationRepository = {
    */
   async updatePreferences(
     userId: string,
-    input: NotificationPreferencesInput
+    input: NotificationPreferencesInput,
   ): Promise<NotificationPreferences> {
     // Get current preferences first
     const current = await this.findPreferences(userId);
@@ -58,7 +58,6 @@ export const notificationRepository = {
     return merged;
   },
 
-
   async findAllByUser(
     userId: string,
     options: {
@@ -66,7 +65,7 @@ export const notificationRepository = {
       take?: number;
       read?: boolean;
       type?: string;
-    } = {}
+    } = {},
   ) {
     const where: Record<string, unknown> = { userId };
     if (options.read !== undefined) where.read = options.read;
@@ -96,12 +95,15 @@ export const notificationRepository = {
     return prisma.notification.findUnique({ where: { id } });
   },
 
-  async create(userId: string, data: {
-    type: string;
-    title: string;
-    message: string;
-    dedupKey?: string | null;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      type: string;
+      title: string;
+      message: string;
+      dedupKey?: string | null;
+    },
+  ) {
     return prisma.notification.create({
       data: {
         type: data.type as any,
@@ -118,12 +120,15 @@ export const notificationRepository = {
    * Rows whose (userId, dedupKey) already exist are skipped (skipDuplicates),
    * so callers can generate alerts concurrently without duplicate notifications.
    */
-  async createMany(userId: string, items: Array<{
-    type: string;
-    title: string;
-    message: string;
-    dedupKey?: string | null;
-  }>) {
+  async createMany(
+    userId: string,
+    items: Array<{
+      type: string;
+      title: string;
+      message: string;
+      dedupKey?: string | null;
+    }>,
+  ) {
     if (items.length === 0) return { count: 0 };
     return prisma.notification.createMany({
       data: items.map((item) => ({
@@ -141,11 +146,13 @@ export const notificationRepository = {
    * Delete expired notifications (default: read notifications older than 30 days).
    * Used by the background cleanup job to keep the notifications table lean.
    */
-  async cleanupExpired(options: {
-    userId?: string;
-    olderThanDays?: number;
-    readOnly?: boolean;
-  } = {}) {
+  async cleanupExpired(
+    options: {
+      userId?: string;
+      olderThanDays?: number;
+      readOnly?: boolean;
+    } = {},
+  ) {
     const olderThanDays = options.olderThanDays ?? 30;
     const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
 

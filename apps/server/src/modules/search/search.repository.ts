@@ -39,7 +39,7 @@ function buildOrderBy(
   sortBy: string | undefined,
   sortOrder: SortOrder,
   fieldMap: Record<string, string | string[]>,
-  defaultField: string
+  defaultField: string,
 ): Record<string, any> {
   if (!sortBy || !fieldMap[sortBy]) {
     return { [defaultField]: sortOrder };
@@ -70,7 +70,7 @@ export const searchRepository = {
     categoryFilters?: CategoryFilters,
     dateFilters?: DateFilters,
     amountFilters?: AmountFilters,
-    sortOptions?: SortOptions
+    sortOptions?: SortOptions,
   ): Promise<SearchResultItem[]> {
     const results: SearchResultItem[] = [];
 
@@ -92,27 +92,41 @@ export const searchRepository = {
 
     if (entitiesToSearch.includes("transactions")) {
       searchPromises.push(
-        searchTransactions(userId, perEntityLimit, keywords, categoryFilters, dateFilters, amountFilters, sortOptions)
+        searchTransactions(
+          userId,
+          perEntityLimit,
+          keywords,
+          categoryFilters,
+          dateFilters,
+          amountFilters,
+          sortOptions,
+        ),
       );
     }
     if (entitiesToSearch.includes("categories")) {
       searchPromises.push(
-        searchCategories(userId, perEntityLimit, keywords, categoryFilters, sortOptions)
+        searchCategories(userId, perEntityLimit, keywords, categoryFilters, sortOptions),
       );
     }
     if (entitiesToSearch.includes("payment-methods")) {
-      searchPromises.push(
-        searchPaymentMethods(userId, perEntityLimit, keywords, sortOptions)
-      );
+      searchPromises.push(searchPaymentMethods(userId, perEntityLimit, keywords, sortOptions));
     }
     if (entitiesToSearch.includes("budgets")) {
       searchPromises.push(
-        searchBudgets(userId, perEntityLimit, keywords, categoryFilters, dateFilters, amountFilters, sortOptions)
+        searchBudgets(
+          userId,
+          perEntityLimit,
+          keywords,
+          categoryFilters,
+          dateFilters,
+          amountFilters,
+          sortOptions,
+        ),
       );
     }
     if (entitiesToSearch.includes("savings-goals")) {
       searchPromises.push(
-        searchSavingsGoals(userId, perEntityLimit, keywords, dateFilters, sortOptions)
+        searchSavingsGoals(userId, perEntityLimit, keywords, dateFilters, sortOptions),
       );
     }
 
@@ -128,10 +142,7 @@ export const searchRepository = {
 // ─── Individual Entity Search Functions ───────────────────────
 
 /** Build AND conditions for multiple keywords: all keywords must match at least one field. */
-function buildMultiKeywordFilter(
-  fields: string[],
-  keywords: string[]
-): Record<string, unknown> {
+function buildMultiKeywordFilter(fields: string[], keywords: string[]): Record<string, unknown> {
   if (keywords.length === 1) {
     // Single keyword: OR across all fields
     return {
@@ -155,7 +166,7 @@ function buildMultiKeywordFilter(
 function buildNestedKeywordFilter(
   relation: string,
   field: string,
-  keywords: string[]
+  keywords: string[],
 ): Record<string, unknown> {
   if (keywords.length === 1) {
     return {
@@ -216,7 +227,7 @@ async function searchTransactions(
   categoryFilters?: CategoryFilters,
   dateFilters?: DateFilters,
   amountFilters?: AmountFilters,
-  sortOptions?: SortOptions
+  sortOptions?: SortOptions,
 ): Promise<SearchResultItem[]> {
   const where: Record<string, unknown> = { userId };
   Object.assign(where, buildMultiKeywordFilter(["description", "notes"], keywords));
@@ -293,7 +304,7 @@ async function searchCategories(
   limit: number,
   keywords: string[],
   categoryFilters?: CategoryFilters,
-  sortOptions?: SortOptions
+  sortOptions?: SortOptions,
 ): Promise<SearchResultItem[]> {
   const where: Record<string, unknown> = { userId };
   Object.assign(where, buildMultiKeywordFilter(["name"], keywords));
@@ -362,7 +373,7 @@ async function searchPaymentMethods(
   userId: string,
   limit: number,
   keywords: string[],
-  sortOptions?: SortOptions
+  sortOptions?: SortOptions,
 ): Promise<SearchResultItem[]> {
   const where: Record<string, unknown> = { userId };
   Object.assign(where, buildMultiKeywordFilter(["name"], keywords));
@@ -399,7 +410,7 @@ async function searchBudgets(
   categoryFilters?: CategoryFilters,
   dateFilters?: DateFilters,
   amountFilters?: AmountFilters,
-  sortOptions?: SortOptions
+  sortOptions?: SortOptions,
 ): Promise<SearchResultItem[]> {
   const where: Record<string, unknown> = { userId };
 
@@ -478,7 +489,7 @@ async function searchSavingsGoals(
   limit: number,
   keywords: string[],
   dateFilters?: DateFilters,
-  sortOptions?: SortOptions
+  sortOptions?: SortOptions,
 ): Promise<SearchResultItem[]> {
   const where: Record<string, unknown> = { userId };
   Object.assign(where, buildMultiKeywordFilter(["name"], keywords));
@@ -513,9 +524,7 @@ async function searchSavingsGoals(
 
   return goals.map((goal) => {
     const progress =
-      goal.targetAmount > 0
-        ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
-        : 0;
+      goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0;
     return {
       entity: "savings-goals" as const,
       id: goal.id,
@@ -541,7 +550,7 @@ const suggestionsRepository = {
   async findCategorySuggestions(
     userId: string,
     searchTerm: string,
-    limit: number
+    limit: number,
   ): Promise<Array<{ id: string; name: string; icon: string; color: string }>> {
     const categories = await prisma.category.findMany({
       where: {
@@ -567,7 +576,7 @@ const suggestionsRepository = {
   async findPaymentMethodSuggestions(
     userId: string,
     searchTerm: string,
-    limit: number
+    limit: number,
   ): Promise<Array<{ id: string; name: string; icon: string; color: string }>> {
     const methods = await prisma.paymentMethod.findMany({
       where: {
@@ -594,7 +603,7 @@ const suggestionsRepository = {
   async findTransactionTitleSuggestions(
     userId: string,
     searchTerm: string,
-    limit: number
+    limit: number,
   ): Promise<Array<{ id: string; description: string }>> {
     const txs = await prisma.transaction.findMany({
       where: {

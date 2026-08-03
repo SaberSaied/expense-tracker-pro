@@ -81,9 +81,7 @@ export const RegisterPage: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-4" id="register-form">
       <div className="text-center mb-2">
         <h2 className="text-lg font-semibold text-text-primary">Create Your Pro Account</h2>
-        <p className="text-sm text-text-secondary mt-1">
-          Start tracking your finances in seconds
-        </p>
+        <p className="text-sm text-text-secondary mt-1">Start tracking your finances in seconds</p>
       </div>
 
       <ValidationErrors errors={fieldErrors} onDismiss={() => setFieldErrors(undefined)} />
@@ -125,16 +123,17 @@ export const RegisterPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-            className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
+              className="p-2 -m-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-overlay/5 transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
-          }        error={fieldErrors?.password?.[0]}
-        autoComplete="new-password"
-        name="password"
-        required
-      />
+          }
+          error={fieldErrors?.password?.[0]}
+          autoComplete="new-password"
+          name="password"
+          required
+        />
         {password && (
           <div className="space-y-1">
             {/* Decorative strength meter segments — hidden from the a11y tree */}
@@ -144,9 +143,7 @@ export const RegisterPage: React.FC = () => {
                   key={seg}
                   className={clsx(
                     "h-1 flex-1 rounded-full transition-colors",
-                    seg <= passwordStrength.level
-                      ? passwordStrength.color
-                      : "bg-overlay/10",
+                    seg <= passwordStrength.level ? passwordStrength.color : "bg-overlay/10",
                   )}
                 />
               ))}
@@ -179,9 +176,7 @@ export const RegisterPage: React.FC = () => {
         onChange={(e) => setConfirmPassword(e.target.value)}
         leftIcon={<Lock className="size-4" />}
         error={
-          confirmPassword && confirmPassword !== password
-            ? "Passwords do not match"
-            : undefined
+          confirmPassword && confirmPassword !== password ? "Passwords do not match" : undefined
         }
         autoComplete="new-password"
         required

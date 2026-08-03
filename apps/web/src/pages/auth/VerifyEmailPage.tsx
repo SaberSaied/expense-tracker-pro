@@ -27,9 +27,7 @@ export const VerifyEmailPage: React.FC = () => {
           <div className="size-16 rounded-full bg-primary/15 flex items-center justify-center mb-4 animate-[pulse-ring_2s_infinite]">
             <Loader2 className="size-8 text-primary animate-spin" />
           </div>
-          <h2 className="text-lg font-semibold text-text-primary mb-2">
-            Verifying Your Email
-          </h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Verifying Your Email</h2>
           <p className="text-sm text-text-secondary">
             Please wait while we confirm your email address...
           </p>
@@ -41,9 +39,7 @@ export const VerifyEmailPage: React.FC = () => {
           <div className="size-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
             <CheckCircle className="size-8 text-success" />
           </div>
-          <h2 className="text-lg font-semibold text-text-primary mb-2">
-            Email Verified!
-          </h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Email Verified!</h2>
           <p className="text-sm text-text-secondary mb-6">
             Your email has been confirmed. You&apos;re all set!
           </p>
@@ -58,9 +54,7 @@ export const VerifyEmailPage: React.FC = () => {
           <div className="size-16 rounded-full bg-error/15 flex items-center justify-center mb-4">
             <XCircle className="size-8 text-error" />
           </div>
-          <h2 className="text-lg font-semibold text-text-primary mb-2">
-            Link Expired or Invalid
-          </h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Link Expired or Invalid</h2>
           <p className="text-sm text-text-secondary mb-6">
             This verification link is no longer valid.
           </p>

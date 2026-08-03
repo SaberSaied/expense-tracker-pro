@@ -15,17 +15,13 @@ import type { JwtPayload } from "@/common/types";
 function generateTokens(payload: { id: string; email: string; tokenVersion: number }): AuthTokens {
   const jwtPayload = { sub: payload.id, email: payload.email, tokenVersion: payload.tokenVersion };
 
-  const accessToken = jwt.sign(
-    jwtPayload,
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN } as SignOptions
-  );
+  const accessToken = jwt.sign(jwtPayload, env.JWT_SECRET, {
+    expiresIn: env.JWT_EXPIRES_IN,
+  } as SignOptions);
 
-  const refreshToken = jwt.sign(
-    jwtPayload,
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as SignOptions
-  );
+  const refreshToken = jwt.sign(jwtPayload, env.JWT_SECRET, {
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+  } as SignOptions);
 
   return { accessToken, refreshToken };
 }
@@ -41,7 +37,11 @@ function toAuthResponse(user: {
   avatarUrl: string | null;
   tokenVersion: number;
 }): AuthResponse {
-  const tokens = generateTokens({ id: user.id, email: user.email, tokenVersion: user.tokenVersion });
+  const tokens = generateTokens({
+    id: user.id,
+    email: user.email,
+    tokenVersion: user.tokenVersion,
+  });
   return {
     user: {
       id: user.id,
@@ -102,7 +102,7 @@ export const authService = {
     // Reject login for deactivated accounts
     if (!user.isActive) {
       throw new UnauthorizedError(
-        "This account has been deactivated. Please contact support to reactivate your account."
+        "This account has been deactivated. Please contact support to reactivate your account.",
       );
     }
 
@@ -125,7 +125,7 @@ export const authService = {
     // Reject refresh for deactivated accounts
     if (!user.isActive) {
       throw new UnauthorizedError(
-        "This account has been deactivated. Please contact support to reactivate your account."
+        "This account has been deactivated. Please contact support to reactivate your account.",
       );
     }
 

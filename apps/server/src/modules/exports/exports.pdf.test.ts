@@ -46,7 +46,7 @@ async function request(
   method: string,
   path: string,
   reqBody?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; text: string; contentType: string; buffer?: Buffer }> {
   const headers: Record<string, string> = {};
   if (reqBody !== undefined) headers["Content-Type"] = "application/json";
@@ -177,11 +177,12 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
   const pmJson = JSON.parse(pm.text);
-  testPaymentMethodId = (pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string ?? null;
+  testPaymentMethodId =
+    ((pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string) ?? null;
   assert(testPaymentMethodId != null, "Payment method has ID");
 
   // Create transactions
@@ -192,13 +193,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market",
       date: today,
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx1.status === 201, "Created expense transaction");
 
@@ -207,12 +208,12 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "Monthly Paycheck",
       date: today,
       categoryId: incomeCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx2.status === 201, "Created income transaction");
 
@@ -223,7 +224,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=pdf",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pdfTx.status === 200, "Export transactions PDF returns 200");
   assert(pdfTx.contentType.includes("application/pdf"), "Content-Type is application/pdf");
@@ -240,12 +241,7 @@ async function runTests() {
   // ─── 3. Export Transactions as CSV (default format) ────────
   console.log("\n─── 3. Export Transactions as CSV (default format) ───");
 
-  const csvTx = await request(
-    "GET",
-    "/exports/transactions",
-    undefined,
-    userTokens?.accessToken
-  );
+  const csvTx = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
   assert(csvTx.status === 200, "Export transactions CSV returns 200");
   assert(csvTx.contentType.includes("text/csv"), "Default format is CSV");
 
@@ -256,7 +252,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=daily&format=pdf&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dailyPdf.status === 200, "Export daily report PDF returns 200");
   assert(dailyPdf.contentType.includes("application/pdf"), "Daily report PDF content type");
@@ -276,12 +272,15 @@ async function runTests() {
     "GET",
     `/exports/reports?type=weekly&format=pdf&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(weeklyPdf.status === 200, "Export weekly report PDF returns 200");
   assert(isPdfSignature(weeklyPdf.buffer!), "Weekly report PDF has valid signature");
   assert(pdfContains(weeklyPdf.buffer!, "Weekly Financial Report"), "Weekly PDF has report title");
-  assert(pdfContains(weeklyPdf.buffer!, "Daily Breakdown"), "Weekly PDF has daily breakdown section");
+  assert(
+    pdfContains(weeklyPdf.buffer!, "Daily Breakdown"),
+    "Weekly PDF has daily breakdown section",
+  );
   assert(pdfContains(weeklyPdf.buffer!, "Financial Summary"), "Weekly PDF has summary");
 
   // ─── 6. Export Report - Monthly (PDF) ──────────────────────
@@ -295,14 +294,20 @@ async function runTests() {
     "GET",
     `/exports/reports?type=monthly&format=pdf&year=${thisYear}&month=${thisMonth}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(monthlyPdf.status === 200, "Export monthly report PDF returns 200");
   assert(isPdfSignature(monthlyPdf.buffer!), "Monthly report PDF has valid signature");
-  assert(pdfContains(monthlyPdf.buffer!, "Monthly Financial Report"), "Monthly PDF has report title");
+  assert(
+    pdfContains(monthlyPdf.buffer!, "Monthly Financial Report"),
+    "Monthly PDF has report title",
+  );
   assert(pdfContains(monthlyPdf.buffer!, "Financial Summary"), "Monthly PDF has summary");
   assert(pdfContains(monthlyPdf.buffer!, "Category Breakdown"), "Monthly PDF has category section");
-  assert(pdfContains(monthlyPdf.buffer!, "Payment Method Summary"), "Monthly PDF has payment method section");
+  assert(
+    pdfContains(monthlyPdf.buffer!, "Payment Method Summary"),
+    "Monthly PDF has payment method section",
+  );
 
   // ─── 7. Export Report - Yearly (PDF) ───────────────────────
   console.log("\n─── 7. Export Yearly Report (GET /exports/reports?type=yearly&format=pdf) ───");
@@ -311,7 +316,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=yearly&format=pdf&year=${thisYear}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(yearlyPdf.status === 200, "Export yearly report PDF returns 200");
   assert(isPdfSignature(yearlyPdf.buffer!), "Yearly report PDF has valid signature");
@@ -326,7 +331,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=pdf",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(summaryPdf.status === 200, "Export summary PDF returns 200");
   assert(isPdfSignature(summaryPdf.buffer!), "Summary PDF has valid signature");
@@ -335,23 +340,46 @@ async function runTests() {
   assert(pdfContains(summaryPdf.buffer!, "Detailed Summary"), "Summary PDF has detailed section");
 
   // ─── 9. Export Report - Breakdown (PDF) ────────────────────
-  console.log("\n─── 9. Export Breakdown Report (GET /exports/reports?type=breakdown&format=pdf) ───");
+  console.log(
+    "\n─── 9. Export Breakdown Report (GET /exports/reports?type=breakdown&format=pdf) ───",
+  );
 
   const breakdownPdf = await request(
     "GET",
     "/exports/reports?type=breakdown&format=pdf",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(breakdownPdf.status === 200, "Export breakdown PDF returns 200");
   assert(isPdfSignature(breakdownPdf.buffer!), "Breakdown PDF has valid signature");
-  assert(pdfContains(breakdownPdf.buffer!, "Financial Report Breakdown"), "Breakdown PDF has title");
-  assert(pdfContains(breakdownPdf.buffer!, "Income vs Expense"), "Breakdown PDF has income/expense section");
-  assert(pdfContains(breakdownPdf.buffer!, "Category Breakdown"), "Breakdown PDF has category section");
-  assert(pdfContains(breakdownPdf.buffer!, "Payment Method Summary"), "Breakdown PDF has payment method section");
-  assert(pdfContains(breakdownPdf.buffer!, "Largest Transaction"), "Breakdown PDF has largest transaction");
-  assert(pdfContains(breakdownPdf.buffer!, "Smallest Transaction"), "Breakdown PDF has smallest transaction");
-  assert(pdfContains(breakdownPdf.buffer!, "Whole Foods Market"), "Breakdown PDF contains transaction");
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Financial Report Breakdown"),
+    "Breakdown PDF has title",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Income vs Expense"),
+    "Breakdown PDF has income/expense section",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Category Breakdown"),
+    "Breakdown PDF has category section",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Payment Method Summary"),
+    "Breakdown PDF has payment method section",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Largest Transaction"),
+    "Breakdown PDF has largest transaction",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Smallest Transaction"),
+    "Breakdown PDF has smallest transaction",
+  );
+  assert(
+    pdfContains(breakdownPdf.buffer!, "Whole Foods Market"),
+    "Breakdown PDF contains transaction",
+  );
 
   // ─── 10. Reports as CSV still works ────────────────────────
   console.log("\n─── 10. CSV export still works ───");
@@ -360,7 +388,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=daily&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(csvDaily.status === 200, "CSV daily report still works");
   assert(csvDaily.contentType.includes("text/csv"), "CSV daily has text/csv content type");
@@ -369,7 +397,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=summary`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(csvSummary.status === 200, "CSV summary still works");
   assert(csvSummary.contentType.includes("text/csv"), "CSV summary has text/csv content type");
@@ -391,24 +419,30 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=pdf",
     undefined,
-    secondTokens?.accessToken
+    secondTokens?.accessToken,
   );
   assert(secondPdfTx.status === 200, "Second user PDF export returns 200");
   assert(isPdfSignature(secondPdfTx.buffer!), "Second user PDF has valid signature");
   // Should still have headers and app name but no transaction data
   assert(pdfContains(secondPdfTx.buffer!, "Transaction Export"), "Second user PDF has title");
-  assert(!pdfContains(secondPdfTx.buffer!, "42.50"), "Second user PDF does not contain primary user data");
+  assert(
+    !pdfContains(secondPdfTx.buffer!, "42.50"),
+    "Second user PDF does not contain primary user data",
+  );
 
   // Second user's summary PDF has zero amounts
   const secondSummary = await request(
     "GET",
     "/exports/reports?type=summary&format=pdf",
     undefined,
-    secondTokens?.accessToken
+    secondTokens?.accessToken,
   );
   assert(secondSummary.status === 200, "Second user summary PDF returns 200");
   assert(pdfContains(secondSummary.buffer!, "$0.00"), "Second user summary has $0.00");
-  assert(!pdfContains(secondSummary.buffer!, "5,000.00"), "Second user summary does not have primary income");
+  assert(
+    !pdfContains(secondSummary.buffer!, "5,000.00"),
+    "Second user summary does not have primary income",
+  );
 
   // ─── 12. Validation ────────────────────────────────────────
   console.log("\n─── 12. Validation ───");
@@ -418,7 +452,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=excel",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badFormat.status === 400, "Invalid format returns 400");
 
@@ -426,7 +460,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=excel",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badFormatReport.status === 400, "Invalid format on report returns 400");
 
@@ -435,7 +469,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?format=pdf&startDate=not-a-date",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDate.status === 400, "Invalid date with PDF format returns 400");
 

@@ -53,7 +53,7 @@ export const dashboardController = {
       const months = req.query.months ? parseInt(req.query.months as string, 10) : 0;
       const dateRange = parseDateFilter(req);
       const result = await dashboardService.getCategoryDistribution(req.user.id, {
-        months: dateRange ? undefined : (months > 0 ? Math.min(Math.max(months, 1), 60) : undefined),
+        months: dateRange ? undefined : months > 0 ? Math.min(Math.max(months, 1), 60) : undefined,
         dateRange: dateRange ?? undefined,
       });
       sendSuccess(res, result);

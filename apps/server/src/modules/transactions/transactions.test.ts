@@ -60,7 +60,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -95,14 +95,10 @@ function assert(condition: unknown, label: string) {
 // Helper to create a tiny test PNG for receipt upload
 function createTestPng(): Buffer {
   return Buffer.from([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-    0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
-    0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41,
-    0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
-    0x00, 0x00, 0x03, 0x00, 0x01, 0x36, 0x28, 0x19,
-    0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+    0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
+    0x00, 0x00, 0x03, 0x00, 0x01, 0x36, 0x28, 0x19, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
     0xae, 0x42, 0x60, 0x82,
   ]);
 }
@@ -149,10 +145,11 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
-  testPaymentMethodId = (pm.json.data?.paymentMethod as Record<string, unknown>)?.id as string ?? null;
+  testPaymentMethodId =
+    ((pm.json.data?.paymentMethod as Record<string, unknown>)?.id as string) ?? null;
   assert(testPaymentMethodId != null, "Payment method has ID");
 
   // Set up created transaction IDs for later tests
@@ -167,14 +164,14 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market",
       date: "2026-07-01",
       notes: "Weekly grocery shopping",
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(expenseTxn.status === 201, "Create expense returns 201");
   assert(expenseTxn.json.success === true, "Create expense success=true");
@@ -196,12 +193,12 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "July Paycheck",
       date: "2026-07-15",
       categoryId: incomeCategoryId!,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeTxn.status === 201, "Create income returns 201");
   const income = incomeTxn.json.data?.transaction as Record<string, unknown> | undefined;
@@ -218,12 +215,12 @@ async function runTests() {
     "/transactions",
     {
       type: "TRANSFER",
-      amount: 200.00,
+      amount: 200.0,
       description: "Transfer to Savings",
       date: "2026-07-20",
       categoryId: testCategoryId!,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(transferTxn.status === 201, "Create transfer returns 201");
   const transfer = transferTxn.json.data?.transaction as Record<string, unknown> | undefined;
@@ -243,7 +240,7 @@ async function runTests() {
       date: "2026-06-15",
       categoryId: testCategoryId!,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   await request(
@@ -251,13 +248,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 150.00,
+      amount: 150.0,
       description: "Electric Bill",
       date: "2026-07-05",
       notes: "Monthly utility payment",
       categoryId: testCategoryId!,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // ─── 3. Validation — Missing / Invalid Fields ──────────────
@@ -268,7 +265,7 @@ async function runTests() {
     "POST",
     "/transactions",
     { amount: 10, description: "Test", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(noType.status === 400, "Missing type returns 400");
 
@@ -276,7 +273,7 @@ async function runTests() {
     "POST",
     "/transactions",
     { type: "EXPENSE", description: "Test", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(noAmount.status === 400, "Missing amount returns 400");
 
@@ -284,7 +281,7 @@ async function runTests() {
     "POST",
     "/transactions",
     { type: "EXPENSE", amount: 10, date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(noDescription.status === 400, "Missing description returns 400");
 
@@ -292,16 +289,28 @@ async function runTests() {
   const zeroAmount = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 0, description: "Zero", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 0,
+      description: "Zero",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   assert(zeroAmount.status === 400, "Zero amount returns 400");
 
   const negativeAmount = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: -10, description: "Negative", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: -10,
+      description: "Negative",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   assert(negativeAmount.status === 400, "Negative amount returns 400");
 
@@ -309,8 +318,14 @@ async function runTests() {
   const badType = await request(
     "POST",
     "/transactions",
-    { type: "INVALID", amount: 10, description: "Bad type", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "INVALID",
+      amount: 10,
+      description: "Bad type",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   assert(badType.status === 400, "Invalid type returns 400");
 
@@ -318,8 +333,14 @@ async function runTests() {
   const badCat = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 10, description: "Bad cat", date: "2026-07-01", categoryId: "00000000-0000-0000-0000-000000000000" },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 10,
+      description: "Bad cat",
+      date: "2026-07-01",
+      categoryId: "00000000-0000-0000-0000-000000000000",
+    },
+    userTokens?.accessToken,
   );
   assert(badCat.status === 400, "Non-existent category returns 400");
 
@@ -327,8 +348,15 @@ async function runTests() {
   const badPm = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 10, description: "Bad PM", date: "2026-07-01", categoryId: testCategoryId, paymentMethodId: "00000000-0000-0000-0000-000000000000" },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 10,
+      description: "Bad PM",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+      paymentMethodId: "00000000-0000-0000-0000-000000000000",
+    },
+    userTokens?.accessToken,
   );
   assert(badPm.status === 400, "Non-existent payment method returns 400");
 
@@ -349,7 +377,12 @@ async function runTests() {
   // ─── 5. Get Transaction By ID ──────────────────────────────
   console.log("\n─── 5. Get Transaction By ID (GET /transactions/:id) ───");
 
-  const byId = await request("GET", `/transactions/${expenseId}`, undefined, userTokens?.accessToken);
+  const byId = await request(
+    "GET",
+    `/transactions/${expenseId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(byId.status === 200, "Get by ID returns 200");
   assert(byId.json.success === true, "Get by ID success=true");
   const fetched = byId.json.data?.transaction as Record<string, unknown> | undefined;
@@ -359,19 +392,27 @@ async function runTests() {
   assert(fetched!.category != null, "Category relation included");
   assert((fetched!.category as Record<string, unknown>)?.name === "Food", "Category name included");
   assert(fetched!.paymentMethod != null, "Payment method relation included");
-  assert((fetched!.paymentMethod as Record<string, unknown>)?.name === "Test Visa", "Payment method name included");
+  assert(
+    (fetched!.paymentMethod as Record<string, unknown>)?.name === "Test Visa",
+    "Payment method name included",
+  );
 
   // Non-existent ID returns 404
   const notFound = await request(
     "GET",
     "/transactions/00000000-0000-0000-0000-000000000000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(notFound.status === 404, "Non-existent ID returns 404");
 
   // Invalid UUID returns 400
-  const badId = await request("GET", "/transactions/not-a-uuid", undefined, userTokens?.accessToken);
+  const badId = await request(
+    "GET",
+    "/transactions/not-a-uuid",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badId.status === 400, "Invalid UUID returns 400");
 
   // ─── 6. Update Transaction ─────────────────────────────────
@@ -382,12 +423,12 @@ async function runTests() {
     "PATCH",
     `/transactions/${expenseId}`,
     {
-      amount: 45.00,
+      amount: 45.0,
       description: "Whole Foods Updated",
       notes: "Updated notes",
       categoryId: testCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update returns 200");
   assert(updated.json.success === true, "Update success=true");
@@ -401,7 +442,7 @@ async function runTests() {
     "PATCH",
     `/transactions/${expenseId}`,
     { notes: "Partial update test" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(partialUpdate.status === 200, "Partial update returns 200");
   const partialTxn = partialUpdate.json.data?.transaction as Record<string, unknown> | undefined;
@@ -414,7 +455,7 @@ async function runTests() {
     "PATCH",
     `/transactions/${expenseId}`,
     { categoryId: "00000000-0000-0000-0000-000000000000" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badCatUpdate.status === 400, "Update with invalid category returns 400");
 
@@ -426,7 +467,7 @@ async function runTests() {
     "GET",
     "/transactions?search=Whole%20Foods",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchFoods.status === 200, "Search 'Whole Foods' returns 200");
   const foodResults = (searchFoods.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
@@ -438,10 +479,12 @@ async function runTests() {
     "GET",
     "/transactions?search=Monthly",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchNotes.status === 200, "Search 'Monthly' returns 200");
-  const notesResults = (searchNotes.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
+  const notesResults = (searchNotes.json.data?.transactions ?? []) as Array<
+    Record<string, unknown>
+  >;
   assert(notesResults.length >= 1, "Search found note match");
   const hasMonthly = notesResults.some((t) => t.notes === "Monthly utility payment");
   assert(hasMonthly, "Search 'Monthly' found transaction with that note");
@@ -451,7 +494,7 @@ async function runTests() {
     "GET",
     "/transactions?search=zzzznotfound",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchNone.status === 200, "No-match search returns 200");
   const emptyResults = (searchNone.json.data?.transactions ?? []) as Array<unknown>;
@@ -466,54 +509,68 @@ async function runTests() {
     "GET",
     "/transactions?type=INCOME",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeFilter.status === 200, "Income filter returns 200");
   const incomeList = (incomeFilter.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   assert(incomeList.length > 0, "Income filter returned results");
-  assert(incomeList.every((t): boolean => t.type === "INCOME"), "All results are INCOME type");
+  assert(
+    incomeList.every((t): boolean => t.type === "INCOME"),
+    "All results are INCOME type",
+  );
 
   const expenseFilter = await request(
     "GET",
     "/transactions?type=EXPENSE",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(expenseFilter.status === 200, "Expense filter returns 200");
-  const expenseList = (expenseFilter.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
+  const expenseList = (expenseFilter.json.data?.transactions ?? []) as Array<
+    Record<string, unknown>
+  >;
   assert(expenseList.length > 0, "Expense filter returned results");
-  assert(expenseList.every((t): boolean => t.type === "EXPENSE"), "All results are EXPENSE type");
+  assert(
+    expenseList.every((t): boolean => t.type === "EXPENSE"),
+    "All results are EXPENSE type",
+  );
 
   // Filter by category
   const catFilter = await request(
     "GET",
     `/transactions?categoryId=${testCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(catFilter.status === 200, "Category filter returns 200");
   const catList = (catFilter.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   assert(catList.length > 0, "Category filter returned results");
-  assert(catList.every((t): boolean => t.categoryId === testCategoryId), "All results match category");
+  assert(
+    catList.every((t): boolean => t.categoryId === testCategoryId),
+    "All results match category",
+  );
 
   // Filter by payment method
   const pmFilter = await request(
     "GET",
     `/transactions?paymentMethodId=${testPaymentMethodId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pmFilter.status === 200, "Payment method filter returns 200");
   const pmList = (pmFilter.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   assert(pmList.length > 0, "Payment method filter returned results");
-  assert(pmList.every((t): boolean => t.paymentMethodId === testPaymentMethodId), "All results match payment method");
+  assert(
+    pmList.every((t): boolean => t.paymentMethodId === testPaymentMethodId),
+    "All results match payment method",
+  );
 
   // Filter by date range
   const dateFilter = await request(
     "GET",
     "/transactions?startDate=2026-07-01&endDate=2026-07-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateFilter.status === 200, "Date range filter returns 200");
   assert(Number(dateFilter.json.meta!.total) >= 3, "July date range finds 3+ transactions");
@@ -523,19 +580,22 @@ async function runTests() {
     "GET",
     "/transactions?minAmount=100&maxAmount=1000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(amountFilter.status === 200, "Amount range filter returns 200");
   const amountList = (amountFilter.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   assert(amountList.length >= 1, "Amount range finds transactions");
-  assert(amountList.every((t): boolean => (t.amount as number) >= 100 && (t.amount as number) <= 1000), "All results in amount range");
+  assert(
+    amountList.every((t): boolean => (t.amount as number) >= 100 && (t.amount as number) <= 1000),
+    "All results in amount range",
+  );
 
   // Combined filters
   const combined = await request(
     "GET",
     `/transactions?type=EXPENSE&categoryId=${testCategoryId}&minAmount=40&maxAmount=100`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(combined.status === 200, "Combined filters return 200");
   const combinedList = (combined.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
@@ -543,7 +603,10 @@ async function runTests() {
     const t = txn as Record<string, unknown>;
     assert(t.type === "EXPENSE", "Combined filter — type is EXPENSE");
     assert(t.categoryId === testCategoryId, "Combined filter — category matches");
-    assert((t.amount as number) >= 40 && (t.amount as number) <= 100, "Combined filter — amount in range");
+    assert(
+      (t.amount as number) >= 40 && (t.amount as number) <= 100,
+      "Combined filter — amount in range",
+    );
   }
 
   // ─── 9. Sorting ────────────────────────────────────────────
@@ -554,13 +617,16 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=amount&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAmountAsc.status === 200, "Sort by amount asc returns 200");
   const ascList = (sortAmountAsc.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   assert(ascList.length >= 2, "Sort results have transactions");
   for (let i = 1; i < ascList.length; i++) {
-    assert((ascList[i].amount as number) >= (ascList[i - 1].amount as number), "Amount ascending order");
+    assert(
+      (ascList[i].amount as number) >= (ascList[i - 1].amount as number),
+      "Amount ascending order",
+    );
   }
 
   // Sort by amount descending
@@ -568,12 +634,15 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=amount&sortOrder=desc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAmountDesc.status === 200, "Sort by amount desc returns 200");
   const descList = (sortAmountDesc.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
   for (let i = 1; i < descList.length; i++) {
-    assert((descList[i].amount as number) <= (descList[i - 1].amount as number), "Amount descending order");
+    assert(
+      (descList[i].amount as number) <= (descList[i - 1].amount as number),
+      "Amount descending order",
+    );
   }
 
   // Sort by date ascending
@@ -581,7 +650,7 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=date&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortDateAsc.status === 200, "Sort by date asc returns 200");
 
@@ -590,7 +659,7 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=description&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortTitleAsc.status === 200, "Sort by description asc returns 200");
 
@@ -599,7 +668,7 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=createdAt&sortOrder=desc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortCreatedAt.status === 200, "Sort by createdAt desc returns 200");
 
@@ -608,7 +677,7 @@ async function runTests() {
     "GET",
     "/transactions?sortBy=updatedAt&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortUpdatedAt.status === 200, "Sort by updatedAt asc returns 200");
 
@@ -620,7 +689,7 @@ async function runTests() {
     "GET",
     "/transactions?page=1&limit=2",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(page1.status === 200, "Page 1 returns 200");
   assert(page1.json.meta!.page === 1, "Meta.page is 1");
@@ -636,7 +705,7 @@ async function runTests() {
     "GET",
     "/transactions?page=2&limit=2",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(page2.status === 200, "Page 2 returns 200");
   assert(page2.json.meta!.page === 2, "Meta.page is 2");
@@ -657,7 +726,7 @@ async function runTests() {
     "GET",
     "/transactions?page=999&limit=2",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(page999.status === 200, "Out-of-range page returns 200");
   const page999List = (page999.json.data?.transactions ?? []) as Array<unknown>;
@@ -669,7 +738,7 @@ async function runTests() {
     "GET",
     "/transactions?limit=999",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badLimit.status === 400, "Limit > 100 returns 400");
 
@@ -677,7 +746,7 @@ async function runTests() {
     "GET",
     "/transactions?limit=0",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(zeroLimit.status === 400, "Limit of 0 returns 400");
 
@@ -694,7 +763,10 @@ async function runTests() {
   assert(typeof sum!.netAmount === "number", "netAmount is a number");
   assert(typeof sum!.count === "number", "count is a number");
   assert(sum!.totalIncome === 5000, "totalIncome is 5000 (July Paycheck)");
-  assert(sum!.netAmount === (sum!.totalIncome as number) - (sum!.totalExpense as number), "netAmount = income - expense");
+  assert(
+    sum!.netAmount === (sum!.totalIncome as number) - (sum!.totalExpense as number),
+    "netAmount = income - expense",
+  );
   assert((sum!.count as number) >= 5, "count >= 5 transactions");
 
   // Summary with filters
@@ -702,7 +774,7 @@ async function runTests() {
     "GET",
     "/transactions/summary?type=EXPENSE",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(filteredSummary.status === 200, "Filtered summary returns 200");
   const filteredSum = filteredSummary.json.data?.summary as Record<string, unknown> | undefined;
@@ -714,7 +786,7 @@ async function runTests() {
     "GET",
     "/transactions/summary?startDate=2026-07-01&endDate=2026-07-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(julySummary.status === 200, "July summary returns 200");
   const julySum = julySummary.json.data?.summary as Record<string, unknown> | undefined;
@@ -737,7 +809,9 @@ async function runTests() {
   let receiptJson: ApiResult = { success: false };
   try {
     receiptJson = (await receiptUpload.json()) as ApiResult;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   assert(receiptJson.success === true, "Receipt upload success=true");
   assert(receiptJson.data?.receiptUrl != null, "Receipt upload returns receiptUrl");
   assert(receiptJson.data?.transaction != null, "Receipt upload returns transaction");
@@ -758,7 +832,7 @@ async function runTests() {
     "DELETE",
     `/transactions/${expenseId}/receipt`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(removeReceipt.status === 200, "Remove receipt returns 200");
   const removedTxn = removeReceipt.json.data?.transaction as Record<string, unknown> | undefined;
@@ -771,16 +845,28 @@ async function runTests() {
   const bulk1 = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 11.00, description: "Bulk Item 1", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 11.0,
+      description: "Bulk Item 1",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   const bulk1Id = (bulk1.json.data?.transaction as Record<string, unknown>)?.id as string;
 
   const bulk2 = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 22.00, description: "Bulk Item 2", date: "2026-07-02", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 22.0,
+      description: "Bulk Item 2",
+      date: "2026-07-02",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   const bulk2Id = (bulk2.json.data?.transaction as Record<string, unknown>)?.id as string;
 
@@ -789,13 +875,18 @@ async function runTests() {
     "POST",
     "/transactions/bulk/update",
     { ids: [bulk1Id, bulk2Id], categoryId: incomeCategoryId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(bulkUpdate.status === 200, "Bulk update returns 200");
   assert(bulkUpdate.json.data?.count === 2, "Bulk update affected 2 transactions");
 
   // Verify the update took effect
-  const bulk1After = await request("GET", `/transactions/${bulk1Id}`, undefined, userTokens?.accessToken);
+  const bulk1After = await request(
+    "GET",
+    `/transactions/${bulk1Id}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   const afterCat = (bulk1After.json.data?.transaction as Record<string, unknown>)?.categoryId;
   assert(afterCat === incomeCategoryId, "Bulk updated category on transaction 1");
 
@@ -804,13 +895,18 @@ async function runTests() {
     "POST",
     "/transactions/bulk/delete",
     { ids: [bulk1Id, bulk2Id] },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(bulkDelete.status === 200, "Bulk delete returns 200");
   assert(bulkDelete.json.data?.count === 2, "Bulk delete removed 2 transactions");
 
   // Verify the delete took effect
-  const bulk1Gone = await request("GET", `/transactions/${bulk1Id}`, undefined, userTokens?.accessToken);
+  const bulk1Gone = await request(
+    "GET",
+    `/transactions/${bulk1Id}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(bulk1Gone.status === 404, "Bulk deleted transaction returns 404");
 
   // Empty ids array
@@ -818,7 +914,7 @@ async function runTests() {
     "POST",
     "/transactions/bulk/delete",
     { ids: [] },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(emptyBulkDelete.status === 400, "Empty ids array for bulk delete returns 400");
 
@@ -826,7 +922,7 @@ async function runTests() {
     "POST",
     "/transactions/bulk/update",
     { ids: [], categoryId: testCategoryId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(emptyBulkUpdate.status === 400, "Empty ids array for bulk update returns 400");
 
@@ -835,7 +931,7 @@ async function runTests() {
     "POST",
     "/transactions/bulk/delete",
     { ids: ["00000000-0000-0000-0000-000000000000"] },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(phantomDelete.status === 404, "Bulk delete non-existent IDs returns 404");
 
@@ -845,16 +941,32 @@ async function runTests() {
   const toDelete = await request(
     "POST",
     "/transactions",
-    { type: "EXPENSE", amount: 5.00, description: "To Be Deleted", date: "2026-07-01", categoryId: testCategoryId },
-    userTokens?.accessToken
+    {
+      type: "EXPENSE",
+      amount: 5.0,
+      description: "To Be Deleted",
+      date: "2026-07-01",
+      categoryId: testCategoryId,
+    },
+    userTokens?.accessToken,
   );
   const deleteId = (toDelete.json.data?.transaction as Record<string, unknown>)?.id as string;
   assert(toDelete.status === 201, "Created transaction for deletion test");
 
-  const deleted = await request("DELETE", `/transactions/${deleteId}`, undefined, userTokens?.accessToken);
+  const deleted = await request(
+    "DELETE",
+    `/transactions/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleted.status === 204, "Delete returns 204 No Content");
 
-  const gone = await request("GET", `/transactions/${deleteId}`, undefined, userTokens?.accessToken);
+  const gone = await request(
+    "GET",
+    `/transactions/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(gone.status === 404, "Deleted transaction returns 404");
 
   // ─── 15. Ownership Validation ──────────────────────────────
@@ -874,7 +986,7 @@ async function runTests() {
     "GET",
     `/transactions/${expenseId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user cannot get primary's transaction (404)");
 
@@ -883,7 +995,7 @@ async function runTests() {
     "PATCH",
     `/transactions/${expenseId}`,
     { description: "Hacked" },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenUpdate.status === 404, "Second user cannot update primary's transaction (404)");
 
@@ -892,13 +1004,20 @@ async function runTests() {
     "DELETE",
     `/transactions/${expenseId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenDelete.status === 404, "Second user cannot delete primary's transaction (404)");
 
   // Second user's list does NOT include primary's transactions
-  const secondUserList = await request("GET", "/transactions", undefined, secondUserTokens?.accessToken);
-  const secondTxns = (secondUserList.json.data?.transactions ?? []) as Array<Record<string, unknown>>;
+  const secondUserList = await request(
+    "GET",
+    "/transactions",
+    undefined,
+    secondUserTokens?.accessToken,
+  );
+  const secondTxns = (secondUserList.json.data?.transactions ?? []) as Array<
+    Record<string, unknown>
+  >;
   assert(secondTxns.length === 0, "Second user has 0 transactions (no crossover)");
 
   // Second user cannot upload receipt on primary's transaction
@@ -907,7 +1026,10 @@ async function runTests() {
     headers: { Authorization: `Bearer ${secondUserTokens?.accessToken ?? ""}` },
     body: formData,
   });
-  assert(forbiddenReceipt.status === 404, "Second user cannot upload receipt on primary's txn (404)");
+  assert(
+    forbiddenReceipt.status === 404,
+    "Second user cannot upload receipt on primary's txn (404)",
+  );
 
   // ─── 16. Unauthenticated Access ────────────────────────────
   console.log("\n─── 16. Unauthenticated Access ───");

@@ -3,7 +3,11 @@ import { reportService } from "../reports/reports.service";
 import { reportRepository } from "../reports/reports.repository";
 import { budgetRepository } from "../budgets/budgets.repository";
 import { savingsGoalRepository } from "../savings-goals/savings-goals.repository";
-import type { ColumnName, ExportTransactionsQuery, ExportTransactionsXlsxResult } from "./exports.types";
+import type {
+  ColumnName,
+  ExportTransactionsQuery,
+  ExportTransactionsXlsxResult,
+} from "./exports.types";
 
 // ─── Style Constants ──────────────────────────────────────────
 
@@ -123,7 +127,7 @@ function addTable(
   worksheet: ExcelJS.Worksheet,
   columns: TableColumn[],
   data: Record<string, unknown>[],
-  startRow: number
+  startRow: number,
 ): number {
   let row = startRow;
 
@@ -171,7 +175,10 @@ function addTable(
 
       // Apply data style
       cell.font = STYLES.data.font;
-      cell.alignment = { ...STYLES.data.alignment, ...(col.isCurrency ? { horizontal: "right" } : col.isDate ? { horizontal: "center" } : {}) };
+      cell.alignment = {
+        ...STYLES.data.alignment,
+        ...(col.isCurrency ? { horizontal: "right" } : col.isDate ? { horizontal: "center" } : {}),
+      };
       cell.border = STYLES.data.border;
 
       // Alternating rows
@@ -217,7 +224,12 @@ function addSubSectionTitle(worksheet: ExcelJS.Worksheet, title: string, row: nu
 
 // ─── Helper: Add Key-Value Pair Row ───────────────────────────
 
-function addKvRow(worksheet: ExcelJS.Worksheet, key: string, value: string | number, row: number): number {
+function addKvRow(
+  worksheet: ExcelJS.Worksheet,
+  key: string,
+  value: string | number,
+  row: number,
+): number {
   const kvRow = worksheet.getRow(row);
   const labelCell = kvRow.getCell(1);
   labelCell.value = key;
@@ -246,7 +258,10 @@ function addEmptyRow(worksheet: ExcelJS.Worksheet, row: number): number {
 
 // ─── Helper: Build DB Filters ─────────────────────────────────
 
-async function buildDbFilters(userId: string, filters: ExportTransactionsQuery): Promise<Record<string, unknown>> {
+async function buildDbFilters(
+  userId: string,
+  filters: ExportTransactionsQuery,
+): Promise<Record<string, unknown>> {
   const dbFilters: Record<string, unknown> = {};
 
   if (filters.startDate) dbFilters.startDate = new Date(filters.startDate);
@@ -280,7 +295,7 @@ function formatTransactionsForTable(
     paymentMethod?: { name: string } | null;
     notes?: string | null;
   }>,
-  cols: Array<{ key: ColumnName; label: string }>
+  cols: Array<{ key: ColumnName; label: string }>,
 ): Record<string, unknown>[] {
   return transactions.map((tx) => {
     const row: Record<string, unknown> = {};
@@ -324,7 +339,7 @@ export const xlsxExportService = {
    */
   async generateTransactionsXlsx(
     userId: string,
-    filters: ExportTransactionsQuery
+    filters: ExportTransactionsQuery,
   ): Promise<ExportTransactionsXlsxResult> {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Expense Tracker Pro";
@@ -341,13 +356,13 @@ export const xlsxExportService = {
     const [totalCount, transactions] = await Promise.all([
       reportRepository.countCustomTransactions(
         userId,
-        dbFilters as Parameters<typeof reportRepository.countCustomTransactions>[1]
+        dbFilters as Parameters<typeof reportRepository.countCustomTransactions>[1],
       ),
       reportRepository.findCustomTransactions(
         userId,
         dbFilters as Parameters<typeof reportRepository.findCustomTransactions>[1],
         { skip, take: limit },
-        { sortBy: filters.sortBy, sortOrder: filters.sortOrder }
+        { sortBy: filters.sortBy, sortOrder: filters.sortOrder },
       ),
     ]);
 
@@ -384,7 +399,7 @@ export const xlsxExportService = {
       endDate?: string;
       budgetId?: string;
       savingsGoalId?: string;
-    }
+    },
   ): Promise<Buffer> {
     // Fetch savings goal info if provided
     let goalInfo: Record<string, unknown> | null = null;
@@ -405,11 +420,21 @@ export const xlsxExportService = {
 
     switch (query.type) {
       case "daily":
-        return this.generateDailyReportXlsx(userId, query.date ?? new Date().toISOString().slice(0, 10));
+        return this.generateDailyReportXlsx(
+          userId,
+          query.date ?? new Date().toISOString().slice(0, 10),
+        );
       case "weekly":
-        return this.generateWeeklyReportXlsx(userId, query.date ?? new Date().toISOString().slice(0, 10));
+        return this.generateWeeklyReportXlsx(
+          userId,
+          query.date ?? new Date().toISOString().slice(0, 10),
+        );
       case "monthly":
-        return this.generateMonthlyReportXlsx(userId, query.year ?? new Date().getFullYear(), query.month ?? new Date().getMonth() + 1);
+        return this.generateMonthlyReportXlsx(
+          userId,
+          query.year ?? new Date().getFullYear(),
+          query.month ?? new Date().getMonth() + 1,
+        );
       case "yearly":
         return this.generateYearlyReportXlsx(userId, query.year ?? new Date().getFullYear());
       case "summary":
@@ -645,7 +670,8 @@ export const xlsxExportService = {
         spent: bp.spent,
         remaining: bp.remaining,
         percentage: `${bp.percentage}%`,
-        status: bp.status === "critical" ? "Critical" : bp.status === "warning" ? "Warning" : "On Track",
+        status:
+          bp.status === "critical" ? "Critical" : bp.status === "warning" ? "Warning" : "On Track",
       }));
       addTable(ws, budgetCols, budgetData, row);
     }
@@ -730,7 +756,8 @@ export const xlsxExportService = {
         spent: bp.spent,
         remaining: bp.remaining,
         percentage: `${bp.percentage}%`,
-        status: bp.status === "critical" ? "Critical" : bp.status === "warning" ? "Warning" : "On Track",
+        status:
+          bp.status === "critical" ? "Critical" : bp.status === "warning" ? "Warning" : "On Track",
       }));
       addTable(ws, budgetCols, budgetData, row);
     }
@@ -745,7 +772,7 @@ export const xlsxExportService = {
     userId: string,
     startDate?: string,
     endDate?: string,
-    goalInfo?: Record<string, unknown> | null
+    goalInfo?: Record<string, unknown> | null,
   ): Promise<Buffer> {
     const summary = await reportService.getSummary(userId, startDate, endDate);
 
@@ -792,7 +819,17 @@ export const xlsxExportService = {
     // Apply currency formatting to metric values
     for (let r = row - metrics.length - 2; r < row - 2; r++) {
       const label = ws.getRow(r).getCell(1).value;
-      if (label && ["Income", "Expenses", "Net Balance", "Average Transaction", "Average Income", "Average Expense"].includes(String(label))) {
+      if (
+        label &&
+        [
+          "Income",
+          "Expenses",
+          "Net Balance",
+          "Average Transaction",
+          "Average Income",
+          "Average Expense",
+        ].includes(String(label))
+      ) {
         ws.getRow(r).getCell(2).numFmt = STYLES.currency.numFmt;
       }
     }
@@ -822,7 +859,11 @@ export const xlsxExportService = {
 
   // ─── Breakdown Report ───────────────────────────────────────
 
-  async generateBreakdownXlsx(userId: string, startDate?: string, endDate?: string): Promise<Buffer> {
+  async generateBreakdownXlsx(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<Buffer> {
     const breakdown = await reportService.getBreakdown(userId, startDate, endDate);
 
     const workbook = new ExcelJS.Workbook();

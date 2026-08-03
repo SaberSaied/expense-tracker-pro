@@ -49,7 +49,7 @@ async function request(
   method: string,
   path: string,
   reqBody?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; text: string; contentType: string; disposition?: string }> {
   const headers: Record<string, string> = {};
   // Set Content-Type for requests with a body (POST, PATCH)
@@ -122,11 +122,12 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
   const pmJson = JSON.parse(pm.text);
-  testPaymentMethodId = (pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string ?? null;
+  testPaymentMethodId =
+    ((pmJson.data?.paymentMethod as Record<string, unknown>)?.id as string) ?? null;
   assert(testPaymentMethodId != null, "Payment method has ID");
 
   // Create transactions
@@ -137,13 +138,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market",
       date: today,
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx1.status === 201, "Created expense transaction");
 
@@ -152,19 +153,24 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "Monthly Paycheck",
       date: today,
       categoryId: incomeCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx2.status === 201, "Created income transaction");
 
   // ─── 2. Export Transactions as CSV ─────────────────────────
   console.log("\n─── 2. Export Transactions (GET /exports/transactions) ───");
 
-  const exportTx = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
+  const exportTx = await request(
+    "GET",
+    "/exports/transactions",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(exportTx.status === 200, "Export transactions returns 200");
   assert(exportTx.contentType.includes("text/csv"), "Content-Type is text/csv");
   assert(exportTx.text.startsWith("ID,Date,Type,Amount,"), "CSV starts with transaction headers");
@@ -194,11 +200,14 @@ async function runTests() {
     "GET",
     "/exports/transactions?type=EXPENSE",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportExpense.status === 200, "Export expense transactions returns 200");
   const expenseLines = exportExpense.text.trim().split("\n");
-  assert(expenseLines.length === 2, `Expense CSV has 2 lines (header + 1 expense, got ${expenseLines.length})`);
+  assert(
+    expenseLines.length === 2,
+    `Expense CSV has 2 lines (header + 1 expense, got ${expenseLines.length})`,
+  );
   assert(!exportExpense.text.includes("INCOME"), "Expense CSV does not contain income");
   assert(exportExpense.text.includes("42.50"), "Expense CSV contains 42.50");
 
@@ -207,11 +216,14 @@ async function runTests() {
     "GET",
     "/exports/transactions?type=INCOME",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportIncome.status === 200, "Export income transactions returns 200");
   const incomeLines = exportIncome.text.trim().split("\n");
-  assert(incomeLines.length === 2, `Income CSV has 2 lines (header + 1 income, got ${incomeLines.length})`);
+  assert(
+    incomeLines.length === 2,
+    `Income CSV has 2 lines (header + 1 income, got ${incomeLines.length})`,
+  );
   assert(exportIncome.text.includes("5000.00"), "Income CSV contains 5000.00");
 
   // Filter by category
@@ -219,7 +231,7 @@ async function runTests() {
     "GET",
     `/exports/transactions?categoryId=${testCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportCat.status === 200, "Export by category returns 200");
   const catLines = exportCat.text.trim().split("\n");
@@ -231,7 +243,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?minAmount=100&maxAmount=10000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportAmount.status === 200, "Export by amount range returns 200");
   const amountLines = exportAmount.text.trim().split("\n");
@@ -243,7 +255,7 @@ async function runTests() {
     "GET",
     `/exports/transactions?categoryId=${testCategoryId}&type=EXPENSE`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportCombined.status === 200, "Combined filters return 200");
   const combinedLines = exportCombined.text.trim().split("\n");
@@ -256,7 +268,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=daily&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dailyReport.status === 200, "Export daily report returns 200");
   assert(dailyReport.contentType.includes("text/csv"), "Daily report CSV content type");
@@ -264,7 +276,10 @@ async function runTests() {
   assert(dailyReport.text.includes("42.50"), "Daily report CSV contains expense");
   assert(dailyReport.text.includes("5000.00"), "Daily report CSV contains income");
   assert(dailyReport.text.includes("Whole Foods Market"), "Daily report CSV has transaction");
-  assert(dailyReport.text.includes("ID,Date,Type,Amount,"), "Daily report CSV has transaction headers");
+  assert(
+    dailyReport.text.includes("ID,Date,Type,Amount,"),
+    "Daily report CSV has transaction headers",
+  );
 
   // ─── 5. Export Report - Weekly ─────────────────────────────
   console.log("\n─── 5. Export Report - Weekly (GET /exports/reports?type=weekly) ───");
@@ -273,7 +288,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=weekly&date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(weeklyReport.status === 200, "Export weekly report returns 200");
   assert(weeklyReport.text.includes("Weekly Report"), "Weekly report CSV has title");
@@ -292,12 +307,15 @@ async function runTests() {
     "GET",
     `/exports/reports?type=monthly&year=${thisYear}&month=${thisMonth}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(monthlyReport.status === 200, "Export monthly report returns 200");
   assert(monthlyReport.text.includes("Monthly Report"), "Monthly report CSV has title");
   assert(monthlyReport.text.includes("Category Summary"), "Monthly report has category section");
-  assert(monthlyReport.text.includes("Payment Method Summary"), "Monthly report has payment method section");
+  assert(
+    monthlyReport.text.includes("Payment Method Summary"),
+    "Monthly report has payment method section",
+  );
   assert(monthlyReport.text.includes("Budget Performance"), "Monthly report has budget section");
   assert(monthlyReport.text.includes("Food"), "Monthly report has category name");
   assert(monthlyReport.text.includes("Test Visa"), "Monthly report has payment method name");
@@ -309,7 +327,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=yearly&year=${thisYear}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(yearlyReport.status === 200, "Export yearly report returns 200");
   assert(yearlyReport.text.includes("Yearly Report"), "Yearly report CSV has title");
@@ -324,7 +342,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(summaryReport.status === 200, "Export summary report returns 200");
   assert(summaryReport.text.includes("Report Summary"), "Summary CSV has title");
@@ -339,13 +357,16 @@ async function runTests() {
     "GET",
     "/exports/reports?type=breakdown",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(breakdownReport.status === 200, "Export breakdown report returns 200");
   assert(breakdownReport.text.includes("Report Breakdown"), "Breakdown CSV has title");
   assert(breakdownReport.text.includes("Income vs Expense"), "Breakdown CSV has income/expense");
   assert(breakdownReport.text.includes("Category Breakdown"), "Breakdown CSV has category section");
-  assert(breakdownReport.text.includes("Payment Method Breakdown"), "Breakdown CSV has payment method section");
+  assert(
+    breakdownReport.text.includes("Payment Method Breakdown"),
+    "Breakdown CSV has payment method section",
+  );
   assert(breakdownReport.text.includes("Food"), "Breakdown CSV has category name");
   assert(breakdownReport.text.includes("Salary"), "Breakdown CSV has income category name");
 
@@ -362,11 +383,11 @@ async function runTests() {
       startDate: today,
       period: "MONTHLY",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
   const budgetJson = JSON.parse(budget.text);
-  const budgetId = budgetJson.data?.budget?.id as string ?? budgetJson.data?.id as string;
+  const budgetId = (budgetJson.data?.budget?.id as string) ?? (budgetJson.data?.id as string);
   assert(budgetId != null, "Budget has ID");
 
   // Filter transactions by budgetId
@@ -374,14 +395,17 @@ async function runTests() {
     "GET",
     `/exports/transactions?budgetId=${budgetId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportBudgetTx.status === 200, "Export by budget returns 200");
   const budgetLines = exportBudgetTx.text.trim().split("\n");
   // Should only include transactions for the budget's category (Food)
   assert(budgetLines.length === 2, "Budget-filtered CSV has header + 1 transaction");
   assert(exportBudgetTx.text.includes("42.50"), "Budget CSV contains expense 42.50");
-  assert(!exportBudgetTx.text.includes("5000.00"), "Budget CSV does not contain income (different category)");
+  assert(
+    !exportBudgetTx.text.includes("5000.00"),
+    "Budget CSV does not contain income (different category)",
+  );
   assert(exportBudgetTx.text.includes("Food"), "Budget CSV contains Food category");
 
   // Budget filter on reports
@@ -389,7 +413,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=summary&budgetId=${budgetId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportBudgetReport.status === 200, "Export report by budget returns 200");
 
@@ -398,11 +422,14 @@ async function runTests() {
     "GET",
     "/exports/transactions?budgetId=00000000-0000-0000-0000-000000000000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(fakeBudgetExport.status === 200, "Export with non-existent budget returns 200");
   const fakeBudgetLines = fakeBudgetExport.text.trim().split("\n");
-  assert(fakeBudgetLines.length === 3, "Non-existent budget CSV has all transactions (header + 2 rows)");
+  assert(
+    fakeBudgetLines.length === 3,
+    "Non-existent budget CSV has all transactions (header + 2 rows)",
+  );
 
   // ─── 11. Savings Goal Filter ──────────────────────────────────
   console.log("\n─── 11. Savings Goal Filter (GET /exports/reports?savingsGoalId=xxx) ───");
@@ -417,11 +444,11 @@ async function runTests() {
       deadline: "2027-01-01",
       priority: "HIGH",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(goal.status === 201, "Savings goal created");
   const goalJson = JSON.parse(goal.text);
-  const goalId = goalJson.data?.savingsGoal?.id as string ?? goalJson.data?.id as string;
+  const goalId = (goalJson.data?.savingsGoal?.id as string) ?? (goalJson.data?.id as string);
   assert(goalId != null, "Savings goal has ID");
 
   // Export summary report with savingsGoalId filter
@@ -429,7 +456,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=summary&savingsGoalId=${goalId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportGoalReport.status === 200, "Export report with savings goal returns 200");
 
@@ -438,7 +465,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=breakdown&savingsGoalId=${goalId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportGoalBreakdown.status === 200, "Export breakdown with savings goal returns 200");
 
@@ -447,7 +474,7 @@ async function runTests() {
     "GET",
     `/exports/reports?type=summary&budgetId=${budgetId}&savingsGoalId=${goalId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exportCombinedFilter.status === 200, "Combined budget+goal filter returns 200");
 
@@ -459,21 +486,30 @@ async function runTests() {
     "GET",
     `/exports/transactions?columns=date,amount,description`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(columnFiltered.status === 200, "Column-filtered export returns 200");
-  assert(columnFiltered.text.startsWith("Date,Amount,Description"), "Column-filtered CSV starts with selected columns");
+  assert(
+    columnFiltered.text.startsWith("Date,Amount,Description"),
+    "Column-filtered CSV starts with selected columns",
+  );
   assert(!columnFiltered.text.includes("ID,"), "Column-filtered CSV does not include ID column");
-  assert(!columnFiltered.text.includes("Category"), "Column-filtered CSV does not include Category column");
+  assert(
+    !columnFiltered.text.includes("Category"),
+    "Column-filtered CSV does not include Category column",
+  );
   assert(columnFiltered.text.includes("42.50"), "Column-filtered CSV contains amounts");
-  assert(columnFiltered.text.includes("Whole Foods Market"), "Column-filtered CSV contains descriptions");
+  assert(
+    columnFiltered.text.includes("Whole Foods Market"),
+    "Column-filtered CSV contains descriptions",
+  );
 
   // Single column
   const singleColumn = await request(
     "GET",
     `/exports/transactions?columns=amount`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(singleColumn.status === 200, "Single-column export returns 200");
   const singleLines = singleColumn.text.trim().split("\n");
@@ -489,7 +525,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?sortBy=amount&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAsc.status === 200, "Sort ascending returns 200");
   const ascLines = sortAsc.text.trim().split("\n");
@@ -503,7 +539,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?sortBy=amount&sortOrder=desc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortDesc.status === 200, "Sort descending returns 200");
   const descLines = sortDesc.text.trim().split("\n");
@@ -517,20 +553,23 @@ async function runTests() {
     "GET",
     "/exports/transactions?sortBy=description&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAlpha.status === 200, "Sort by description returns 200");
   const alphaLines = sortAlpha.text.trim().split("\n");
   assert(alphaLines.length === 3, "Description-sorted CSV has 3 lines");
   // Alphabetical: "Monthly Paycheck" before "Whole Foods Market"
-  assert(alphaLines[1].includes("Monthly Paycheck"), "Alphabetical sort puts Monthly Paycheck first");
+  assert(
+    alphaLines[1].includes("Monthly Paycheck"),
+    "Alphabetical sort puts Monthly Paycheck first",
+  );
 
   // Invalid sortBy defaults to date sorting (no error)
   const sortDefault = await request(
     "GET",
     "/exports/transactions?sortBy=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortDefault.status === 400, "Invalid sortBy returns 400");
 
@@ -541,17 +580,20 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=pdf&orientation=landscape",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(landscapePdf.status === 200, "Landscape PDF returns 200");
-  assert(landscapePdf.contentType.includes("application/pdf"), "Landscape PDF has correct content type");
+  assert(
+    landscapePdf.contentType.includes("application/pdf"),
+    "Landscape PDF has correct content type",
+  );
 
   // Default orientation (portrait) still works
   const portraitPdf = await request(
     "GET",
     "/exports/reports?type=summary&format=pdf&orientation=portrait",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(portraitPdf.status === 200, "Portrait PDF returns 200");
 
@@ -560,7 +602,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=pdf&orientation=square",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badOrientation.status === 400, "Invalid orientation returns 400");
 
@@ -569,7 +611,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&format=pdf&columns=date,amount&sortBy=amount&sortOrder=desc&orientation=landscape",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(combinedOptions.status === 200, "Combined options on PDF returns 200");
 
@@ -590,7 +632,7 @@ async function runTests() {
     "GET",
     "/exports/transactions",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondExport.status === 200, "Second user export returns 200");
   const secondLines = secondExport.text.trim().split("\n");
@@ -601,7 +643,7 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondSummary.status === 200, "Second user summary returns 200");
   assert(secondSummary.text.includes("0.00"), "Second user summary has zero amounts");
@@ -611,11 +653,14 @@ async function runTests() {
     "GET",
     "/exports/reports?type=breakdown",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondBreakdown.status === 200, "Second user breakdown returns 200");
   // Should not contain Food or Salary since second user has no transactions
-  assert(!secondBreakdown.text.includes("Food"), "Second user breakdown does not have primary's categories");
+  assert(
+    !secondBreakdown.text.includes("Food"),
+    "Second user breakdown does not have primary's categories",
+  );
 
   // ─── 16. Validation ────────────────────────────────────────
   console.log("\n─── 16. Validation ───");
@@ -625,7 +670,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?startDate=not-a-date",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDate.status === 400, "Invalid date returns 400");
 
@@ -634,7 +679,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?type=INVALID",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badType.status === 400, "Invalid type returns 400");
 
@@ -643,7 +688,7 @@ async function runTests() {
     "GET",
     "/exports/transactions?categoryId=not-a-uuid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badUuid.status === 400, "Invalid UUID returns 400");
 
@@ -652,17 +697,12 @@ async function runTests() {
     "GET",
     "/exports/reports?type=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badReportType.status === 400, "Invalid report type returns 400");
 
   // Missing type param (required for report export)
-  const missingType = await request(
-    "GET",
-    "/exports/reports",
-    undefined,
-    userTokens?.accessToken
-  );
+  const missingType = await request("GET", "/exports/reports", undefined, userTokens?.accessToken);
   assert(missingType.status === 400, "Missing report type returns 400");
 
   // ─── 17. Unauthenticated Access ────────────────────────────
@@ -681,94 +721,176 @@ async function runTests() {
   const fYear = new Date().getFullYear();
   const fMonth = new Date().getMonth() + 1;
   const fMonthName = [
-    "january", "february", "march", "april", "may", "june",
-    "july", "august", "september", "october", "november", "december",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
   ][fMonth - 1];
 
   // ── Transaction file naming ──
 
   // Default: transactions-{date}.csv
   const fnTx = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
-  assert(fnTx.disposition?.includes(`transactions-${fToday}.csv`),
-    `Filename is transactions-${fToday}.csv (got: ${fnTx.disposition})`);
+  assert(
+    fnTx.disposition?.includes(`transactions-${fToday}.csv`),
+    `Filename is transactions-${fToday}.csv (got: ${fnTx.disposition})`,
+  );
 
   // Filtered by type=EXPENSE: expenses-{date}.csv
-  const fnExpenses = await request("GET", "/exports/transactions?type=EXPENSE", undefined, userTokens?.accessToken);
-  assert(fnExpenses.disposition?.includes(`expenses-${fToday}.csv`),
-    `Filename is expenses-${fToday}.csv (got: ${fnExpenses.disposition})`);
+  const fnExpenses = await request(
+    "GET",
+    "/exports/transactions?type=EXPENSE",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnExpenses.disposition?.includes(`expenses-${fToday}.csv`),
+    `Filename is expenses-${fToday}.csv (got: ${fnExpenses.disposition})`,
+  );
 
   // Filtered by type=INCOME: income-{date}.csv
-  const fnIncome = await request("GET", "/exports/transactions?type=INCOME", undefined, userTokens?.accessToken);
-  assert(fnIncome.disposition?.includes(`income-${fToday}.csv`),
-    `Filename is income-${fToday}.csv (got: ${fnIncome.disposition})`);
+  const fnIncome = await request(
+    "GET",
+    "/exports/transactions?type=INCOME",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnIncome.disposition?.includes(`income-${fToday}.csv`),
+    `Filename is income-${fToday}.csv (got: ${fnIncome.disposition})`,
+  );
 
   // ── Report file naming ──
 
   // Daily report: daily-report-{date}.csv
-  const fnDaily = await request("GET", `/exports/reports?type=daily&date=${fToday}`, undefined, userTokens?.accessToken);
-  assert(fnDaily.disposition?.includes(`daily-report-${fToday}.csv`),
-    `Filename is daily-report-${fToday}.csv (got: ${fnDaily.disposition})`);
+  const fnDaily = await request(
+    "GET",
+    `/exports/reports?type=daily&date=${fToday}`,
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnDaily.disposition?.includes(`daily-report-${fToday}.csv`),
+    `Filename is daily-report-${fToday}.csv (got: ${fnDaily.disposition})`,
+  );
 
   // Weekly report: weekly-report-{date}.csv
-  const fnWeekly = await request("GET", `/exports/reports?type=weekly&date=${fToday}`, undefined, userTokens?.accessToken);
-  assert(fnWeekly.disposition?.includes(`weekly-report-${fToday}.csv`),
-    `Filename is weekly-report-${fToday}.csv (got: ${fnWeekly.disposition})`);
+  const fnWeekly = await request(
+    "GET",
+    `/exports/reports?type=weekly&date=${fToday}`,
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnWeekly.disposition?.includes(`weekly-report-${fToday}.csv`),
+    `Filename is weekly-report-${fToday}.csv (got: ${fnWeekly.disposition})`,
+  );
 
   // Monthly report: monthly-report-{monthName}-{year}.csv
   const fnMonthly = await request(
     "GET",
     `/exports/reports?type=monthly&year=${fYear}&month=${String(fMonth).padStart(2, "0")}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnMonthly.disposition?.includes(`monthly-report-${fMonthName}-${fYear}.csv`),
-    `Filename is monthly-report-${fMonthName}-${fYear}.csv (got: ${fnMonthly.disposition})`
+    `Filename is monthly-report-${fMonthName}-${fYear}.csv (got: ${fnMonthly.disposition})`,
   );
 
   // Yearly report: yearly-report-{year}.csv
-  const fnYearly = await request("GET", `/exports/reports?type=yearly&year=${fYear}`, undefined, userTokens?.accessToken);
-  assert(fnYearly.disposition?.includes(`yearly-report-${fYear}.csv`),
-    `Filename is yearly-report-${fYear}.csv (got: ${fnYearly.disposition})`);
+  const fnYearly = await request(
+    "GET",
+    `/exports/reports?type=yearly&year=${fYear}`,
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnYearly.disposition?.includes(`yearly-report-${fYear}.csv`),
+    `Filename is yearly-report-${fYear}.csv (got: ${fnYearly.disposition})`,
+  );
 
   // Summary report: summary-report-{date}.csv
-  const fnSummary = await request("GET", "/exports/reports?type=summary", undefined, userTokens?.accessToken);
-  assert(fnSummary.disposition?.includes(`summary-report-${fToday}.csv`),
-    `Filename is summary-report-${fToday}.csv (got: ${fnSummary.disposition})`);
+  const fnSummary = await request(
+    "GET",
+    "/exports/reports?type=summary",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnSummary.disposition?.includes(`summary-report-${fToday}.csv`),
+    `Filename is summary-report-${fToday}.csv (got: ${fnSummary.disposition})`,
+  );
 
   // Breakdown report: breakdown-report-{date}.csv
-  const fnBreakdown = await request("GET", "/exports/reports?type=breakdown", undefined, userTokens?.accessToken);
-  assert(fnBreakdown.disposition?.includes(`breakdown-report-${fToday}.csv`),
-    `Filename is breakdown-report-${fToday}.csv (got: ${fnBreakdown.disposition})`);
+  const fnBreakdown = await request(
+    "GET",
+    "/exports/reports?type=breakdown",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnBreakdown.disposition?.includes(`breakdown-report-${fToday}.csv`),
+    `Filename is breakdown-report-${fToday}.csv (got: ${fnBreakdown.disposition})`,
+  );
 
   // ── PDF file naming ──
 
   // Daily report as PDF: daily-report-{date}.pdf
-  const fnDailyPdf = await request("GET", `/exports/reports?type=daily&format=pdf&date=${fToday}`, undefined, userTokens?.accessToken);
-  assert(fnDailyPdf.disposition?.includes(`daily-report-${fToday}.pdf`),
-    `PDF filename is daily-report-${fToday}.pdf (got: ${fnDailyPdf.disposition})`);
+  const fnDailyPdf = await request(
+    "GET",
+    `/exports/reports?type=daily&format=pdf&date=${fToday}`,
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnDailyPdf.disposition?.includes(`daily-report-${fToday}.pdf`),
+    `PDF filename is daily-report-${fToday}.pdf (got: ${fnDailyPdf.disposition})`,
+  );
 
   // Monthly report as PDF: monthly-report-{monthName}-{year}.pdf
   const fnMonthlyPdf = await request(
     "GET",
     `/exports/reports?type=monthly&format=pdf&year=${fYear}&month=${String(fMonth).padStart(2, "0")}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnMonthlyPdf.disposition?.includes(`monthly-report-${fMonthName}-${fYear}.pdf`),
-    `PDF filename is monthly-report-${fMonthName}-${fYear}.pdf (got: ${fnMonthlyPdf.disposition})`
+    `PDF filename is monthly-report-${fMonthName}-${fYear}.pdf (got: ${fnMonthlyPdf.disposition})`,
   );
 
   // Transaction export as PDF: transactions-{date}.pdf
-  const fnTxPdf = await request("GET", "/exports/transactions?format=pdf", undefined, userTokens?.accessToken);
-  assert(fnTxPdf.disposition?.includes(`transactions-${fToday}.pdf`),
-    `Transaction PDF filename is transactions-${fToday}.pdf (got: ${fnTxPdf.disposition})`);
+  const fnTxPdf = await request(
+    "GET",
+    "/exports/transactions?format=pdf",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnTxPdf.disposition?.includes(`transactions-${fToday}.pdf`),
+    `Transaction PDF filename is transactions-${fToday}.pdf (got: ${fnTxPdf.disposition})`,
+  );
 
   // Expenses as PDF: expenses-{date}.pdf
-  const fnExpPdf = await request("GET", "/exports/transactions?type=EXPENSE&format=pdf", undefined, userTokens?.accessToken);
-  assert(fnExpPdf.disposition?.includes(`expenses-${fToday}.pdf`),
-    `Expense PDF filename is expenses-${fToday}.pdf (got: ${fnExpPdf.disposition})`);
+  const fnExpPdf = await request(
+    "GET",
+    "/exports/transactions?type=EXPENSE&format=pdf",
+    undefined,
+    userTokens?.accessToken,
+  );
+  assert(
+    fnExpPdf.disposition?.includes(`expenses-${fToday}.pdf`),
+    `Expense PDF filename is expenses-${fToday}.pdf (got: ${fnExpPdf.disposition})`,
+  );
 
   // ── Edge: date range in filename ──
 
@@ -776,11 +898,11 @@ async function runTests() {
     "GET",
     `/exports/transactions?startDate=2026-01-01&endDate=2026-12-31`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnDateRange.disposition?.includes("transactions-2026-01-01-to-2026-12-31.csv"),
-    `Date range filename: transactions-2026-01-01-to-2026-12-31.csv (got: ${fnDateRange.disposition})`
+    `Date range filename: transactions-2026-01-01-to-2026-12-31.csv (got: ${fnDateRange.disposition})`,
   );
 
   // Filtered expenses with date range: expenses-{startDate}-to-{endDate}.csv
@@ -788,11 +910,11 @@ async function runTests() {
     "GET",
     "/exports/transactions?type=EXPENSE&startDate=2026-01-01&endDate=2026-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnExpRange.disposition?.includes("expenses-2026-01-01-to-2026-12-31.csv"),
-    `Expense range filename: expenses-2026-01-01-to-2026-12-31.csv (got: ${fnExpRange.disposition})`
+    `Expense range filename: expenses-2026-01-01-to-2026-12-31.csv (got: ${fnExpRange.disposition})`,
   );
 
   // Summary report with date range
@@ -800,11 +922,11 @@ async function runTests() {
     "GET",
     "/exports/reports?type=summary&startDate=2026-01-01&endDate=2026-06-30",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(
     fnSummaryRange.disposition?.includes("summary-report-2026-01-01-to-2026-06-30.csv"),
-    `Summary range filename: summary-report-2026-01-01-to-2026-06-30.csv (got: ${fnSummaryRange.disposition})`
+    `Summary range filename: summary-report-2026-01-01-to-2026-06-30.csv (got: ${fnSummaryRange.disposition})`,
   );
 
   // ─── 19. Performance & Security ──────────────────────────────
@@ -813,14 +935,24 @@ async function runTests() {
   // ── Pagination ──
 
   // page=1, limit=1 returns the first transaction (1 row)
-  const page1 = await request("GET", "/exports/transactions?page=1&limit=1", undefined, userTokens?.accessToken);
+  const page1 = await request(
+    "GET",
+    "/exports/transactions?page=1&limit=1",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(page1.status === 200, "Page 1 with limit 1 returns 200");
   const page1Lines = page1.text.trim().split("\n");
   assert(page1Lines.length === 2, `Page 1 CSV has header + 1 row (got ${page1Lines.length})`);
   assert(page1.disposition?.includes(".csv"), "Page 1 response is CSV");
 
   // page=2, limit=1 should return the second transaction
-  const page2 = await request("GET", "/exports/transactions?page=2&limit=1", undefined, userTokens?.accessToken);
+  const page2 = await request(
+    "GET",
+    "/exports/transactions?page=2&limit=1",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(page2.status === 200, "Page 2 with limit 1 returns 200");
   const page2Lines = page2.text.trim().split("\n");
   assert(page2Lines.length === 2, `Page 2 CSV has header + 1 row (got ${page2Lines.length})`);
@@ -831,13 +963,23 @@ async function runTests() {
   assert(uniqueRows.length === 2, "Page 1 + Page 2 have 2 unique transactions across both pages");
 
   // Page with limit > total returns all
-  const pageLarge = await request("GET", "/exports/transactions?page=1&limit=100", undefined, userTokens?.accessToken);
+  const pageLarge = await request(
+    "GET",
+    "/exports/transactions?page=1&limit=100",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(pageLarge.status === 200, "Large page limit returns 200");
   const largeLines = pageLarge.text.trim().split("\n");
   assert(largeLines.length === 3, `Large limit CSV has header + 2 rows (got ${largeLines.length})`);
 
   // Default pagination (no params) still works
-  const defaultPage = await request("GET", "/exports/transactions", undefined, userTokens?.accessToken);
+  const defaultPage = await request(
+    "GET",
+    "/exports/transactions",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(defaultPage.status === 200, "Default (no page params) returns 200");
   const defaultLines = defaultPage.text.trim().split("\n");
   assert(defaultLines.length === 3, `Default CSV has header + 2 rows (got ${defaultLines.length})`);
@@ -860,7 +1002,7 @@ async function runTests() {
         }
         res.resume();
         res.on("end", () => resolve(headers));
-      }
+      },
     );
     req.on("error", reject);
     req.end();
@@ -871,16 +1013,36 @@ async function runTests() {
 
   // ── Invalid Page/Limit ──
 
-  const badPage = await request("GET", "/exports/transactions?page=0", undefined, userTokens?.accessToken);
+  const badPage = await request(
+    "GET",
+    "/exports/transactions?page=0",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badPage.status === 400, "page=0 returns 400");
 
-  const badLimit = await request("GET", "/exports/transactions?limit=0", undefined, userTokens?.accessToken);
+  const badLimit = await request(
+    "GET",
+    "/exports/transactions?limit=0",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badLimit.status === 400, "limit=0 returns 400");
 
-  const hugeLimit = await request("GET", "/exports/transactions?limit=10001", undefined, userTokens?.accessToken);
+  const hugeLimit = await request(
+    "GET",
+    "/exports/transactions?limit=10001",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(hugeLimit.status === 400, "limit=10001 returns 400 (max is 10000)");
 
-  const nonNumericPage = await request("GET", "/exports/transactions?page=abc", undefined, userTokens?.accessToken);
+  const nonNumericPage = await request(
+    "GET",
+    "/exports/transactions?page=abc",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(nonNumericPage.status === 400, "page=abc returns 400");
 
   // ── Summary ──────────────────────────────────────────────

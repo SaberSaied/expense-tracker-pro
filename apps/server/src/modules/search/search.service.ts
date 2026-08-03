@@ -31,7 +31,7 @@ function computeDateRange(preset: DatePreset): { start: Date; end: Date } {
 
     case "this_week": {
       const dayOfWeek = now.getDay(); // 0=Sun
-      const sunday = dayOfWeek === 0 ? 0 : -(dayOfWeek);
+      const sunday = dayOfWeek === 0 ? 0 : -dayOfWeek;
       const saturday = sunday + 6;
       return {
         start: startOfDay(sunday),
@@ -82,11 +82,22 @@ export const searchService = {
    *
    * Results are grouped by entity with per-entity counts.
    */
-  async globalSearch(
-    userId: string,
-    query: GlobalSearchQuery
-  ): Promise<GlobalSearchResult> {
-    const { q, entities, limit, categoryIds, categoryType, datePreset, startDate, endDate, minAmount, maxAmount, exactAmount, sortBy, sortOrder } = query;
+  async globalSearch(userId: string, query: GlobalSearchQuery): Promise<GlobalSearchResult> {
+    const {
+      q,
+      entities,
+      limit,
+      categoryIds,
+      categoryType,
+      datePreset,
+      startDate,
+      endDate,
+      minAmount,
+      maxAmount,
+      exactAmount,
+      sortBy,
+      sortOrder,
+    } = query;
     const perEntityLimit = limit ?? 10;
 
     // Compute date filters from preset or custom range
@@ -102,9 +113,10 @@ export const searchService = {
     }
 
     // Build amount filters
-    const amountFilters = minAmount != null || maxAmount != null || exactAmount != null
-      ? { minAmount, maxAmount, exactAmount }
-      : undefined;
+    const amountFilters =
+      minAmount != null || maxAmount != null || exactAmount != null
+        ? { minAmount, maxAmount, exactAmount }
+        : undefined;
 
     // Build sort options
     const sortOptions: { sortBy: SortByField; sortOrder: SortOrder } = {
@@ -120,7 +132,7 @@ export const searchService = {
       { categoryIds, categoryType },
       dateFilters,
       amountFilters,
-      sortOptions
+      sortOptions,
     );
 
     // Compute counts by entity
@@ -148,11 +160,7 @@ export const searchService = {
    * - Matching payment methods (name contains query)
    * - Matching transaction titles (description contains query)
    */
-  async getSuggestions(
-    userId: string,
-    q: string,
-    limit: number = 5
-  ): Promise<SuggestionsResult> {
+  async getSuggestions(userId: string, q: string, limit: number = 5): Promise<SuggestionsResult> {
     const groups: SuggestionGroup[] = [];
 
     // 1. Recent searches

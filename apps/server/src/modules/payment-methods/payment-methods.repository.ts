@@ -78,14 +78,17 @@ export const paymentMethodRepository = {
     });
   },
 
-  async create(userId: string, data: {
-    type: PaymentMethodType;
-    name: string;
-    icon?: string;
-    color?: string;
-    isDefault?: boolean;
-    lastFour?: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      type: PaymentMethodType;
+      name: string;
+      icon?: string;
+      color?: string;
+      isDefault?: boolean;
+      lastFour?: string;
+    },
+  ) {
     // If setting as default, unset others
     if (data.isDefault) {
       await prisma.paymentMethod.updateMany({
@@ -106,14 +109,17 @@ export const paymentMethodRepository = {
     });
   },
 
-  async update(id: string, data: {
-    type?: PaymentMethodType;
-    name?: string;
-    icon?: string;
-    color?: string;
-    isDefault?: boolean;
-    lastFour?: string | null;
-  }) {
+  async update(
+    id: string,
+    data: {
+      type?: PaymentMethodType;
+      name?: string;
+      icon?: string;
+      color?: string;
+      isDefault?: boolean;
+      lastFour?: string | null;
+    },
+  ) {
     return prisma.paymentMethod.update({ where: { id }, data });
   },
 
@@ -132,7 +138,7 @@ export const paymentMethodRepository = {
    */
   async createDefaultPaymentMethods(
     userId: string,
-    defaults: readonly { name: string; type: string; icon: string; color: string }[]
+    defaults: readonly { name: string; type: string; icon: string; color: string }[],
   ) {
     return prisma.paymentMethod.createMany({
       data: defaults.map((pm) => ({

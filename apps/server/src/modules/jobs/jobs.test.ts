@@ -61,7 +61,7 @@ async function request(
   path: string,
   body?: unknown,
   token?: string | null,
-  jobsToken?: string | null
+  jobsToken?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -118,11 +118,8 @@ function previousMonthStartStr(): string {
 
 async function runTests() {
   // Lazy import so env.ts evaluates AFTER the env overrides above.
-  const {
-    startJobsScheduler,
-    stopJobsScheduler,
-    isJobsSchedulerRunning,
-  } = await import("./jobs.scheduler");
+  const { startJobsScheduler, stopJobsScheduler, isJobsSchedulerRunning } =
+    await import("./jobs.scheduler");
 
   console.log("\n🧪 Background Jobs Module — API Integration Tests\n");
   console.log(`Test user: ${TEST_EMAIL}\n`);
@@ -149,7 +146,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Groceries", icon: "ShoppingBag", color: "#F59E0B" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(category.status === 201, "Category created");
   const categoryId = (category.json.data?.category as Record<string, unknown>)?.id as string;
@@ -168,7 +165,7 @@ async function runTests() {
       startDate: previousMonthStartStr(),
       categoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
 
@@ -183,7 +180,7 @@ async function runTests() {
       date: previousMonthStartStr(),
       categoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(txn1.status === 201, "Expense transaction created");
 
@@ -200,7 +197,7 @@ async function runTests() {
       startDate: pastDateStr(1),
       categoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(reminder.status === 201, "Due reminder created");
 
@@ -215,7 +212,7 @@ async function runTests() {
       frequency: "DAILY",
       startDate: futureDateStr(2),
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(bill.status === 201, "Upcoming bill reminder created");
 
@@ -230,7 +227,7 @@ async function runTests() {
       date: previousMonthStartStr(),
       categoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeTxn.status === 201, "Income transaction created");
 
@@ -240,7 +237,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { monthlySummary: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(enableMonthly.status === 200, "Monthly summary preference enabled");
 
@@ -263,7 +260,7 @@ async function runTests() {
     "/jobs/run/check-budgets",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(runBudgets.status === 200, "run check-budgets returns 200");
   assert(runBudgets.json.success === true, "run check-budgets success=true");
@@ -278,7 +275,7 @@ async function runTests() {
     "/jobs/run/process-reminders",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(runReminders.status === 200, "run process-reminders returns 200");
   const remindersData = runReminders.json.data as Record<string, unknown> | undefined;
@@ -292,7 +289,7 @@ async function runTests() {
     "/jobs/run/detect-upcoming-bills",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(runBills.status === 200, "run detect-upcoming-bills returns 200");
   const billsData = runBills.json.data as Record<string, unknown> | undefined;
@@ -300,7 +297,7 @@ async function runTests() {
   const billResults = billsData?.results as Array<Record<string, unknown>> | undefined;
   assert(
     billResults?.some((r) => (r.generated as number) > 0),
-    "Bill notification generated for the user"
+    "Bill notification generated for the user",
   );
 
   // ─── 7. Run Single Job: generate-monthly-summaries ─────────
@@ -310,21 +307,24 @@ async function runTests() {
     "/jobs/run/generate-monthly-summaries",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(runSummaries.status === 200, "run generate-monthly-summaries returns 200");
   const summariesData = runSummaries.json.data as Record<string, unknown> | undefined;
   assert(summariesData?.job === "generate-monthly-summaries", "Job name reported");
-  assert(
-    (summariesData?.generated as number) >= 1,
-    "Monthly summary notification generated"
-  );
+  assert((summariesData?.generated as number) >= 1, "Monthly summary notification generated");
 
   // ─── 8. Notifications Created by the Jobs ──────────────────
   console.log("\n─── 8. Notifications Created (GET /notifications) ───");
-  const notifications = await request("GET", "/notifications?limit=100", undefined, userTokens?.accessToken);
+  const notifications = await request(
+    "GET",
+    "/notifications?limit=100",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(notifications.status === 200, "List notifications returns 200");
-  const notifList = notifications.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const notifList = notifications.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(notifList != null, "Notifications array exists");
 
   const types = notifList!.map((n) => n.type);
@@ -340,13 +340,13 @@ async function runTests() {
     "/jobs/run/check-budgets",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(rerunBudgets.status === 200, "Re-run check-budgets returns 200");
   const rerunBudgetsData = rerunBudgets.json.data as Record<string, unknown> | undefined;
   assert(
     (rerunBudgetsData?.generated as number) === 0,
-    "No duplicate budget alerts on re-run (dedup)"
+    "No duplicate budget alerts on re-run (dedup)",
   );
 
   const rerunSummaries = await request(
@@ -354,13 +354,13 @@ async function runTests() {
     "/jobs/run/generate-monthly-summaries",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(rerunSummaries.status === 200, "Re-run summaries returns 200");
   const rerunSummariesData = rerunSummaries.json.data as Record<string, unknown> | undefined;
   assert(
     (rerunSummariesData?.generated as number) === 0,
-    "No duplicate monthly summary on re-run (dedup)"
+    "No duplicate monthly summary on re-run (dedup)",
   );
 
   // ─── 10. Run All ───────────────────────────────────────────
@@ -384,7 +384,7 @@ async function runTests() {
     "/jobs/run/detect-upcoming-bills?windowDays=0",
     undefined,
     undefined,
-    JOBS_TOKEN
+    JOBS_TOKEN,
   );
   assert(badWindow.status === 400, "Invalid windowDays returns 400");
 

@@ -187,9 +187,7 @@ export const SettingsPage: React.FC = () => {
     <div className="max-w-2xl space-y-6 pb-20 lg:pb-0 animate-[fade-in_0.3s_ease-out]">
       <div>
         <h2 className="page-title font-bold text-text-primary">Settings</h2>
-        <p className="text-sm text-text-secondary mt-1">
-          Configure your workspace preferences
-        </p>
+        <p className="text-sm text-text-secondary mt-1">Configure your workspace preferences</p>
       </div>
 
       {/* Theme */}
@@ -245,9 +243,7 @@ export const SettingsPage: React.FC = () => {
 
       {/* Regional & Time Zone */}
       <div className="glass rounded-xl p-6">
-        <h3 className="text-base font-semibold text-text-primary mb-4">
-          Regional & Time Zone
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary mb-4">Regional & Time Zone</h3>
         <div className="space-y-4">
           <Select
             label="Default Currency"
@@ -325,9 +321,7 @@ export const SettingsPage: React.FC = () => {
 
       {/* Notifications */}
       <div className="glass rounded-xl p-6">
-        <h3 className="text-base font-semibold text-text-primary mb-4">
-          Notification Preferences
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary mb-4">Notification Preferences</h3>
         <div className="space-y-4">
           <Checkbox
             label="Budget Threshold Alerts (toast when category budget hits 80%)"
@@ -365,9 +359,7 @@ export const SettingsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-text-primary">Download Full Backup</p>
-            <p className="text-xs text-text-muted mt-1">
-              Export all your data as a JSON file
-            </p>
+            <p className="text-xs text-text-muted mt-1">Export all your data as a JSON file</p>
           </div>
           <Button variant="outline" size="sm" leftIcon={<Download className="size-4" />}>
             Download JSON

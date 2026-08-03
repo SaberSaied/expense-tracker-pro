@@ -57,7 +57,7 @@ const envSchema = z.object({
           "TRUST_PROXY must be 'false', a positive hop count (e.g. '1'), " +
           "'loopback', 'linklocal', or 'uniquelocal'. 'true' is not allowed " +
           "(allows X-Forwarded-For spoofing).",
-      }
+      },
     ),
 
   // ─── Background Jobs (optional) ────────────────────────────
@@ -86,13 +86,10 @@ function parseEnv() {
 
   // Never boot production with the public placeholder secret — it would
   // allow anyone to forge valid JWTs.
-  if (
-    result.data.NODE_ENV === "production" &&
-    result.data.JWT_SECRET === DEFAULT_JWT_SECRET
-  ) {
+  if (result.data.NODE_ENV === "production" && result.data.JWT_SECRET === DEFAULT_JWT_SECRET) {
     console.error(
       "❌ JWT_SECRET must be set to a strong, unique value in production " +
-        "(generate one with `openssl rand -hex 64`)."
+        "(generate one with `openssl rand -hex 64`).",
     );
     process.exit(1);
   }

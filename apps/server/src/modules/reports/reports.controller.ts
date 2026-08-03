@@ -9,14 +9,11 @@ export const reportController = {
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const startDate = (req.query.startDate as string) ?? firstDayOfMonth.toISOString().slice(0, 10);
+      const startDate =
+        (req.query.startDate as string) ?? firstDayOfMonth.toISOString().slice(0, 10);
       const endDate = (req.query.endDate as string) ?? now.toISOString().slice(0, 10);
 
-      const result = await reportService.getCategorySummary(
-        req.user.id,
-        startDate,
-        endDate
-      );
+      const result = await reportService.getCategorySummary(req.user.id, startDate, endDate);
       sendSuccess(res, { report: result });
     } catch (err) {
       next(err);
@@ -77,15 +74,8 @@ export const reportController = {
 
   async getCustomReport(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const {
-        startDate,
-        endDate,
-        categoryId,
-        paymentMethodId,
-        type,
-        minAmount,
-        maxAmount,
-      } = req.query as Record<string, string | undefined>;
+      const { startDate, endDate, categoryId, paymentMethodId, type, minAmount, maxAmount } =
+        req.query as Record<string, string | undefined>;
 
       const result = await reportService.getCustomReport(req.user.id, {
         startDate,

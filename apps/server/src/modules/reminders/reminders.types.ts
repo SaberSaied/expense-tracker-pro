@@ -1,4 +1,5 @@
-export type ReminderType = "RECURRING_EXPENSE" | "RECURRING_INCOME" | "SAVINGS_CONTRIBUTION" | "CUSTOM";
+export type ReminderType =
+  "RECURRING_EXPENSE" | "RECURRING_INCOME" | "SAVINGS_CONTRIBUTION" | "CUSTOM";
 export type ReminderFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
 export interface CreateReminderInput {

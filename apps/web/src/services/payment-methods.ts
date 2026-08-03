@@ -57,7 +57,8 @@ export const paymentMethodsApi = {
    * Returns all payment methods for the authenticated user.
    */
   async findAll(): Promise<ApiPaymentMethod[]> {
-    const response = await api.get<ApiResponse<{ paymentMethods: ApiPaymentMethod[] }>>("/payment-methods");
+    const response =
+      await api.get<ApiResponse<{ paymentMethods: ApiPaymentMethod[] }>>("/payment-methods");
     return response.data.paymentMethods;
   },
 
@@ -66,7 +67,9 @@ export const paymentMethodsApi = {
    * Returns a single payment method by ID.
    */
   async findById(id: string): Promise<ApiPaymentMethod> {
-    const response = await api.get<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>(`/payment-methods/${id}`);
+    const response = await api.get<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>(
+      `/payment-methods/${id}`,
+    );
     return response.data.paymentMethod;
   },
 
@@ -75,7 +78,10 @@ export const paymentMethodsApi = {
    * Creates a new payment method.
    */
   async create(input: CreatePaymentMethodInput): Promise<ApiPaymentMethod> {
-    const response = await api.post<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>("/payment-methods", input);
+    const response = await api.post<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>(
+      "/payment-methods",
+      input,
+    );
     return response.data.paymentMethod;
   },
 
@@ -84,7 +90,10 @@ export const paymentMethodsApi = {
    * Updates an existing payment method.
    */
   async update(id: string, input: UpdatePaymentMethodInput): Promise<ApiPaymentMethod> {
-    const response = await api.patch<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>(`/payment-methods/${id}`, input);
+    const response = await api.patch<ApiResponse<{ paymentMethod: ApiPaymentMethod }>>(
+      `/payment-methods/${id}`,
+      input,
+    );
     return response.data.paymentMethod;
   },
 

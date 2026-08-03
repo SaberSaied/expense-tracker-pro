@@ -92,7 +92,7 @@ export const authApi = {
 
     const response = await api.postPublic<{ success: boolean; data: { tokens: AuthTokens } }>(
       "/auth/refresh",
-      { refreshToken }
+      { refreshToken },
     );
 
     const { tokens } = response.data;
@@ -102,7 +102,9 @@ export const authApi = {
   },
 
   async forgotPassword(email: string) {
-    return api.postPublic<{ success: boolean; message: string }>("/auth/forgot-password", { email });
+    return api.postPublic<{ success: boolean; message: string }>("/auth/forgot-password", {
+      email,
+    });
   },
 
   async resetPassword(token: string, password: string) {

@@ -109,7 +109,9 @@ export const Modal: React.FC<ModalProps> = ({
     const frameId = requestAnimationFrame(() => {
       if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) {
         const focusTarget =
-          dialogRef.current.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea") ??
+          dialogRef.current.querySelector<HTMLElement>(
+            "input:not([type='hidden']), select, textarea",
+          ) ??
           dialogRef.current.querySelector<HTMLElement>(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
           );
@@ -140,9 +142,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={clsx(
           "absolute inset-0 bg-black/60 backdrop-blur-sm",
-          closing
-            ? "animate-[fade-out_0.15s_ease-in_forwards]"
-            : "animate-[fade-in_0.2s_ease-out]",
+          closing ? "animate-[fade-out_0.15s_ease-in_forwards]" : "animate-[fade-in_0.2s_ease-out]",
         )}
         onClick={onClose}
         aria-hidden="true"
@@ -164,10 +164,7 @@ export const Modal: React.FC<ModalProps> = ({
         {title && (
           <div className="flex items-start justify-between gap-4 p-6 pb-4 border-b border-border-card/50 shrink-0">
             <div className="min-w-0">
-              <h2
-                id={titleId}
-                className="text-lg font-semibold text-text-primary"
-              >
+              <h2 id={titleId} className="text-lg font-semibold text-text-primary">
                 {title}
               </h2>
               {description && (

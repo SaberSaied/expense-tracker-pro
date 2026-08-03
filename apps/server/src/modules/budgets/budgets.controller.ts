@@ -8,8 +8,10 @@ export const budgetController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       // Query params are validated & parsed by the validate(budgetQuerySchema) middleware
-      const { period, status, startDate, endDate, sortBy, sortOrder } =
-        req.query as Record<string, string | undefined>;
+      const { period, status, startDate, endDate, sortBy, sortOrder } = req.query as Record<
+        string,
+        string | undefined
+      >;
 
       const filters: BudgetQueryFilters = {
         period,
@@ -40,7 +42,7 @@ export const budgetController = {
     try {
       const budgetWithProgress = await budgetService.getProgress(
         req.user.id,
-        req.params.id as string
+        req.params.id as string,
       );
       sendSuccess(res, { budget: budgetWithProgress });
     } catch (err) {

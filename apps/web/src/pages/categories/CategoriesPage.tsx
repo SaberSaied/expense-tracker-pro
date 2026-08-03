@@ -14,9 +14,24 @@ import { ApiError } from "@/services/api";
 import type { ApiCategory } from "@/services/categories";
 
 const COLOR_PALETTE = [
-  "#10B981", "#F59E0B", "#06B6D4", "#8B5CF6", "#F43F5E", "#EC4899",
-  "#6366F1", "#D946EF", "#14B8A6", "#EAB308", "#3B82F6", "#EF4444",
-  "#F97316", "#A855F7", "#E879F9", "#22C55E", "#64748B", "#94A3B8",
+  "#10B981",
+  "#F59E0B",
+  "#06B6D4",
+  "#8B5CF6",
+  "#F43F5E",
+  "#EC4899",
+  "#6366F1",
+  "#D946EF",
+  "#14B8A6",
+  "#EAB308",
+  "#3B82F6",
+  "#EF4444",
+  "#F97316",
+  "#A855F7",
+  "#E879F9",
+  "#22C55E",
+  "#64748B",
+  "#94A3B8",
 ];
 
 const ICON_OPTIONS = [
@@ -157,7 +172,7 @@ export const CategoriesPage: React.FC = () => {
     setDeleteLoading(true);
     try {
       await categoriesApi.delete(selectedCategory.id);
-      toast.success("Category \"" + selectedCategory.name + "\" deleted");
+      toast.success('Category "' + selectedCategory.name + '" deleted');
       setShowDeleteDialog(false);
       setSelectedCategory(null);
       await fetchCategories();
@@ -203,9 +218,7 @@ export const CategoriesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="page-title font-bold text-text-primary">Categories</h2>
-          <p className="text-sm text-text-secondary mt-1">
-            Organize your expenses into categories
-          </p>
+          <p className="text-sm text-text-secondary mt-1">Organize your expenses into categories</p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Search Bar */}
@@ -253,7 +266,12 @@ export const CategoriesPage: React.FC = () => {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
                 {systemCategories.map((cat) => (
-                  <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
+                  <CategoryCard
+                    key={cat.id}
+                    category={cat}
+                    onEdit={openEditModal}
+                    onDelete={openDeleteDialog}
+                  />
                 ))}
               </div>
             </section>
@@ -275,7 +293,12 @@ export const CategoriesPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
                 {customCategories.map((cat) => (
-                  <CategoryCard key={cat.id} category={cat} onEdit={openEditModal} onDelete={openDeleteDialog} />
+                  <CategoryCard
+                    key={cat.id}
+                    category={cat}
+                    onEdit={openEditModal}
+                    onDelete={openDeleteDialog}
+                  />
                 ))}
               </div>
             )}
@@ -381,9 +404,7 @@ export const CategoriesPage: React.FC = () => {
                       size={22}
                       className={isSelected ? "text-primary" : "text-text-secondary"}
                     />
-                    {isSelected && (
-                      <Check className="size-3 text-primary" aria-hidden="true" />
-                    )}
+                    {isSelected && <Check className="size-3 text-primary" aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -405,7 +426,7 @@ export const CategoriesPage: React.FC = () => {
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={handleDelete}
-        title={"Delete \"" + (selectedCategory?.name ?? "") + "\"?"}
+        title={'Delete "' + (selectedCategory?.name ?? "") + '"?'}
         description="This will permanently delete this category. Any transactions using this category may be affected."
         confirmLabel="Confirm Delete"
       />
@@ -429,12 +450,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onEdit, onDelete 
         <CategoryIcon name={category.icon} size={22} style={{ color: category.color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-text-primary truncate">
-          {category.name}
-        </h3>
-        <p className="text-xs text-text-muted">
-          {category.isSystem ? "System" : "Custom"}
-        </p>
+        <h3 className="text-sm font-semibold text-text-primary truncate">{category.name}</h3>
+        <p className="text-xs text-text-muted">{category.isSystem ? "System" : "Custom"}</p>
       </div>
     </div>
 

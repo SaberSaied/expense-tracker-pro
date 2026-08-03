@@ -25,7 +25,9 @@ interface StatItem {
 /**
  * Quick statistics grid — displays aggregate counts and extremes at a glance.
  */
-export const QuickStatsCards = React.memo(function QuickStatsCards({ stats }: QuickStatsCardsProps) {
+export const QuickStatsCards = React.memo(function QuickStatsCards({
+  stats,
+}: QuickStatsCardsProps) {
   const formatCurrency = (value: number) =>
     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -98,9 +100,7 @@ export const QuickStatsCards = React.memo(function QuickStatsCards({ stats }: Qu
             <p className="text-lg font-bold text-text-primary tabular-nums leading-tight">
               {item.value}
             </p>
-            <p className="text-[11px] text-text-muted mt-0.5 whitespace-nowrap">
-              {item.label}
-            </p>
+            <p className="text-[11px] text-text-muted mt-0.5 whitespace-nowrap">{item.label}</p>
           </div>
         </div>
       ))}

@@ -98,12 +98,7 @@ interface ApiResponse<T> {
 // ─── Shared Date Range Types ───────────────────────────────────
 
 export type DateRangePreset =
-  | "today"
-  | "this_week"
-  | "this_month"
-  | "last_month"
-  | "this_year"
-  | "custom";
+  "today" | "this_week" | "this_month" | "last_month" | "this_year" | "custom";
 
 export interface DateRangeFilter {
   range: DateRangePreset;
@@ -255,9 +250,8 @@ export const dashboardApi = {
    * Returns aggregated financial overview for the authenticated user.
    */
   async getOverview(): Promise<DashboardOverview> {
-    const response = await api.get<ApiResponse<{ overview: DashboardOverview }>>(
-      "/dashboard/overview"
-    );
+    const response =
+      await api.get<ApiResponse<{ overview: DashboardOverview }>>("/dashboard/overview");
     return response.data.overview;
   },
 
@@ -294,12 +288,12 @@ export const dashboardApi = {
     if (params?.period) {
       const sep = query.includes("?") ? "&" : "?";
       const response = await api.get<ApiResponse<IncomeExpenseChartResponse>>(
-        `/dashboard/income-expense-chart${query}${sep}period=${params.period}`
+        `/dashboard/income-expense-chart${query}${sep}period=${params.period}`,
       );
       return response.data;
     }
     const response = await api.get<ApiResponse<IncomeExpenseChartResponse>>(
-      `/dashboard/income-expense-chart${query}`
+      `/dashboard/income-expense-chart${query}`,
     );
     return response.data;
   },
@@ -316,7 +310,7 @@ export const dashboardApi = {
   }): Promise<MonthlyExpensesResponse> {
     const query = dashboardApi.buildParams(params);
     const response = await api.get<ApiResponse<MonthlyExpensesResponse>>(
-      `/dashboard/monthly-expenses${query}`
+      `/dashboard/monthly-expenses${query}`,
     );
     return response.data;
   },
@@ -325,14 +319,12 @@ export const dashboardApi = {
    * GET /api/v1/dashboard/budget-usage
    * Returns budget usage data with limits, spent, remaining, and percentage for the current month or a specific month.
    */
-  async getBudgetUsage(params?: {
-    month?: string;
-  }): Promise<BudgetUsageResponse> {
+  async getBudgetUsage(params?: { month?: string }): Promise<BudgetUsageResponse> {
     const query = new URLSearchParams();
     if (params?.month) query.set("month", params.month);
     const qs = query.toString();
     const response = await api.get<ApiResponse<BudgetUsageResponse>>(
-      `/dashboard/budget-usage${qs ? `?${qs}` : ""}`
+      `/dashboard/budget-usage${qs ? `?${qs}` : ""}`,
     );
     return response.data;
   },
@@ -348,9 +340,7 @@ export const dashboardApi = {
     endDate?: string;
   }): Promise<CashFlowResponse> {
     const query = dashboardApi.buildParams(params);
-    const response = await api.get<ApiResponse<CashFlowResponse>>(
-      `/dashboard/cash-flow${query}`
-    );
+    const response = await api.get<ApiResponse<CashFlowResponse>>(`/dashboard/cash-flow${query}`);
     return response.data;
   },
 
@@ -366,7 +356,7 @@ export const dashboardApi = {
   }): Promise<CategoryDistributionResponse> {
     const query = dashboardApi.buildParams(params);
     const response = await api.get<ApiResponse<CategoryDistributionResponse>>(
-      `/dashboard/category-distribution${query}`
+      `/dashboard/category-distribution${query}`,
     );
     return response.data;
   },

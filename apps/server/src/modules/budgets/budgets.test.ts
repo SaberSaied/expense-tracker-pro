@@ -58,7 +58,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -176,7 +176,7 @@ async function runTests() {
     "GET",
     "/budgets?period=MONTHLY",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(filtered.status === 200, "Filtered budgets returns 200");
   const monthBudgets = filtered.json.data?.budgets as Array<Record<string, unknown>> | undefined;
@@ -184,12 +184,7 @@ async function runTests() {
 
   // ─── 6. Get Budget Details ─────────────────────────────────
   console.log("\n─── 6. Get Budget Details (GET /budgets/:id) ───");
-  const byId = await request(
-    "GET",
-    `/budgets/${budgetId}`,
-    undefined,
-    userTokens?.accessToken
-  );
+  const byId = await request("GET", `/budgets/${budgetId}`, undefined, userTokens?.accessToken);
   assert(byId.status === 200, "Get budget by ID returns 200");
   assert(byId.json.success === true, "Get budget success=true");
   const fetched = byId.json.data?.budget as Record<string, unknown> | undefined;
@@ -208,7 +203,7 @@ async function runTests() {
     "PATCH",
     `/budgets/${budgetId}`,
     { targetAmount: 750, alertThreshold: 85 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update budget returns 200");
   assert(updated.json.success === true, "Update budget success=true");
@@ -224,18 +219,21 @@ async function runTests() {
     "PATCH",
     `/budgets/${budgetId}`,
     { categoryId: catId2 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(catUpdated.status === 200, "Update category returns 200");
   const catUpdatedBudget = catUpdated.json.data?.budget as Record<string, unknown> | undefined;
-  assert((catUpdatedBudget!.category as Record<string, unknown> | undefined)?.id === catId2, "Category updated");
+  assert(
+    (catUpdatedBudget!.category as Record<string, unknown> | undefined)?.id === catId2,
+    "Category updated",
+  );
 
   // Partial update — period only
   const periodUpdated = await request(
     "PATCH",
     `/budgets/${budgetId}`,
     { period: "WEEKLY" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(periodUpdated.status === 200, "Partial period update returns 200");
   const periodBudget = periodUpdated.json.data?.budget as Record<string, unknown> | undefined;
@@ -248,7 +246,7 @@ async function runTests() {
     "GET",
     `/budgets/${budgetId}/progress`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(progress.status === 200, "Progress endpoint returns 200");
   assert(progress.json.success === true, "Progress success=true");
@@ -270,7 +268,7 @@ async function runTests() {
     "GET",
     "/budgets/progress/summary",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(summary.status === 200, "Progress summary returns 200");
   assert(summary.json.success === true, "Progress summary success=true");
@@ -295,12 +293,7 @@ async function runTests() {
 
   // ─── 11. Insights (GET /budgets/insights) ──────────────────
   console.log("\n─── 11. Insights (GET /budgets/insights) ───");
-  const insights = await request(
-    "GET",
-    "/budgets/insights",
-    undefined,
-    userTokens?.accessToken
-  );
+  const insights = await request("GET", "/budgets/insights", undefined, userTokens?.accessToken);
   assert(insights.status === 200, "Insights endpoint returns 200");
   assert(insights.json.success === true, "Insights success=true");
   const insightData = insights.json.data as Record<string, unknown> | undefined;
@@ -328,7 +321,7 @@ async function runTests() {
       startDate: todayStr(),
       categoryId: warnCatId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(warnBudget.status === 201, "Warning-test budget created");
 
@@ -344,7 +337,7 @@ async function runTests() {
         date: todayStr(),
         categoryId: warnCatId,
       },
-      userTokens?.accessToken
+      userTokens?.accessToken,
     );
   }
 
@@ -353,28 +346,24 @@ async function runTests() {
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(genAlerts.status === 201, "Generate alerts returns 201");
   const genData = genAlerts.json.data as Record<string, unknown> | undefined;
   assert(genData?.generated != null, "Generate alerts returns count");
   const warningTypes = (genData?.alerts as Array<Record<string, unknown>> | undefined) ?? [];
   const hasWarning = warningTypes.some(
-    (a: any) => a.type === "BUDGET_WARNING" || a.type === "BUDGET_CRITICAL"
+    (a: any) => a.type === "BUDGET_WARNING" || a.type === "BUDGET_CRITICAL",
   );
   assert(hasWarning === true, "Alerts generated for budget threshold breach");
 
   // Verify the notification was persisted and appears in the notification list
-  const notifList = await request(
-    "GET",
-    "/notifications",
-    undefined,
-    userTokens?.accessToken
-  );
+  const notifList = await request("GET", "/notifications", undefined, userTokens?.accessToken);
   assert(notifList.status === 200, "Notifications list returns 200");
-  const notifications = (notifList.json.data as Record<string, unknown>)?.notifications as Array<Record<string, unknown>> | undefined;
+  const notifications = (notifList.json.data as Record<string, unknown>)?.notifications as
+    Array<Record<string, unknown>> | undefined;
   const hasBudgetAlertNotif = (notifications ?? []).some(
-    (n: any) => n.type === "BUDGET_WARNING" || n.type === "BUDGET_CRITICAL"
+    (n: any) => n.type === "BUDGET_WARNING" || n.type === "BUDGET_CRITICAL",
   );
   assert(hasBudgetAlertNotif === true, "Budget alert notification persisted");
 
@@ -390,7 +379,7 @@ async function runTests() {
         date: todayStr(),
         categoryId: warnCatId,
       },
-      userTokens?.accessToken
+      userTokens?.accessToken,
     );
   }
 
@@ -398,7 +387,7 @@ async function runTests() {
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(genOverBudget.status === 201, "Generate after over-budget returns 201");
   const genOverData = genOverBudget.json.data as Record<string, unknown> | undefined;
@@ -414,11 +403,12 @@ async function runTests() {
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(genAgain.status === 201, "Second generate returns 201");
   const genAgainData = genAgain.json.data as Record<string, unknown> | undefined;
-  const secondCount = (genAgainData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
+  const secondCount =
+    (genAgainData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
   assert(secondCount === 0, "Dedup suppresses duplicate alerts within 24h window");
 
   // ─── 14. Budget Warnings: Preferences Gating ───────────────
@@ -429,18 +419,19 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { budgetAlerts: false, budgetCriticalAlerts: false },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   const genPrefsOff = await request(
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(genPrefsOff.status === 201, "Generate with prefs off returns 201");
   const genPrefsOffData = genPrefsOff.json.data as Record<string, unknown> | undefined;
-  const offCount = (genPrefsOffData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
+  const offCount =
+    (genPrefsOffData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
   assert(offCount === 0, "No alerts generated when budget alert prefs are disabled");
 
   // Disable notifications globally → generate should be fully suppressed
@@ -448,19 +439,23 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { enabled: false, budgetAlerts: true, budgetCriticalAlerts: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   const genGlobalOff = await request(
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(genGlobalOff.status === 201, "Generate with global off returns 201");
   const genGlobalData = genGlobalOff.json.data as Record<string, unknown> | undefined;
-  assert(genGlobalData?.suppressedByPreferences === true, "Global disabled returns suppressedByPreferences flag");
-  const globalCount = (genGlobalData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
+  assert(
+    genGlobalData?.suppressedByPreferences === true,
+    "Global disabled returns suppressedByPreferences flag",
+  );
+  const globalCount =
+    (genGlobalData?.alerts as Array<Record<string, unknown>> | undefined)?.length ?? 0;
   assert(globalCount === 0, "No alerts generated when notifications globally disabled");
 
   // ─── 15. Budget Warnings: Ownership ────────────────────────
@@ -480,7 +475,7 @@ async function runTests() {
     "POST",
     "/budgets/alerts/generate",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(foreignGen.status === 201, "Second user generate returns 201 (own data only)");
   const foreignData = foreignGen.json.data as Record<string, unknown> | undefined;
@@ -490,12 +485,7 @@ async function runTests() {
   console.log("\n─── 16. Ownership Verification ───");
 
   // Second user cannot see primary user's budgets
-  const secondList = await request(
-    "GET",
-    "/budgets",
-    undefined,
-    secondUserTokens?.accessToken
-  );
+  const secondList = await request("GET", "/budgets", undefined, secondUserTokens?.accessToken);
   assert(secondList.status === 200, "Second user list returns 200");
   const secondBuds = secondList.json.data?.budgets as Array<Record<string, unknown>> | undefined;
   const hasPrimaryBudget = secondBuds!.some((b: any) => b.id === budgetId);
@@ -506,7 +496,7 @@ async function runTests() {
     "GET",
     `/budgets/${budgetId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user gets 404 on primary's budget");
 
@@ -515,7 +505,7 @@ async function runTests() {
     "PATCH",
     `/budgets/${budgetId}`,
     { targetAmount: 999 },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenUpdate.status === 404, "Second user gets 404 on update");
 
@@ -527,7 +517,7 @@ async function runTests() {
     "POST",
     "/budgets",
     { targetAmount: 100 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingFields.status === 400, "Missing fields returns 400");
 
@@ -536,7 +526,7 @@ async function runTests() {
     "POST",
     "/budgets",
     { targetAmount: -50, startDate: todayStr(), categoryId: catId1 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(negativeAmount.status === 400, "Negative target amount returns 400");
 
@@ -545,7 +535,7 @@ async function runTests() {
     "POST",
     "/budgets",
     { targetAmount: 100, period: "BIWEEKLY", startDate: todayStr(), categoryId: catId1 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidPeriod.status === 400, "Invalid period returns 400");
 
@@ -554,7 +544,7 @@ async function runTests() {
     "POST",
     "/budgets",
     { targetAmount: 100, startDate: todayStr(), categoryId: "not-a-uuid" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidCategory.status === 400, "Invalid category ID returns 400");
 
@@ -564,17 +554,12 @@ async function runTests() {
     "DELETE",
     `/budgets/${budgetId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleted.status === 204, "Delete budget returns 204 No Content");
 
   // Verify it's gone
-  const gone = await request(
-    "GET",
-    `/budgets/${budgetId}`,
-    undefined,
-    userTokens?.accessToken
-  );
+  const gone = await request("GET", `/budgets/${budgetId}`, undefined, userTokens?.accessToken);
   assert(gone.status === 404, "Deleted budget returns 404");
 
   // Delete non-existent budget
@@ -582,7 +567,7 @@ async function runTests() {
     "DELETE",
     `/budgets/${budgetId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleteGone.status === 404, "Delete non-existent returns 404");
 

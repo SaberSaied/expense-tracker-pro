@@ -99,17 +99,13 @@ export const AppLayout: React.FC = () => {
   // focus the first item on open, and Arrow/Home/End keys move between items.
   useEffect(() => {
     if (!userMenuOpen) return;
-    userMenuRef.current
-      ?.querySelector<HTMLElement>("[role='menuitem']")
-      ?.focus();
+    userMenuRef.current?.querySelector<HTMLElement>("[role='menuitem']")?.focus();
   }, [userMenuOpen]);
 
   const handleUserMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menu = userMenuRef.current;
     if (!menu) return;
-    const items = Array.from(
-      menu.querySelectorAll<HTMLElement>("[role='menuitem']"),
-    );
+    const items = Array.from(menu.querySelectorAll<HTMLElement>("[role='menuitem']"));
     if (items.length === 0) return;
     const currentIndex = items.indexOf(document.activeElement as HTMLElement);
     let nextIndex: number;
@@ -118,7 +114,8 @@ export const AppLayout: React.FC = () => {
       nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      nextIndex = currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+      nextIndex =
+        currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
     } else if (e.key === "Home") {
       e.preventDefault();
       nextIndex = 0;
@@ -183,9 +180,8 @@ export const AppLayout: React.FC = () => {
   }, []);
 
   const currentPageTitle =
-    [...navItems, ...bottomNavItems].find((item) =>
-      location.pathname.startsWith(item.path),
-    )?.label ?? "Dashboard";
+    [...navItems, ...bottomNavItems].find((item) => location.pathname.startsWith(item.path))
+      ?.label ?? "Dashboard";
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
@@ -262,7 +258,11 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         {/* Bottom nav links */}
-        <div className="px-3 pb-4 space-y-1 border-t border-border-card pt-4" role="navigation" aria-label="Account">
+        <div
+          className="px-3 pb-4 space-y-1 border-t border-border-card pt-4"
+          role="navigation"
+          aria-label="Account"
+        >
           {bottomNavItems.map((item) => (
             <NavLink
               key={item.path}
@@ -353,7 +353,10 @@ export const AppLayout: React.FC = () => {
                 <span className="hidden sm:block text-sm text-text-primary font-medium max-w-[100px] truncate">
                   {user?.name ?? "User"}
                 </span>
-                <ChevronDown className="size-3.5 text-text-muted hidden sm:block" aria-hidden="true" />
+                <ChevronDown
+                  className="size-3.5 text-text-muted hidden sm:block"
+                  aria-hidden="true"
+                />
               </button>
 
               {userMenuOpen && (
@@ -376,9 +379,7 @@ export const AppLayout: React.FC = () => {
                       <p className="text-sm font-medium text-text-primary truncate">
                         {user?.name ?? "User"}
                       </p>
-                      <p className="text-xs text-text-muted truncate">
-                        {user?.email ?? ""}
-                      </p>
+                      <p className="text-xs text-text-muted truncate">{user?.email ?? ""}</p>
                     </div>
 
                     <NavLink

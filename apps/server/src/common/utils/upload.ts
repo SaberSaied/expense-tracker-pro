@@ -32,18 +32,13 @@ try {
   // Warn so a misconfigured writable host (permissions) isn't silently masked.
   logger.warn(
     "[upload] Could not create upload directories — uploads will be unavailable " +
-      "(read-only filesystem or insufficient permissions)"
+      "(read-only filesystem or insufficient permissions)",
   );
 }
 
 // ─── Allowed MIME types ───────────────────────────────────────
 
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-] as const;
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 
 // Server-side extension derived from the (validated) MIME type — never from
 // the client-supplied filename, which could smuggle an .html/.svg payload.
@@ -62,19 +57,12 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 // images (stored XSS via the static /uploads serving).
 
 function detectImageType(buffer: Buffer): string | null {
-  if (
-    buffer.length >= 3 &&
-    buffer[0] === 0xff &&
-    buffer[1] === 0xd8 &&
-    buffer[2] === 0xff
-  ) {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
     return "image/jpeg";
   }
   if (
     buffer.length >= 8 &&
-    buffer.subarray(0, 8).equals(
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
-    )
+    buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
   ) {
     return "image/png";
   }
@@ -98,7 +86,7 @@ function detectImageType(buffer: Buffer): string | null {
 async function verifyUploadedImage(
   req: Express.Request,
   _res: Express.Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const file = (req as Express.Request & { file?: Express.Multer.File }).file;
   if (!file) return next();
@@ -111,8 +99,8 @@ async function verifyUploadedImage(
       await fsp.unlink(file.path).catch(() => {});
       next(
         new ValidationError(
-          "Uploaded file is not a valid image of the declared type. Only JPEG, PNG, WebP, and GIF are allowed."
-        )
+          "Uploaded file is not a valid image of the declared type. Only JPEG, PNG, WebP, and GIF are allowed.",
+        ),
       );
       return;
     }
@@ -143,9 +131,9 @@ function makeDiskStorage(dir: string) {
 function fileFilter(
   _req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: multer.FileFilterCallback,
 ) {
-  if (ALLOWED_MIME_TYPES.includes(file.mimetype as typeof ALLOWED_MIME_TYPES[number])) {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype as (typeof ALLOWED_MIME_TYPES)[number])) {
     cb(null, true);
   } else {
     cb(new ValidationError("Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."));

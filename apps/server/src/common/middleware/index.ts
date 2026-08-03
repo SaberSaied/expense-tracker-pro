@@ -5,12 +5,7 @@ import { logger } from "@/config/logger";
 
 // ─── Global Error Handler ─────────────────────────────────────
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
   // Zod validation errors → 400
   if (err instanceof ZodError) {
     const details: Record<string, string[]> = {};
@@ -102,7 +97,7 @@ export function validate(schema: ZodSchema, source: ValidationTarget = "body") {
  * Generic type parameter allows handlers using AuthenticatedRequest.
  */
 export function asyncHandler<T extends Request = Request>(
-  fn: (req: T, res: Response, next: NextFunction) => void | Promise<void>
+  fn: (req: T, res: Response, next: NextFunction) => void | Promise<void>,
 ): RequestHandler {
   return (req, res, next) => {
     Promise.resolve(fn(req as T, res, next)).catch(next);

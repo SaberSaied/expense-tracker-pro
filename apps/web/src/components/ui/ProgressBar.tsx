@@ -30,12 +30,7 @@ export const ProgressBar = React.memo(function ProgressBar({
 }: ProgressBarProps) {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
-  const autoColor =
-    percentage >= 90
-      ? "bg-error"
-      : percentage >= 70
-        ? "bg-warning"
-        : "bg-success";
+  const autoColor = percentage >= 90 ? "bg-error" : percentage >= 70 ? "bg-warning" : "bg-success";
 
   const heightStyles = {
     sm: "h-1.5",
@@ -48,16 +43,11 @@ export const ProgressBar = React.memo(function ProgressBar({
       {showLabel && (
         <div className="flex items-center justify-between text-xs text-text-secondary">
           <span>{label}</span>
-          <span className="tabular-nums font-medium">
-            {Math.round(percentage)}%
-          </span>
+          <span className="tabular-nums font-medium">{Math.round(percentage)}%</span>
         </div>
       )}
       <div
-        className={clsx(
-          "w-full rounded-full bg-overlay/5 overflow-hidden",
-          heightStyles[size],
-        )}
+        className={clsx("w-full rounded-full bg-overlay/5 overflow-hidden", heightStyles[size])}
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}

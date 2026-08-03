@@ -35,18 +35,11 @@ export const StatCard = React.memo(function StatCard({
     <div className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150 animate-[rise-in_0.3s_ease-out]">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm text-text-secondary">{title}</span>
-        <div
-          className={clsx(
-            "size-10 rounded-xl flex items-center justify-center",
-            iconBg,
-          )}
-        >
+        <div className={clsx("size-10 rounded-xl flex items-center justify-center", iconBg)}>
           <Icon className={clsx("size-5", iconColor)} />
         </div>
       </div>
-      <p className="text-2xl font-bold text-text-primary tabular-nums mb-1">
-        {value}
-      </p>
+      <p className="text-2xl font-bold text-text-primary tabular-nums mb-1">{value}</p>
       <p
         className={clsx(
           "text-xs font-medium",

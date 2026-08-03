@@ -111,7 +111,13 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
     setIsLoading(true);
     setError(null);
     try {
-      const params: { months?: number; range?: DateRangePreset; startDate?: string; endDate?: string; period: string } = {
+      const params: {
+        months?: number;
+        range?: DateRangePreset;
+        startDate?: string;
+        endDate?: string;
+        period: string;
+      } = {
         period: "monthly",
       };
       if (filter.range === "custom" && filter.startDate && filter.endDate) {
@@ -158,9 +164,7 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Income vs Expenses
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Income vs Expenses</h3>
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <BarChart3 className="size-10 text-text-muted/40" />
@@ -183,15 +187,11 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Income vs Expenses
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Income vs Expenses</h3>
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <BarChart3 className="size-10 text-text-muted/40" />
-          <p className="text-sm text-text-muted">
-            No transaction data yet for this period
-          </p>
+          <p className="text-sm text-text-muted">No transaction data yet for this period</p>
           <p className="text-xs text-text-muted">
             Add transactions to see your income vs expenses chart
           </p>
@@ -217,18 +217,14 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
     <div className="glass rounded-xl p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Income vs Expenses
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Income vs Expenses</h3>
         <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
       </div>
 
       {/* Summary Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-5 pb-4 border-b border-border-glass">
         <div className="text-center">
-          <p className="text-[11px] text-text-muted uppercase tracking-wider mb-1">
-            Total Income
-          </p>
+          <p className="text-[11px] text-text-muted uppercase tracking-wider mb-1">Total Income</p>
           <p className="text-lg font-bold text-success tabular-nums">
             {formatCurrency(totalIncome)}
           </p>
@@ -347,9 +343,7 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
             <TrendingUp className="size-4 text-success shrink-0" />
             <div className="min-w-0">
               <p className="text-[11px] text-text-muted">Best Month</p>
-              <p className="text-xs font-semibold text-text-primary truncate">
-                {bestMonth.label}
-              </p>
+              <p className="text-xs font-semibold text-text-primary truncate">{bestMonth.label}</p>
               <p className="text-[11px] text-success tabular-nums">
                 +{formatCurrency(bestMonth.net)}
               </p>
@@ -359,9 +353,7 @@ export const IncomeExpenseChart = React.memo(function IncomeExpenseChart() {
             <TrendingDown className="size-4 text-error shrink-0" />
             <div className="min-w-0">
               <p className="text-[11px] text-text-muted">Worst Month</p>
-              <p className="text-xs font-semibold text-text-primary truncate">
-                {worstMonth.label}
-              </p>
+              <p className="text-xs font-semibold text-text-primary truncate">{worstMonth.label}</p>
               <p className="text-[11px] text-error tabular-nums">
                 {formatCurrency(worstMonth.net)}
               </p>

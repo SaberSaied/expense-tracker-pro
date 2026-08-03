@@ -2,8 +2,7 @@ import React from "react";
 import { clsx } from "clsx";
 import { Check } from "lucide-react";
 
-export interface CheckboxProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   /** Label text rendered next to the checkbox. */
   label?: string;
   indeterminate?: boolean;

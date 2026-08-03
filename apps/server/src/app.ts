@@ -21,15 +21,14 @@ export function createApp(): Application {
   // Never `true` — that would let anyone spoof X-Forwarded-For and bypass
   // rate limiting (express-rate-limit v8 also refuses permissive trust).
   // env.ts validates TRUST_PROXY and rejects the permissive "true" value.
-  const trustProxyValue =
-    env.TRUST_PROXY ?? (env.NODE_ENV === "production" ? "1" : "false");
+  const trustProxyValue = env.TRUST_PROXY ?? (env.NODE_ENV === "production" ? "1" : "false");
   app.set(
     "trust proxy",
     trustProxyValue === "false"
       ? false
       : /^\d+$/.test(trustProxyValue)
         ? parseInt(trustProxyValue, 10)
-        : trustProxyValue
+        : trustProxyValue,
   );
 
   // ─── Security Middleware ──────────────────────────────────

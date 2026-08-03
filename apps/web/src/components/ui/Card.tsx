@@ -26,8 +26,7 @@ export const Card: React.FC<CardProps> = ({
         glass
           ? "bg-bg-card-glass backdrop-blur-md border-border-glass shadow-glass"
           : "bg-bg-card border-border-card shadow-card",
-        hoverEffect &&
-          "hover:border-text-muted/30 hover:shadow-hover hover:-translate-y-0.5",
+        hoverEffect && "hover:border-text-muted/30 hover:shadow-hover hover:-translate-y-0.5",
         className,
       )}
       {...props}
@@ -47,23 +46,24 @@ export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   </div>
 );
 
-export const CardTitle: React.FC<
-  React.HTMLAttributes<HTMLHeadingElement>
-> = ({ className, children, ...props }) => (
+export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
+  className,
+  children,
+  ...props
+}) => (
   <h3
-    className={clsx(
-      "text-lg font-semibold text-text-primary tracking-tight",
-      className,
-    )}
+    className={clsx("text-lg font-semibold text-text-primary tracking-tight", className)}
     {...props}
   >
     {children}
   </h3>
 );
 
-export const CardDescription: React.FC<
-  React.HTMLAttributes<HTMLParagraphElement>
-> = ({ className, children, ...props }) => (
+export const CardDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement>> = ({
+  className,
+  children,
+  ...props
+}) => (
   <p className={clsx("text-sm text-text-secondary", className)} {...props}>
     {children}
   </p>

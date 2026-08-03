@@ -1,13 +1,7 @@
 import React from "react";
 import { clsx } from "clsx";
 
-type BadgeVariant =
-  | "default"
-  | "success"
-  | "warning"
-  | "error"
-  | "info"
-  | "secondary";
+type BadgeVariant = "default" | "success" | "warning" | "error" | "info" | "secondary";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   /** Visual variant controlling color. */
@@ -45,9 +39,7 @@ export const Badge = React.memo(function Badge({
       )}
       {...props}
     >
-      {dot && (
-        <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
-      )}
+      {dot && <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />}
       {children}
     </span>
   );

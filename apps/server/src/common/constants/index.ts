@@ -83,22 +83,22 @@ export const REGEX = {
 // ─── System Category Defaults ─────────────────────────────────
 
 export const SYSTEM_CATEGORIES = [
-  { name: "Food & Dining",       icon: "UtensilsCrossed", color: "#F59E0B" },
-  { name: "Transportation",      icon: "Car",            color: "#06B6D4" },
-  { name: "Housing & Rent",      icon: "Home",           color: "#8B5CF6" },
-  { name: "Utilities",           icon: "Zap",            color: "#10B981" },
-  { name: "Entertainment",       icon: "Film",           color: "#F43F5E" },
-  { name: "Healthcare",          icon: "Heart",          color: "#EC4899" },
-  { name: "Shopping",            icon: "ShoppingBag",    color: "#F97316" },
-  { name: "Education",           icon: "BookOpen",       color: "#A855F7" },
-  { name: "Travel",              icon: "Plane",          color: "#14B8A6" },
-  { name: "Personal Care",       icon: "Sparkles",       color: "#E879F9" },
-  { name: "Groceries",           icon: "Apple",          color: "#22C55E" },
-  { name: "Subscriptions",       icon: "Repeat",         color: "#3B82F6" },
-  { name: "Insurance",           icon: "Shield",         color: "#64748B" },
-  { name: "Savings & Investments", icon: "TrendingUp",   color: "#10B981" },
-  { name: "Income",              icon: "Briefcase",      color: "#22C55E" },
-  { name: "Other",               icon: "MoreHorizontal", color: "#94A3B8" },
+  { name: "Food & Dining", icon: "UtensilsCrossed", color: "#F59E0B" },
+  { name: "Transportation", icon: "Car", color: "#06B6D4" },
+  { name: "Housing & Rent", icon: "Home", color: "#8B5CF6" },
+  { name: "Utilities", icon: "Zap", color: "#10B981" },
+  { name: "Entertainment", icon: "Film", color: "#F43F5E" },
+  { name: "Healthcare", icon: "Heart", color: "#EC4899" },
+  { name: "Shopping", icon: "ShoppingBag", color: "#F97316" },
+  { name: "Education", icon: "BookOpen", color: "#A855F7" },
+  { name: "Travel", icon: "Plane", color: "#14B8A6" },
+  { name: "Personal Care", icon: "Sparkles", color: "#E879F9" },
+  { name: "Groceries", icon: "Apple", color: "#22C55E" },
+  { name: "Subscriptions", icon: "Repeat", color: "#3B82F6" },
+  { name: "Insurance", icon: "Shield", color: "#64748B" },
+  { name: "Savings & Investments", icon: "TrendingUp", color: "#10B981" },
+  { name: "Income", icon: "Briefcase", color: "#22C55E" },
+  { name: "Other", icon: "MoreHorizontal", color: "#94A3B8" },
 ] as const;
 
 // ─── Default Onboarding Categories ──────────────────────────
@@ -108,15 +108,15 @@ export const SYSTEM_CATEGORIES = [
  * These are marked as isSystem so they cannot be renamed or deleted.
  */
 export const DEFAULT_CATEGORIES = [
-  { name: "Food",             icon: "UtensilsCrossed", color: "#F59E0B" },
-  { name: "Transportation",   icon: "Car",            color: "#06B6D4" },
-  { name: "Shopping",         icon: "ShoppingBag",    color: "#F97316" },
-  { name: "Salary",           icon: "Briefcase",      color: "#22C55E" },
-  { name: "Entertainment",    icon: "Film",           color: "#F43F5E" },
-  { name: "Health",           icon: "Heart",          color: "#EC4899" },
-  { name: "Housing",          icon: "Home",           color: "#8B5CF6" },
-  { name: "Utilities",        icon: "Zap",            color: "#10B981" },
-  { name: "Other",            icon: "MoreHorizontal", color: "#94A3B8" },
+  { name: "Food", icon: "UtensilsCrossed", color: "#F59E0B" },
+  { name: "Transportation", icon: "Car", color: "#06B6D4" },
+  { name: "Shopping", icon: "ShoppingBag", color: "#F97316" },
+  { name: "Salary", icon: "Briefcase", color: "#22C55E" },
+  { name: "Entertainment", icon: "Film", color: "#F43F5E" },
+  { name: "Health", icon: "Heart", color: "#EC4899" },
+  { name: "Housing", icon: "Home", color: "#8B5CF6" },
+  { name: "Utilities", icon: "Zap", color: "#10B981" },
+  { name: "Other", icon: "MoreHorizontal", color: "#94A3B8" },
 ] as const;
 
 // ─── Payment Method Colors ──────────────────────────────────
@@ -165,10 +165,10 @@ export const PAYMENT_METHOD_ICONS = [
  * Starter payment methods auto-created for every new user on registration.
  */
 export const DEFAULT_PAYMENT_METHODS = [
-  { name: "Cash",         type: "CASH" as const,          icon: "Wallet",      color: "#10B981" },
-  { name: "Credit Card",  type: "CREDIT_CARD" as const,   icon: "CreditCard",  color: "#3B82F6" },
-  { name: "Debit Card",   type: "DEBIT_CARD" as const,    icon: "CreditCard",  color: "#8B5CF6" },
-  { name: "Bank Account", type: "BANK_TRANSFER" as const, icon: "Building2",   color: "#F59E0B" },
+  { name: "Cash", type: "CASH" as const, icon: "Wallet", color: "#10B981" },
+  { name: "Credit Card", type: "CREDIT_CARD" as const, icon: "CreditCard", color: "#3B82F6" },
+  { name: "Debit Card", type: "DEBIT_CARD" as const, icon: "CreditCard", color: "#8B5CF6" },
+  { name: "Bank Account", type: "BANK_TRANSFER" as const, icon: "Building2", color: "#F59E0B" },
   { name: "Digital Wallet", type: "DIGITAL_WALLET" as const, icon: "Smartphone", color: "#EC4899" },
 ] as const;
 

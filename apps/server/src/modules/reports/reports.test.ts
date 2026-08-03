@@ -58,7 +58,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -131,10 +131,11 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
-  testPaymentMethodId = (pm.json.data?.paymentMethod as Record<string, unknown>)?.id as string ?? null;
+  testPaymentMethodId =
+    ((pm.json.data?.paymentMethod as Record<string, unknown>)?.id as string) ?? null;
   assert(testPaymentMethodId != null, "Payment method has ID");
 
   // Create transactions for report testing
@@ -143,13 +144,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market",
       date: new Date().toISOString().slice(0, 10),
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx1.status === 201, "Created expense transaction");
 
@@ -158,12 +159,12 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "Monthly Paycheck",
       date: new Date().toISOString().slice(0, 10),
       categoryId: incomeCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx2.status === 201, "Created income transaction");
 
@@ -176,12 +177,12 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 35.00,
+      amount: 35.0,
       description: "Gas Station",
       date: new Date(Date.now() - 86400000).toISOString().slice(0, 10), // yesterday
       categoryId: transportCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx3.status === 201, "Created second expense transaction");
 
@@ -193,7 +194,7 @@ async function runTests() {
     "GET",
     `/reports/daily?date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(daily.status === 200, "Daily report returns 200");
   assert(daily.json.success === true, "Daily report success=true");
@@ -203,10 +204,16 @@ async function runTests() {
   assert(typeof dailyReport!.income === "number", "Daily report includes income");
   assert(typeof dailyReport!.expenses === "number", "Daily report includes expenses");
   assert(typeof dailyReport!.balance === "number", "Daily report includes balance");
-  assert(typeof dailyReport!.transactionCount === "number", "Daily report includes transaction count");
+  assert(
+    typeof dailyReport!.transactionCount === "number",
+    "Daily report includes transaction count",
+  );
   assert(Number(dailyReport!.transactionCount) >= 2, "Daily report has 2+ transactions");
   assert(Array.isArray(dailyReport!.transactions), "Daily report includes transactions array");
-  assert(Array.isArray(dailyReport!.spendingByCategory), "Daily report includes category breakdown");
+  assert(
+    Array.isArray(dailyReport!.spendingByCategory),
+    "Daily report includes category breakdown",
+  );
 
   // Daily report without date (defaults to today)
   const dailyDefault = await request("GET", "/reports/daily", undefined, userTokens?.accessToken);
@@ -217,7 +224,7 @@ async function runTests() {
     "GET",
     "/reports/daily?date=not-a-date",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dailyBad.status === 400, "Daily report with invalid date returns 400");
 
@@ -228,7 +235,7 @@ async function runTests() {
     "GET",
     `/reports/weekly?date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(weekly.status === 200, "Weekly report returns 200");
   assert(weekly.json.success === true, "Weekly report success=true");
@@ -242,7 +249,10 @@ async function runTests() {
   assert(typeof weeklyReport!.balance === "number", "Weekly report includes balance");
   assert(Number(weeklyReport!.transactionCount) >= 2, "Weekly report has 2+ transactions");
   assert(Array.isArray(weeklyReport!.dailyBreakdown), "Weekly report has dailyBreakdown");
-  assert((weeklyReport!.dailyBreakdown as Array<unknown>).length === 7, "Weekly report has 7 daily breakdowns");
+  assert(
+    (weeklyReport!.dailyBreakdown as Array<unknown>).length === 7,
+    "Weekly report has 7 daily breakdowns",
+  );
   assert(Array.isArray(weeklyReport!.transactions), "Weekly report has transactions array");
   assert(Array.isArray(weeklyReport!.spendingByCategory), "Weekly report has spendingByCategory");
 
@@ -255,7 +265,7 @@ async function runTests() {
     "GET",
     "/reports/weekly?date=bad-date",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(weeklyBad.status === 400, "Weekly report with invalid date returns 400");
 
@@ -270,7 +280,7 @@ async function runTests() {
     "GET",
     `/reports/monthly?year=${thisYear}&month=${thisMonth}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(monthly.status === 200, "Monthly report returns 200");
   assert(monthly.json.success === true, "Monthly report success=true");
@@ -281,14 +291,28 @@ async function runTests() {
   assert(typeof monthlyReport!.income === "number", "Monthly report includes income");
   assert(typeof monthlyReport!.expenses === "number", "Monthly report includes expenses");
   assert(typeof monthlyReport!.netSavings === "number", "Monthly report includes netSavings");
-  assert(typeof monthlyReport!.transactionCount === "number", "Monthly report includes transactionCount");
+  assert(
+    typeof monthlyReport!.transactionCount === "number",
+    "Monthly report includes transactionCount",
+  );
   assert(Number(monthlyReport!.transactionCount) >= 2, "Monthly report has 2+ transactions");
   assert(Array.isArray(monthlyReport!.categorySummary), "Monthly report includes categorySummary");
-  assert(Array.isArray(monthlyReport!.paymentMethodSummary), "Monthly report includes paymentMethodSummary");
-  assert(Array.isArray(monthlyReport!.budgetPerformance), "Monthly report includes budgetPerformance");
+  assert(
+    Array.isArray(monthlyReport!.paymentMethodSummary),
+    "Monthly report includes paymentMethodSummary",
+  );
+  assert(
+    Array.isArray(monthlyReport!.budgetPerformance),
+    "Monthly report includes budgetPerformance",
+  );
 
   // Monthly report without params (defaults to current month)
-  const monthlyDefault = await request("GET", "/reports/monthly", undefined, userTokens?.accessToken);
+  const monthlyDefault = await request(
+    "GET",
+    "/reports/monthly",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(monthlyDefault.status === 200, "Monthly report without params returns 200");
 
   // Monthly report with date param
@@ -296,7 +320,7 @@ async function runTests() {
     "GET",
     `/reports/monthly?date=${today}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(monthlyDate.status === 200, "Monthly report with date param returns 200");
 
@@ -305,7 +329,7 @@ async function runTests() {
     "GET",
     "/reports/monthly?month=13",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(monthlyBad.status === 400, "Monthly report with invalid month returns 400");
 
@@ -316,7 +340,7 @@ async function runTests() {
     "GET",
     `/reports/yearly?year=${thisYear}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(yearly.status === 200, "Yearly report returns 200");
   assert(yearly.json.success === true, "Yearly report success=true");
@@ -326,12 +350,24 @@ async function runTests() {
   assert(typeof yearlyReport!.income === "number", "Yearly report includes income");
   assert(typeof yearlyReport!.expenses === "number", "Yearly report includes expenses");
   assert(typeof yearlyReport!.netSavings === "number", "Yearly report includes netSavings");
-  assert(typeof yearlyReport!.transactionCount === "number", "Yearly report includes transactionCount");
+  assert(
+    typeof yearlyReport!.transactionCount === "number",
+    "Yearly report includes transactionCount",
+  );
   assert(Number(yearlyReport!.transactionCount) >= 2, "Yearly report has 2+ transactions");
-  assert(Array.isArray(yearlyReport!.monthlyComparison), "Yearly report includes monthlyComparison");
-  assert((yearlyReport!.monthlyComparison as Array<unknown>).length === 12, "Yearly report has 12 monthly comparisons");
+  assert(
+    Array.isArray(yearlyReport!.monthlyComparison),
+    "Yearly report includes monthlyComparison",
+  );
+  assert(
+    (yearlyReport!.monthlyComparison as Array<unknown>).length === 12,
+    "Yearly report has 12 monthly comparisons",
+  );
   assert(Array.isArray(yearlyReport!.topCategories), "Yearly report includes topCategories");
-  assert(Array.isArray(yearlyReport!.budgetPerformance), "Yearly report includes budgetPerformance");
+  assert(
+    Array.isArray(yearlyReport!.budgetPerformance),
+    "Yearly report includes budgetPerformance",
+  );
 
   // Yearly report without params (defaults to current year)
   const yearlyDefault = await request("GET", "/reports/yearly", undefined, userTokens?.accessToken);
@@ -350,7 +386,7 @@ async function runTests() {
     "GET",
     "/reports/yearly?year=abc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(yearlyBad.status === 400, "Yearly report with invalid year returns 400");
 
@@ -361,7 +397,7 @@ async function runTests() {
     "GET",
     "/reports/category-summary",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(catSummary.status === 200, "Category summary returns 200");
   assert(catSummary.json.success === true, "Category summary success=true");
@@ -386,7 +422,7 @@ async function runTests() {
     "GET",
     "/reports/category-summary?startDate=2020-01-01&endDate=2030-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(catSummaryFiltered.status === 200, "Category summary with date range returns 200");
 
@@ -397,7 +433,7 @@ async function runTests() {
     "GET",
     `/reports/monthly-trend?year=${thisYear}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(trend.status === 200, "Monthly trend returns 200");
   assert(trend.json.success === true, "Monthly trend success=true");
@@ -408,13 +444,16 @@ async function runTests() {
   assert((trendReport!.months as Array<unknown>).length === 12, "Monthly trend has 12 months");
 
   const trendMonths = trendReport!.months as Array<Record<string, unknown>>;
-  const currentTrendMonth = trendMonths.find(
-    (m) => m.month === currentMonthKey
-  );
+  const currentTrendMonth = trendMonths.find((m) => m.month === currentMonthKey);
   assert(currentTrendMonth != null, "Current month present in trend");
 
   // Without year (defaults to current year)
-  const trendDefault = await request("GET", "/reports/monthly-trend", undefined, userTokens?.accessToken);
+  const trendDefault = await request(
+    "GET",
+    "/reports/monthly-trend",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(trendDefault.status === 200, "Monthly trend without year returns 200");
 
   // ─── 8. Custom Report ──────────────────────────────────────
@@ -438,7 +477,7 @@ async function runTests() {
     "GET",
     "/reports/custom?startDate=2026-01-01&endDate=2026-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customDate.status === 200, "Custom report with date range returns 200");
 
@@ -447,7 +486,7 @@ async function runTests() {
     "GET",
     "/reports/custom?type=INCOME",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customType.status === 200, "Custom report with type filter returns 200");
   const incomeReport = customType.json.data?.report as Record<string, unknown> | undefined;
@@ -458,7 +497,7 @@ async function runTests() {
     "GET",
     "/reports/custom?type=EXPENSE",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customExpense.status === 200, "Custom report with expense filter returns 200");
   const expenseReport = customExpense.json.data?.report as Record<string, unknown> | undefined;
@@ -469,7 +508,7 @@ async function runTests() {
     "GET",
     `/reports/custom?categoryId=${testCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customCat.status === 200, "Custom report with category filter returns 200");
 
@@ -478,7 +517,7 @@ async function runTests() {
     "GET",
     "/reports/custom?minAmount=10&maxAmount=100",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customAmount.status === 200, "Custom report with amount range returns 200");
 
@@ -487,7 +526,7 @@ async function runTests() {
     "GET",
     `/reports/custom?paymentMethodId=${testPaymentMethodId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customPm.status === 200, "Custom report with payment method filter returns 200");
 
@@ -496,7 +535,7 @@ async function runTests() {
     "GET",
     `/reports/custom?type=EXPENSE&categoryId=${testCategoryId}&minAmount=10&maxAmount=100`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customAll.status === 200, "Custom report with combined filters returns 200");
 
@@ -505,7 +544,7 @@ async function runTests() {
     "GET",
     "/reports/custom?type=INVALID",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customBadType.status === 400, "Custom report with invalid type returns 400");
 
@@ -514,7 +553,7 @@ async function runTests() {
     "GET",
     "/reports/custom?categoryId=not-a-uuid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customBadUuid.status === 400, "Custom report with invalid UUID returns 400");
 
@@ -533,19 +572,25 @@ async function runTests() {
   assert(typeof summaryData!.transactionCount === "number", "Summary has transactionCount");
   assert(typeof summaryData!.incomeCount === "number", "Summary has incomeCount");
   assert(typeof summaryData!.expenseCount === "number", "Summary has expenseCount");
-  assert(typeof summaryData!.averageTransactionAmount === "number", "Summary has averageTransactionAmount");
+  assert(
+    typeof summaryData!.averageTransactionAmount === "number",
+    "Summary has averageTransactionAmount",
+  );
   assert(typeof summaryData!.averageIncome === "number", "Summary has averageIncome");
   assert(typeof summaryData!.averageExpense === "number", "Summary has averageExpense");
   assert(Number(summaryData!.transactionCount) >= 2, "Summary has 2+ transactions");
   assert(Number(summaryData!.income) > 0, "Summary has income > 0");
-  assert(Number(summaryData!.netBalance) > 0, "Summary has positive net balance (income > expenses)");
+  assert(
+    Number(summaryData!.netBalance) > 0,
+    "Summary has positive net balance (income > expenses)",
+  );
 
   // Summary with date range
   const summaryFiltered = await request(
     "GET",
     "/reports/summary?startDate=2026-01-01&endDate=2026-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(summaryFiltered.status === 200, "Summary with date range returns 200");
 
@@ -558,7 +603,10 @@ async function runTests() {
   const breakdownData = breakdown.json.data?.breakdown as Record<string, unknown> | undefined;
   assert(breakdownData != null, "Breakdown data returned");
   assert(Array.isArray(breakdownData!.categoryBreakdown), "Breakdown has categoryBreakdown");
-  assert(Array.isArray(breakdownData!.paymentMethodBreakdown), "Breakdown has paymentMethodBreakdown");
+  assert(
+    Array.isArray(breakdownData!.paymentMethodBreakdown),
+    "Breakdown has paymentMethodBreakdown",
+  );
   assert(breakdownData!.incomeVsExpense != null, "Breakdown has incomeVsExpense");
 
   const incomeVsExpense = breakdownData!.incomeVsExpense as Record<string, unknown>;
@@ -567,8 +615,14 @@ async function runTests() {
   assert(typeof incomeVsExpense.net === "number", "incomeVsExpense has net");
   assert(typeof incomeVsExpense.incomeCount === "number", "incomeVsExpense has incomeCount");
   assert(typeof incomeVsExpense.expenseCount === "number", "incomeVsExpense has expenseCount");
-  assert(typeof incomeVsExpense.incomePercentage === "number", "incomeVsExpense has incomePercentage");
-  assert(typeof incomeVsExpense.expensePercentage === "number", "incomeVsExpense has expensePercentage");
+  assert(
+    typeof incomeVsExpense.incomePercentage === "number",
+    "incomeVsExpense has incomePercentage",
+  );
+  assert(
+    typeof incomeVsExpense.expensePercentage === "number",
+    "incomeVsExpense has expensePercentage",
+  );
   assert(Number(incomeVsExpense.incomeCount) >= 1, "incomeVsExpense has at least 1 income");
   assert(Number(incomeVsExpense.expenseCount) >= 1, "incomeVsExpense has at least 1 expense");
 
@@ -577,7 +631,10 @@ async function runTests() {
   const smallest = breakdownData!.smallestTransaction as Record<string, unknown> | null;
   assert(largest != null, "Breakdown has largestTransaction");
   assert(smallest != null, "Breakdown has smallestTransaction");
-  assert((largest!.amount as number) >= (smallest!.amount as number), "Largest amount >= smallest amount");
+  assert(
+    (largest!.amount as number) >= (smallest!.amount as number),
+    "Largest amount >= smallest amount",
+  );
 
   // Check category breakdown has names/colors/icons (not empty strings after optimization fix)
   const catBreakdown = breakdownData!.categoryBreakdown as Array<Record<string, unknown>>;
@@ -586,7 +643,10 @@ async function runTests() {
     assert(typeof catBreakdown[0].categoryColor === "string", "Category breakdown item has color");
     assert(typeof catBreakdown[0].categoryIcon === "string", "Category breakdown item has icon");
     assert(catBreakdown[0].categoryName !== "", "Category name is not empty");
-    assert(typeof catBreakdown[0].percentage === "number", "Category breakdown item has percentage");
+    assert(
+      typeof catBreakdown[0].percentage === "number",
+      "Category breakdown item has percentage",
+    );
   }
 
   // Breakdown with date range
@@ -594,7 +654,7 @@ async function runTests() {
     "GET",
     "/reports/breakdown?startDate=2026-01-01&endDate=2026-12-31",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(breakdownFiltered.status === 200, "Breakdown with date range returns 200");
 
@@ -614,18 +674,21 @@ async function runTests() {
     "GET",
     `/reports/daily?date=${today}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondDaily.status === 200, "Second user daily report returns 200");
   const secondDailyReport = secondDaily.json.data?.report as Record<string, unknown> | undefined;
-  assert(secondDailyReport!.transactionCount === 0, "Second user daily report has 0 transactions (no crossover)");
+  assert(
+    secondDailyReport!.transactionCount === 0,
+    "Second user daily report has 0 transactions (no crossover)",
+  );
 
   // Second user's summary is isolated
   const secondSummary = await request(
     "GET",
     "/reports/summary",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondSummary.status === 200, "Second user summary returns 200");
   const secondSummaryData = secondSummary.json.data?.summary as Record<string, unknown> | undefined;
@@ -636,10 +699,11 @@ async function runTests() {
     "GET",
     "/reports/breakdown",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondBreakdown.status === 200, "Second user breakdown returns 200");
-  const secondBreakdownData = secondBreakdown.json.data?.breakdown as Record<string, unknown> | undefined;
+  const secondBreakdownData = secondBreakdown.json.data?.breakdown as
+    Record<string, unknown> | undefined;
   const secondCatBreakdown = secondBreakdownData!.categoryBreakdown as Array<unknown>;
   assert(secondCatBreakdown.length === 0, "Second user breakdown has no categories");
 
@@ -648,11 +712,15 @@ async function runTests() {
     "GET",
     `/reports/monthly?year=${thisYear}&month=${thisMonth}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondMonthly.status === 200, "Second user monthly report returns 200");
-  const secondMonthlyReport = secondMonthly.json.data?.report as Record<string, unknown> | undefined;
-  assert(secondMonthlyReport!.transactionCount === 0, "Second user monthly report has 0 transactions");
+  const secondMonthlyReport = secondMonthly.json.data?.report as
+    Record<string, unknown> | undefined;
+  assert(
+    secondMonthlyReport!.transactionCount === 0,
+    "Second user monthly report has 0 transactions",
+  );
 
   // ─── 12. Validation ────────────────────────────────────────
   console.log("\n─── 12. Validation ───");
@@ -662,7 +730,7 @@ async function runTests() {
     "GET",
     "/reports/daily?date=01-01-2026",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidDate.status === 400, "Invalid date format returns 400");
 
@@ -671,7 +739,7 @@ async function runTests() {
     "GET",
     "/reports/custom?startDate=not-a-date",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customBadDate.status === 400, "Custom report with invalid date returns 400");
 
@@ -680,7 +748,7 @@ async function runTests() {
     "GET",
     "/reports/custom?startDate=2026-12-31&endDate=2026-01-01",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(reversedDates.status === 200, "Custom report with reversed dates returns 200 (no crash)");
 

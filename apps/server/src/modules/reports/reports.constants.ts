@@ -1,6 +1,16 @@
 export const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ] as const;
 
 export const DEFAULT_MONTHS = 12;
@@ -15,7 +25,7 @@ export const DATE_RANGE_PRESETS = {
 } as const;
 
 export function getDateRangeForPreset(
-  preset: string
+  preset: string,
 ): { startDate: string; endDate: string } | null {
   const now = new Date();
   const endDate = now.toISOString().slice(0, 10);

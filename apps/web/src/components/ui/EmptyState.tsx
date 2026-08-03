@@ -70,10 +70,7 @@ export const EmptyState = React.memo(function EmptyState({
             compact ? "size-12" : "size-16",
           )}
         >
-          <Icon
-            className={clsx("", compact ? "size-5" : "size-8")}
-            strokeWidth={1.75}
-          />
+          <Icon className={clsx("", compact ? "size-5" : "size-8")} strokeWidth={1.75} />
         </div>
         {/* Accent dots */}
         <span
@@ -100,12 +97,7 @@ export const EmptyState = React.memo(function EmptyState({
       >
         {title}
       </h3>
-      <p
-        className={clsx(
-          "text-text-secondary max-w-sm mb-5",
-          compact ? "text-xs" : "text-sm",
-        )}
-      >
+      <p className={clsx("text-text-secondary max-w-sm mb-5", compact ? "text-xs" : "text-sm")}>
         {description}
       </p>
       {actionLabel && onAction && (

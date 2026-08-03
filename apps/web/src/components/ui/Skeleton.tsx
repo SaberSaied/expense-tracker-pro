@@ -23,13 +23,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 }) => {
   return (
     <div
-      className={clsx(
-        "skeleton",
-        circle ? "rounded-full" : "rounded-md",
-        width,
-        height,
-        className,
-      )}
+      className={clsx("skeleton", circle ? "rounded-full" : "rounded-md", width, height, className)}
       aria-hidden="true"
       {...props}
     />

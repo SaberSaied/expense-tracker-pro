@@ -35,9 +35,18 @@ export const transactionQuerySchema = z.object({
   paymentMethodId: z.string().uuid().optional(),
   minAmount: z.coerce.number().positive().optional(),
   maxAmount: z.coerce.number().positive().optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  sortBy: z.enum(["date", "amount", "createdAt", "updatedAt", "description"]).optional().default("date"),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  sortBy: z
+    .enum(["date", "amount", "createdAt", "updatedAt", "description"])
+    .optional()
+    .default("date"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
   search: z.string().max(200).optional(),
 });

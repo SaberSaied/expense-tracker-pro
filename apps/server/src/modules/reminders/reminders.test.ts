@@ -59,7 +59,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -136,7 +136,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Rent", icon: "Home", color: "#6366F1" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(category.status === 201, "Category created");
   const categoryId = (category.json.data?.category as Record<string, unknown>)?.id as string;
@@ -145,7 +145,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Emergency Fund", targetAmount: 5000, currentAmount: 1000, priority: "HIGH" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(goal.status === 201, "Savings goal created");
   const goalId = (goal.json.data?.savingsGoal as Record<string, unknown>)?.id as string;
@@ -211,7 +211,10 @@ async function runTests() {
   const contribReminder = createdContrib.json.data?.reminder as Record<string, unknown> | undefined;
   assert(contribReminder!.type === "SAVINGS_CONTRIBUTION", "Type matches");
   assert(contribReminder!.savingsGoal != null, "Savings goal relation included");
-  assert((contribReminder!.savingsGoal as Record<string, unknown>)!.name === "Emergency Fund", "Goal name included");
+  assert(
+    (contribReminder!.savingsGoal as Record<string, unknown>)!.name === "Emergency Fund",
+    "Goal name included",
+  );
 
   // ─── 5. Create Custom Reminder ─────────────────────────────
   console.log("\n─── 5. Create Custom Reminder ───");
@@ -227,7 +230,10 @@ async function runTests() {
   assert(createdCustom.status === 201, "Create custom reminder returns 201");
   const customReminder = createdCustom.json.data?.reminder as Record<string, unknown> | undefined;
   assert(customReminder!.type === "CUSTOM", "Type matches");
-  assert(customReminder!.message === "Shop around for the best quote this month.", "Message matches");
+  assert(
+    customReminder!.message === "Shop around for the best quote this month.",
+    "Message matches",
+  );
   assert(customReminder!.amount == null, "Custom reminder has no amount");
   assert(customReminder!.frequency === "YEARLY", "Frequency matches");
   const customId = customReminder!.id as string;
@@ -255,27 +261,45 @@ async function runTests() {
   assert(remindersList![0].category !== undefined, "Reminder includes relations");
 
   // Filter by type
-  const typeFilter = await request("GET", "/reminders?type=RECURRING_EXPENSE", undefined, userTokens?.accessToken);
+  const typeFilter = await request(
+    "GET",
+    "/reminders?type=RECURRING_EXPENSE",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(typeFilter.status === 200, "Type filter returns 200");
-  const typeFiltered = typeFilter.json.data?.reminders as Array<Record<string, unknown>> | undefined;
+  const typeFiltered = typeFilter.json.data?.reminders as
+    Array<Record<string, unknown>> | undefined;
   assert(typeFiltered!.length === 1, "Type filter returns only expense reminders");
   for (const r of typeFiltered!) {
     assert(r.type === "RECURRING_EXPENSE", "Type filter only returns matching type");
   }
 
   // Filter by frequency
-  const freqFilter = await request("GET", "/reminders?frequency=DAILY", undefined, userTokens?.accessToken);
+  const freqFilter = await request(
+    "GET",
+    "/reminders?frequency=DAILY",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(freqFilter.status === 200, "Frequency filter returns 200");
-  const freqFiltered = freqFilter.json.data?.reminders as Array<Record<string, unknown>> | undefined;
+  const freqFiltered = freqFilter.json.data?.reminders as
+    Array<Record<string, unknown>> | undefined;
   assert(freqFiltered!.length >= 1, "Frequency filter returns daily reminders");
   for (const r of freqFiltered!) {
     assert(r.frequency === "DAILY", "Frequency filter only returns matching frequency");
   }
 
   // Filter by enabled=false
-  const disabledFilter = await request("GET", "/reminders?enabled=false", undefined, userTokens?.accessToken);
+  const disabledFilter = await request(
+    "GET",
+    "/reminders?enabled=false",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(disabledFilter.status === 200, "Enabled filter returns 200");
-  const disabledList = disabledFilter.json.data?.reminders as Array<Record<string, unknown>> | undefined;
+  const disabledList = disabledFilter.json.data?.reminders as
+    Array<Record<string, unknown>> | undefined;
   assert(disabledList!.length === 0, "No disabled reminders yet");
 
   // ─── 7. Get Reminder by ID ─────────────────────────────────
@@ -292,7 +316,7 @@ async function runTests() {
     "GET",
     "/reminders/00000000-0000-0000-0000-000000000000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(notFound.status === 404, "Non-existent reminder returns 404");
 
@@ -308,7 +332,7 @@ async function runTests() {
     "PATCH",
     `/reminders/${expId}`,
     { title: "Monthly Rent (Apartment)" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(partialUpdate.status === 200, "Partial update returns 200");
   const partialReminder = partialUpdate.json.data?.reminder as Record<string, unknown> | undefined;
@@ -320,7 +344,7 @@ async function runTests() {
     "PATCH",
     `/reminders/${dailyId}`,
     { enabled: false },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(disable.status === 200, "Disable reminder returns 200");
   const disabledReminder = disable.json.data?.reminder as Record<string, unknown> | undefined;
@@ -348,25 +372,33 @@ async function runTests() {
   console.log("\n─── 10. Notifications Created (GET /notifications) ───");
   const notifications = await request("GET", "/notifications", undefined, userTokens?.accessToken);
   assert(notifications.status === 200, "List notifications returns 200");
-  const notifList = notifications.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const notifList = notifications.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   const reminderNotifications = notifList!.filter((n) => n.type === "REMINDER");
   assert(reminderNotifications.length >= 1, "At least one REMINDER notification exists");
   const firstNotif = reminderNotifications[0];
   assert(firstNotif!.title === "Daily Standup Note", "Notification title matches reminder title");
-  assert(typeof firstNotif!.message === "string" && (firstNotif!.message as string).length > 0, "Notification has a message");
+  assert(
+    typeof firstNotif!.message === "string" && (firstNotif!.message as string).length > 0,
+    "Notification has a message",
+  );
 
   // ─── 11. Trigger Advances Schedule (no duplicate re-trigger) ─
   console.log("\n─── 11. Trigger Again (dedup via schedule advance) ───");
   const trigger2 = await request("POST", "/reminders/trigger", undefined, userTokens?.accessToken);
   assert(trigger2.status === 200, "Second trigger returns 200");
   const trigger2Data = trigger2.json.data as Record<string, unknown> | undefined;
-  const dailyTriggered2 = (trigger2Data!.triggered as Array<Record<string, unknown>> | undefined)!.some(
-    (t) => t.title === "Daily Standup Note"
-  );
+  const dailyTriggered2 = (trigger2Data!.triggered as
+    Array<Record<string, unknown>> | undefined)!.some((t) => t.title === "Daily Standup Note");
   assert(!dailyTriggered2, "Daily reminder not triggered again (schedule advanced)");
 
   // Daily reminder's nextTriggerDate should be tomorrow
-  const dailyAfter = await request("GET", `/reminders/${dailyId}`, undefined, userTokens?.accessToken);
+  const dailyAfter = await request(
+    "GET",
+    `/reminders/${dailyId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   const dailyAfterData = dailyAfter.json.data?.reminder as Record<string, unknown> | undefined;
   const nextStr = (dailyAfterData!.nextTriggerDate as string).slice(0, 10);
   assert(nextStr === futureDateStr(1), "Daily reminder advanced to tomorrow");
@@ -380,7 +412,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { enabled: false },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(disablePrefs.status === 200, "Update preferences returns 200");
 
@@ -389,21 +421,36 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "Due While Disabled", frequency: "DAILY", startDate: pastDateStr(1) },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
-  const triggerDisabled = await request("POST", "/reminders/trigger", undefined, userTokens?.accessToken);
+  const triggerDisabled = await request(
+    "POST",
+    "/reminders/trigger",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(triggerDisabled.status === 200, "Trigger with prefs disabled returns 200");
   const disabledData = triggerDisabled.json.data as Record<string, unknown> | undefined;
-  assert(disabledData!.suppressedByPreferences === true, "suppressedByPreferences=true when globally disabled");
-  const freshTriggered = (disabledData!.triggered as Array<Record<string, unknown>> | undefined)!.some(
-    (t) => t.title === "Due While Disabled" && t.suppressed === true
+  assert(
+    disabledData!.suppressedByPreferences === true,
+    "suppressedByPreferences=true when globally disabled",
+  );
+  const freshTriggered = (disabledData!.triggered as
+    Array<Record<string, unknown>> | undefined)!.some(
+    (t) => t.title === "Due While Disabled" && t.suppressed === true,
   );
   assert(freshTriggered, "Due reminder marked suppressed but schedule advanced");
 
   // No REMINDER notification created while disabled
-  const notificationsDisabled = await request("GET", "/notifications", undefined, userTokens?.accessToken);
-  const notifListDisabled = notificationsDisabled.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const notificationsDisabled = await request(
+    "GET",
+    "/notifications",
+    undefined,
+    userTokens?.accessToken,
+  );
+  const notifListDisabled = notificationsDisabled.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   const suppressedNotifs = notifListDisabled!.filter((n) => n.title === "Due While Disabled");
   assert(suppressedNotifs.length === 0, "No notification created while disabled");
 
@@ -412,7 +459,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { enabled: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(enablePrefs.status === 200, "Re-enable preferences returns 200");
 
@@ -424,7 +471,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingTitle.status === 400, "Missing title returns 400");
 
@@ -433,7 +480,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "No Start" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingStart.status === 400, "Missing startDate returns 400");
 
@@ -442,7 +489,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "EVERYTHING", title: "Bad", startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badType.status === 400, "Invalid type returns 400");
 
@@ -451,7 +498,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "Bad", frequency: "HOURLY", startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badFreq.status === 400, "Invalid frequency returns 400");
 
@@ -460,7 +507,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "RECURRING_EXPENSE", title: "Bad", amount: -5, startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(negAmount.status === 400, "Negative amount returns 400");
 
@@ -469,7 +516,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "Bad", frequency: "WEEKLY", dayOfWeek: 9, startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDow.status === 400, "Invalid dayOfWeek returns 400");
 
@@ -478,7 +525,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "Bad", frequency: "MONTHLY", dayOfMonth: 32, startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDom.status === 400, "Invalid dayOfMonth returns 400");
 
@@ -487,7 +534,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "CUSTOM", title: "Bad", startDate: "not-a-date" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDate.status === 400, "Invalid date format returns 400");
 
@@ -502,7 +549,7 @@ async function runTests() {
       startDate: todayStr(),
       categoryId: "00000000-0000-0000-0000-000000000000",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(foreignCategory.status === 400, "Category not owned returns 400");
 
@@ -511,7 +558,7 @@ async function runTests() {
     "POST",
     "/reminders",
     { type: "RECURRING_EXPENSE", title: "No Amount", startDate: todayStr() },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingAmount.status === 400, "Financial reminder without amount returns 400");
 
@@ -530,7 +577,8 @@ async function runTests() {
   // Second user's list should NOT include primary user's reminders
   const secondList = await request("GET", "/reminders", undefined, secondUserTokens?.accessToken);
   assert(secondList.status === 200, "Second user list returns 200");
-  const secondReminders = secondList.json.data?.reminders as Array<Record<string, unknown>> | undefined;
+  const secondReminders = secondList.json.data?.reminders as
+    Array<Record<string, unknown>> | undefined;
   assert(secondReminders!.length === 0, "Second user has no reminders");
 
   // Second user cannot get primary user's reminder by ID
@@ -538,7 +586,7 @@ async function runTests() {
     "GET",
     `/reminders/${expId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user gets 404 on primary's reminder");
 
@@ -547,7 +595,7 @@ async function runTests() {
     "PATCH",
     `/reminders/${expId}`,
     { title: "Hacked" },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenUpdate.status === 404, "Second user gets 404 on update");
 
@@ -556,13 +604,18 @@ async function runTests() {
     "DELETE",
     `/reminders/${expId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenDelete.status === 404, "Second user gets 404 on delete");
 
   // ─── 15. Delete Reminder ───────────────────────────────────
   console.log("\n─── 15. Delete Reminder (DELETE /reminders/:id) ───");
-  const deleted = await request("DELETE", `/reminders/${customId}`, undefined, userTokens?.accessToken);
+  const deleted = await request(
+    "DELETE",
+    `/reminders/${customId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleted.status === 204, "Delete returns 204 No Content");
 
   // Verify it's gone
@@ -570,7 +623,12 @@ async function runTests() {
   assert(gone.status === 404, "Deleted reminder returns 404");
 
   // Delete non-existent reminder
-  const deleteGone = await request("DELETE", `/reminders/${customId}`, undefined, userTokens?.accessToken);
+  const deleteGone = await request(
+    "DELETE",
+    `/reminders/${customId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleteGone.status === 404, "Delete non-existent returns 404");
 
   // ─── 16. Unauthenticated Access ────────────────────────────

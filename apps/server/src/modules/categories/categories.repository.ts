@@ -96,10 +96,7 @@ export const categoryRepository = {
     });
   },
 
-  async create(
-    userId: string,
-    data: { name: string; icon?: string; color?: string }
-  ) {
+  async create(userId: string, data: { name: string; icon?: string; color?: string }) {
     return prisma.category.create({
       data: {
         name: data.name,
@@ -129,7 +126,7 @@ export const categoryRepository = {
    */
   async createDefaultCategories(
     userId: string,
-    defaults: readonly { name: string; icon: string; color: string }[]
+    defaults: readonly { name: string; icon: string; color: string }[],
   ) {
     return prisma.category.createMany({
       data: defaults.map((cat) => ({

@@ -5,7 +5,7 @@ import type { DateRangePreset } from "@/common/types";
  */
 export function pick<T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
-  keys: K[]
+  keys: K[],
 ): Pick<T, K> {
   const result = {} as Pick<T, K>;
   for (const key of keys) {
@@ -21,7 +21,7 @@ export function pick<T extends Record<string, unknown>, K extends keyof T>(
  */
 export function omit<T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
-  keys: K[]
+  keys: K[],
 ): Omit<T, K> {
   const result = { ...obj };
   for (const key of keys) {
@@ -81,7 +81,7 @@ export function safeJsonParse<T = unknown>(json: string): T | undefined {
 export function computeDateRange(
   preset: DateRangePreset,
   customStart?: string,
-  customEnd?: string
+  customEnd?: string,
 ): { startDate: Date; endDate: Date } {
   const now = new Date();
 
@@ -96,7 +96,15 @@ export function computeDateRange(
       const dayOfWeek = now.getDay();
       const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday start
       const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - diff), 23, 59, 59, 999);
+      const end = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + (6 - diff),
+        23,
+        59,
+        59,
+        999,
+      );
       return { startDate: start, endDate: end };
     }
 
@@ -140,7 +148,7 @@ export function computeDateRange(
  * Build a Prisma date filter from a date range.
  */
 export function buildDateFilter(
-  range: { startDate?: Date; endDate?: Date } | null
+  range: { startDate?: Date; endDate?: Date } | null,
 ): Record<string, unknown> {
   if (!range) return {};
   const filter: Record<string, unknown> = {};

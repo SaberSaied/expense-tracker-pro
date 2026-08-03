@@ -7,13 +7,16 @@ import type { SavingsGoalQueryFilters } from "./savings-goals.types";
 export const savingsGoalController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { status, priority, sortBy, sortOrder } =
-        req.query as Record<string, string | undefined>;
+      const { status, priority, sortBy, sortOrder } = req.query as Record<
+        string,
+        string | undefined
+      >;
 
       const filters: SavingsGoalQueryFilters = {
         status: status as "active" | "completed" | undefined,
         priority: priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined,
-        sortBy: sortBy as "deadline" | "targetAmount" | "priority" | "createdAt" | "currentAmount" | undefined,
+        sortBy: sortBy as
+          "deadline" | "targetAmount" | "priority" | "createdAt" | "currentAmount" | undefined,
         sortOrder: sortOrder as "asc" | "desc" | undefined,
       };
 
@@ -44,7 +47,11 @@ export const savingsGoalController = {
 
   async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const savingsGoal = await savingsGoalService.update(req.user.id, req.params.id as string, req.body);
+      const savingsGoal = await savingsGoalService.update(
+        req.user.id,
+        req.params.id as string,
+        req.body,
+      );
       sendSuccess(res, { savingsGoal });
     } catch (err) {
       next(err);
@@ -66,7 +73,7 @@ export const savingsGoalController = {
       const savingsGoal = await savingsGoalService.addProgress(
         req.user.id,
         req.params.id as string,
-        { amount, allowExceed }
+        { amount, allowExceed },
       );
       sendSuccess(res, { savingsGoal });
     } catch (err) {
@@ -80,7 +87,7 @@ export const savingsGoalController = {
       const savingsGoal = await savingsGoalService.withdrawProgress(
         req.user.id,
         req.params.id as string,
-        amount
+        amount,
       );
       sendSuccess(res, { savingsGoal });
     } catch (err) {

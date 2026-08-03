@@ -67,7 +67,7 @@ async function runJob(job: ScheduledJob, trigger: "startup" | "interval"): Promi
     const summary = await job.run();
     logger.info(
       `[jobs] ${job.name} ${trigger} run finished in ${Date.now() - startedAt}ms — ` +
-        `${summary.generated} notifications, ${summary.errors.length} errors`
+        `${summary.generated} notifications, ${summary.errors.length} errors`,
     );
   } catch (err) {
     logger.error(`[jobs] ${job.name} ${trigger} run failed:`, err);

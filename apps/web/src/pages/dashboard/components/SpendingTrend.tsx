@@ -22,9 +22,7 @@ export const SpendingTrend: React.FC<SpendingTrendProps> = ({ data }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   return (
     <div className="glass rounded-xl p-5">
-      <h3 className="text-base font-semibold text-text-primary mb-4">
-        Spending Trend
-      </h3>
+      <h3 className="text-base font-semibold text-text-primary mb-4">Spending Trend</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart accessibilityLayer data={data}>

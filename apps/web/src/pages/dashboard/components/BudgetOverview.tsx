@@ -23,17 +23,12 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
 
   return (
     <div className="glass rounded-xl p-5">
-      <h3 className="text-base font-semibold text-text-primary mb-1">
-        Budget Status
-      </h3>
+      <h3 className="text-base font-semibold text-text-primary mb-1">Budget Status</h3>
 
       {activeBudgets.length === 0 && (
         <p className="text-sm text-text-muted py-6 text-center">
-          No budgets set yet.{' '}
-          <Link
-            to="/budgets"
-            className="text-primary hover:text-primary-hover transition-colors"
-          >
+          No budgets set yet.{" "}
+          <Link to="/budgets" className="text-primary hover:text-primary-hover transition-colors">
             Create your first budget
           </Link>
         </p>
@@ -60,9 +55,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
               <p
                 className={clsx(
                   "text-sm font-semibold tabular-nums",
-                  totalBudgeted - totalSpent >= 0
-                    ? "text-success"
-                    : "text-error",
+                  totalBudgeted - totalSpent >= 0 ? "text-success" : "text-error",
                 )}
               >
                 {formatCurrency(totalBudgeted - totalSpent)}
@@ -88,7 +81,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
                       className="size-1.5 rounded-full shrink-0"
                       style={{ backgroundColor: b.categoryColor }}
                     />
-                    {b.categoryName} —{' '}
+                    {b.categoryName} —{" "}
                     <span className="text-error font-medium">
                       {formatCurrency(Math.abs(b.remaining))} over
                     </span>
@@ -123,9 +116,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
                   label={`${budget.categoryName} budget`}
                 />
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[11px] text-text-muted">
-                    {budget.percentage}% used
-                  </span>
+                  <span className="text-[11px] text-text-muted">{budget.percentage}% used</span>
                   {budget.remaining >= 0 ? (
                     <span className="text-[11px] text-success">
                       {formatCurrency(budget.remaining)} left

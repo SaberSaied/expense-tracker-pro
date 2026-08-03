@@ -381,10 +381,7 @@ export const MOCK_CATEGORY_CHART: ChartDataPoint[] = [
   { label: "Client Dinners", value: 100.5, color: "#D946EF" },
 ];
 
-export const MOCK_SPENDING_TREND: ChartDataPoint[] = Array.from(
-  { length: 30 },
-  (_, i) => ({
-    label: `Jul ${i + 1}`,
-    value: Math.round((50 + Math.random() * 200 + Math.sin(i / 3) * 50) * 100) / 100,
-  }),
-);
+export const MOCK_SPENDING_TREND: ChartDataPoint[] = Array.from({ length: 30 }, (_, i) => ({
+  label: `Jul ${i + 1}`,
+  value: Math.round((50 + Math.random() * 200 + Math.sin(i / 3) * 50) * 100) / 100,
+}));

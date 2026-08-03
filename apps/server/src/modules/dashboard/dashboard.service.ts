@@ -176,9 +176,8 @@ export const dashboardService = {
         budgeted: budget.targetAmount,
         spent: spentAmount,
         remaining: budget.targetAmount - spentAmount,
-        percentage: budget.targetAmount > 0
-          ? Math.round((spentAmount / budget.targetAmount) * 100)
-          : 0,
+        percentage:
+          budget.targetAmount > 0 ? Math.round((spentAmount / budget.targetAmount) * 100) : 0,
       };
     });
 
@@ -205,9 +204,7 @@ export const dashboardService = {
         categoryName: cat?.name ?? "Unknown",
         categoryColor: cat?.color ?? "#6366F1",
         totalSpent,
-        percentage: totalExpense > 0
-          ? Math.round((totalSpent / totalExpense) * 100)
-          : 0,
+        percentage: totalExpense > 0 ? Math.round((totalSpent / totalExpense) * 100) : 0,
       };
     });
 
@@ -300,11 +297,16 @@ export const dashboardService = {
 
   async getIncomeExpenseChart(
     userId: string,
-    options: { months?: number; period?: string; dateRange?: { startDate?: Date; endDate?: Date } | null } = {}
+    options: {
+      months?: number;
+      period?: string;
+      dateRange?: { startDate?: Date; endDate?: Date } | null;
+    } = {},
   ) {
     const months = options.months ?? 12;
     const now = new Date();
-    const startDate = options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const startDate =
+      options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
     const endDate = options.dateRange?.endDate ?? now;
 
     // Fetch all transactions in the date range
@@ -318,10 +320,7 @@ export const dashboardService = {
     });
 
     // Group by year-month (period key: "YYYY-MM")
-    const periodMap = new Map<
-      string,
-      { income: number; expense: number; count: number }
-    >();
+    const periodMap = new Map<string, { income: number; expense: number; count: number }>();
 
     // Initialize all months in range so empty months show as 0
     const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -349,8 +348,18 @@ export const dashboardService = {
 
     // Convert to sorted array
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const chartData = Array.from(periodMap.entries())
@@ -371,7 +380,7 @@ export const dashboardService = {
 
   async getCategoryDistribution(
     userId: string,
-    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {}
+    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {},
   ) {
     const { months, dateRange } = options;
     const now = new Date();
@@ -384,7 +393,9 @@ export const dashboardService = {
       if (dateRange.endDate) df.lte = dateRange.endDate;
       dateFilter = { date: df };
     } else if (months && months > 0) {
-      dateFilter = { date: { gte: new Date(now.getFullYear(), now.getMonth() - months + 1, 1), lte: now } };
+      dateFilter = {
+        date: { gte: new Date(now.getFullYear(), now.getMonth() - months + 1, 1), lte: now },
+      };
     }
 
     // ─── Use Prisma groupBy to aggregate directly in DB instead of fetchAll+JS group ──
@@ -437,13 +448,9 @@ export const dashboardService = {
           categoryColor: cat?.color ?? "#6366F1",
           categoryIcon: cat?.icon ?? "Tag",
           totalSpent: Math.round(amount * 100) / 100,
-          percentage: totalSpent > 0
-            ? Math.round((amount / totalSpent) * 10000) / 100
-            : 0,
+          percentage: totalSpent > 0 ? Math.round((amount / totalSpent) * 10000) / 100 : 0,
           transactionCount: count,
-          averageTransaction: count > 0
-            ? Math.round((amount / count) * 100) / 100
-            : 0,
+          averageTransaction: count > 0 ? Math.round((amount / count) * 100) / 100 : 0,
         };
       })
       .sort((a, b) => b.totalSpent - a.totalSpent);
@@ -468,20 +475,19 @@ export const dashboardService = {
             }
           : null,
         averagePerCategory:
-          distribution.length > 0
-            ? Math.round((totalSpent / distribution.length) * 100) / 100
-            : 0,
+          distribution.length > 0 ? Math.round((totalSpent / distribution.length) * 100) / 100 : 0,
       },
     };
   },
 
   async getMonthlyExpenses(
     userId: string,
-    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {}
+    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {},
   ) {
     const months = options.months ?? 12;
     const now = new Date();
-    const startDate = options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const startDate =
+      options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
     const endDate = options.dateRange?.endDate ?? now;
 
     // Fetch expense transactions in the date range and group by year-month in JS
@@ -497,10 +503,7 @@ export const dashboardService = {
     });
 
     // Group by year-month using a Map
-    const periodMap = new Map<
-      string,
-      { total: number; transactionCount: number }
-    >();
+    const periodMap = new Map<string, { total: number; transactionCount: number }>();
 
     // Initialize all months in range so empty months show as 0
     const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -524,8 +527,18 @@ export const dashboardService = {
 
     // Convert to sorted chronological array
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const chartData = Array.from(periodMap.entries())
@@ -552,25 +565,33 @@ export const dashboardService = {
       chartData,
       summary: {
         totalExpenses: Math.round(totalExpenses * 100) / 100,
-        averageMonthly: monthsWithData > 0
-          ? Math.round((totalExpenses / monthsWithData) * 100) / 100
-          : 0,
+        averageMonthly:
+          monthsWithData > 0 ? Math.round((totalExpenses / monthsWithData) * 100) / 100 : 0,
         monthsWithData,
         totalMonths: months,
-        highestMonth: activeMonths.length > 0
-          ? { ...activeMonths.reduce((max, d) => (d.total > max.total ? d : max), activeMonths[0]) }
-          : null,
-        lowestMonth: activeMonths.length > 0
-          ? { ...activeMonths.reduce((min, d) => (d.total < min.total ? d : min), activeMonths[0]) }
-          : null,
+        highestMonth:
+          activeMonths.length > 0
+            ? {
+                ...activeMonths.reduce(
+                  (max, d) => (d.total > max.total ? d : max),
+                  activeMonths[0],
+                ),
+              }
+            : null,
+        lowestMonth:
+          activeMonths.length > 0
+            ? {
+                ...activeMonths.reduce(
+                  (min, d) => (d.total < min.total ? d : min),
+                  activeMonths[0],
+                ),
+              }
+            : null,
       },
     };
   },
 
-  async getBudgetUsage(
-    userId: string,
-    options: { month?: string } = {}
-  ) {
+  async getBudgetUsage(userId: string, options: { month?: string } = {}) {
     const now = new Date();
     let periodStart: Date;
     let periodEnd: Date;
@@ -628,9 +649,8 @@ export const dashboardService = {
       const spentAmount = spending?.spent ?? 0;
       const transactionCount = spending?.count ?? 0;
       const remaining = budget.targetAmount - spentAmount;
-      const percentage = budget.targetAmount > 0
-        ? Math.round((spentAmount / budget.targetAmount) * 100)
-        : 0;
+      const percentage =
+        budget.targetAmount > 0 ? Math.round((spentAmount / budget.targetAmount) * 100) : 0;
 
       // Determine status
       let status: "on_track" | "warning" | "critical" = "on_track";
@@ -678,9 +698,7 @@ export const dashboardService = {
         totalBudgeted: Math.round(totalBudgeted * 100) / 100,
         totalSpent: Math.round(totalSpent * 100) / 100,
         totalRemaining: Math.round(totalRemaining * 100) / 100,
-        overallPercentage: totalBudgeted > 0
-          ? Math.round((totalSpent / totalBudgeted) * 100)
-          : 0,
+        overallPercentage: totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0,
         overspentCount,
         onTrackCount,
         warningCount,
@@ -691,11 +709,12 @@ export const dashboardService = {
 
   async getCashFlow(
     userId: string,
-    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {}
+    options: { months?: number; dateRange?: { startDate?: Date; endDate?: Date } | null } = {},
   ) {
     const months = options.months ?? 12;
     const now = new Date();
-    const startDate = options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const startDate =
+      options.dateRange?.startDate ?? new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
     const endDate = options.dateRange?.endDate ?? now;
 
     // Fetch all transactions in the date range (both income and expense)
@@ -709,10 +728,7 @@ export const dashboardService = {
     });
 
     // Group by year-month
-    const periodMap = new Map<
-      string,
-      { income: number; expense: number; count: number }
-    >();
+    const periodMap = new Map<string, { income: number; expense: number; count: number }>();
 
     // Initialize all months so empty months show as 0
     const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -740,8 +756,18 @@ export const dashboardService = {
 
     // Convert to sorted chronological array with running balance
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     let runningBalance = 0;

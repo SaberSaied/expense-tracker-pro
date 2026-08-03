@@ -3,8 +3,18 @@ import { reportService } from "../reports/reports.service";
 import { notificationRepository } from "./notifications.repository";
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 /** Format a value as a $ string with thousands separators. */
@@ -59,9 +69,8 @@ async function computeSummary(userId: string, year: number, month: number) {
       categoryColor: cat?.color ?? "#6366F1",
       totalSpent: g._sum.amount ?? 0,
       transactionCount: g._count,
-      percentage: report.expenses > 0
-        ? Math.round(((g._sum.amount ?? 0) / report.expenses) * 100)
-        : 0,
+      percentage:
+        report.expenses > 0 ? Math.round(((g._sum.amount ?? 0) / report.expenses) * 100) : 0,
     };
   }
 
@@ -104,9 +113,8 @@ async function computeSummary(userId: string, year: number, month: number) {
       totalBudgeted,
       totalSpent: Math.round(totalBudgetSpent * 100) / 100,
       totalRemaining: Math.round((totalBudgeted - totalBudgetSpent) * 100) / 100,
-      overallPercentage: totalBudgeted > 0
-        ? Math.round((totalBudgetSpent / totalBudgeted) * 100)
-        : 0,
+      overallPercentage:
+        totalBudgeted > 0 ? Math.round((totalBudgetSpent / totalBudgeted) * 100) : 0,
       onTrackCount,
       warningCount,
       criticalCount,
@@ -125,16 +133,16 @@ function buildSummaryMessage(summary: Awaited<ReturnType<typeof computeSummary>>
   lines.push(`Net savings: ${fmt(summary.netSavings)}`);
   if (summary.topCategory) {
     lines.push(
-      `Top category: ${summary.topCategory.categoryName} (${fmt(summary.topCategory.totalSpent as number)})`
+      `Top category: ${summary.topCategory.categoryName} (${fmt(summary.topCategory.totalSpent as number)})`,
     );
   }
   const bp = summary.budgetPerformance;
   lines.push(
-    `Budgets: ${bp.budgets.length} tracked, ${bp.onTrackCount} on track, ${bp.warningCount} warning, ${bp.criticalCount} over`
+    `Budgets: ${bp.budgets.length} tracked, ${bp.onTrackCount} on track, ${bp.warningCount} warning, ${bp.criticalCount} over`,
   );
   if (summary.largestTransaction) {
     lines.push(
-      `Largest transaction: ${summary.largestTransaction.description} (${fmt(summary.largestTransaction.amount as number)})`
+      `Largest transaction: ${summary.largestTransaction.description} (${fmt(summary.largestTransaction.amount as number)})`,
     );
   }
   return lines.join("\n");
@@ -159,9 +167,7 @@ export const monthlySummaryService = {
 
     const prefs = await notificationRepository.findPreferences(userId);
     const notificationsDisabled =
-      prefs.enabled === false ||
-      prefs.channels?.inApp === false ||
-      prefs.monthlySummary === false;
+      prefs.enabled === false || prefs.channels?.inApp === false || prefs.monthlySummary === false;
 
     if (notificationsDisabled) {
       return {
@@ -174,7 +180,11 @@ export const monthlySummaryService = {
     // Dedup: only one monthly summary per 24h window (regardless of which
     // month is requested — mirrors the budget-alert dedup pattern).
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recent = await notificationRepository.findRecentByTypes(userId, ["MONTHLY_SUMMARY"], since);
+    const recent = await notificationRepository.findRecentByTypes(
+      userId,
+      ["MONTHLY_SUMMARY"],
+      since,
+    );
     if (recent.length > 0) {
       return {
         generated: 0,

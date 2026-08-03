@@ -225,7 +225,12 @@ async function main() {
   });
 
   await prisma.budget.create({
-    data: { targetAmount: 100, startDate: new Date("2026-07-01"), categoryId: tempCat.id, userId: tempUser.id },
+    data: {
+      targetAmount: 100,
+      startDate: new Date("2026-07-01"),
+      categoryId: tempCat.id,
+      userId: tempUser.id,
+    },
   });
 
   await prisma.notification.create({
@@ -309,7 +314,10 @@ async function main() {
     where: { userId: user!.id, categoryId: foodCat!.id },
     take: 5,
   });
-  assert(userTxsByCat.length > 0, "Index [userId, categoryId]: user transactions filtered by category");
+  assert(
+    userTxsByCat.length > 0,
+    "Index [userId, categoryId]: user transactions filtered by category",
+  );
 
   const unreadNotifs = await prisma.notification.findMany({
     where: { userId: user!.id, read: false },

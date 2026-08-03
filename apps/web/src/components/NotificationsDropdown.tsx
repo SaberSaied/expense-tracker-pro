@@ -290,7 +290,11 @@ export const NotificationsDropdown: React.FC = () => {
           ) : (
             <div className="max-h-[50vh] overflow-y-auto divide-y divide-border-card/50">
               {notifications.map((n) => {
-                const meta = TYPE_META[n.type] ?? { icon: Bell, bg: "bg-primary/10", color: "text-primary" };
+                const meta = TYPE_META[n.type] ?? {
+                  icon: Bell,
+                  bg: "bg-primary/10",
+                  color: "text-primary",
+                };
                 const Icon = meta.icon;
                 const isBusy = actionLoadingId === n.id;
                 return (
@@ -319,13 +323,9 @@ export const NotificationsDropdown: React.FC = () => {
                         <span className="text-sm font-medium text-text-primary truncate">
                           {n.title}
                         </span>
-                        {!n.read && (
-                          <span className="size-1.5 rounded-full bg-error shrink-0" />
-                        )}
+                        {!n.read && <span className="size-1.5 rounded-full bg-error shrink-0" />}
                       </div>
-                      <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">
-                        {n.message}
-                      </p>
+                      <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">{n.message}</p>
                       <span className="text-[11px] text-text-muted mt-1 inline-block">
                         {timeAgo(n.createdAt)}
                       </span>

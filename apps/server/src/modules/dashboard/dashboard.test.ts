@@ -53,7 +53,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -143,7 +143,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Dashboard Test Card" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
   const pmId = (pm.json.data?.paymentMethod as Record<string, unknown>)?.id as string;
@@ -151,53 +151,99 @@ async function runTests() {
   // Create transactions for dashboard data
   // Income
   const income1 = await request(
-    "POST", "/transactions",
-    { type: "INCOME", amount: 5000, description: "Monthly Salary", date: today, categoryId: salaryId },
-    userTokens?.accessToken
+    "POST",
+    "/transactions",
+    {
+      type: "INCOME",
+      amount: 5000,
+      description: "Monthly Salary",
+      date: today,
+      categoryId: salaryId,
+    },
+    userTokens?.accessToken,
   );
   assert(income1.status === 201, "Income 1 created");
 
   const income2 = await request(
-    "POST", "/transactions",
-    { type: "INCOME", amount: 500, description: "Freelance Project", date: today, categoryId: salaryId },
-    userTokens?.accessToken
+    "POST",
+    "/transactions",
+    {
+      type: "INCOME",
+      amount: 500,
+      description: "Freelance Project",
+      date: today,
+      categoryId: salaryId,
+    },
+    userTokens?.accessToken,
   );
   assert(income2.status === 201, "Income 2 created");
 
   // Expenses
   const expense1 = await request(
-    "POST", "/transactions",
-    { type: "EXPENSE", amount: 350, description: "Groceries", date: today, categoryId: foodId, paymentMethodId: pmId },
-    userTokens?.accessToken
+    "POST",
+    "/transactions",
+    {
+      type: "EXPENSE",
+      amount: 350,
+      description: "Groceries",
+      date: today,
+      categoryId: foodId,
+      paymentMethodId: pmId,
+    },
+    userTokens?.accessToken,
   );
   assert(expense1.status === 201, "Expense 1 created");
 
   const expense2 = await request(
-    "POST", "/transactions",
-    { type: "EXPENSE", amount: 1500, description: "Monthly Rent", date: today, categoryId: housingId, paymentMethodId: pmId },
-    userTokens?.accessToken
+    "POST",
+    "/transactions",
+    {
+      type: "EXPENSE",
+      amount: 1500,
+      description: "Monthly Rent",
+      date: today,
+      categoryId: housingId,
+      paymentMethodId: pmId,
+    },
+    userTokens?.accessToken,
   );
   assert(expense2.status === 201, "Expense 2 created");
 
   const expense3 = await request(
-    "POST", "/transactions",
-    { type: "EXPENSE", amount: 45, description: "Gas", date: today, categoryId: transportId, paymentMethodId: pmId },
-    userTokens?.accessToken
+    "POST",
+    "/transactions",
+    {
+      type: "EXPENSE",
+      amount: 45,
+      description: "Gas",
+      date: today,
+      categoryId: transportId,
+      paymentMethodId: pmId,
+    },
+    userTokens?.accessToken,
   );
   assert(expense3.status === 201, "Expense 3 created");
 
   const expense4 = await request(
-    "POST", "/transactions",
+    "POST",
+    "/transactions",
     { type: "EXPENSE", amount: 120, description: "Dinner Out", date: today, categoryId: foodId },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(expense4.status === 201, "Expense 4 created");
 
   // Create a budget
   const budget = await request(
-    "POST", "/budgets",
-    { categoryId: foodId, targetAmount: 800, period: "MONTHLY", startDate: firstOfMonth, alertThreshold: 80 },
-    userTokens?.accessToken
+    "POST",
+    "/budgets",
+    {
+      categoryId: foodId,
+      targetAmount: 800,
+      period: "MONTHLY",
+      startDate: firstOfMonth,
+      alertThreshold: 80,
+    },
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
 
@@ -239,12 +285,24 @@ async function runTests() {
   assert(stats != null, "quickStats object returned");
   assert(stats!.totalTransactions === 6, `totalTransactions = 6 (got ${stats!.totalTransactions})`);
   assert(typeof stats!.totalCategories === "number", "totalCategories is a number");
-  assert(Number(stats!.totalCategories) >= 9, `totalCategories >= 9 (got ${stats!.totalCategories})`);
+  assert(
+    Number(stats!.totalCategories) >= 9,
+    `totalCategories >= 9 (got ${stats!.totalCategories})`,
+  );
   assert(typeof stats!.totalPaymentMethods === "number", "totalPaymentMethods is a number");
-  assert(Number(stats!.totalPaymentMethods) >= 5, `totalPaymentMethods >= 5 (got ${stats!.totalPaymentMethods})`);
-  assert(typeof stats!.averageTransactionAmount === "number", "averageTransactionAmount is a number");
+  assert(
+    Number(stats!.totalPaymentMethods) >= 5,
+    `totalPaymentMethods >= 5 (got ${stats!.totalPaymentMethods})`,
+  );
+  assert(
+    typeof stats!.averageTransactionAmount === "number",
+    "averageTransactionAmount is a number",
+  );
   // Average: (5000 + 500 + 350 + 1500 + 45 + 120) / 6 = 7515 / 6 = 1252.5
-  assert(stats!.averageTransactionAmount === 7515 / 6, `avg = ${7515 / 6} (got ${stats!.averageTransactionAmount})`);
+  assert(
+    stats!.averageTransactionAmount === 7515 / 6,
+    `avg = ${7515 / 6} (got ${stats!.averageTransactionAmount})`,
+  );
   assert(stats!.largestExpense === 1500, `largestExpense = 1500 (got ${stats!.largestExpense})`);
   assert(stats!.largestIncome === 5000, `largestIncome = 5000 (got ${stats!.largestIncome})`);
 
@@ -258,8 +316,14 @@ async function runTests() {
   assert(foodBudget != null, "Food budget found");
   assert(foodBudget!.budgeted === 800, "Food budget target = 800");
   assert(foodBudget!.spent === 470, `Food budget spent = 470 (got ${foodBudget!.spent})`);
-  assert(foodBudget!.remaining === 330, `Food budget remaining = 330 (got ${foodBudget!.remaining})`);
-  assert(foodBudget!.percentage === Math.round((470 / 800) * 100), `Food budget % = ${Math.round((470 / 800) * 100)} (got ${foodBudget!.percentage})`);
+  assert(
+    foodBudget!.remaining === 330,
+    `Food budget remaining = 330 (got ${foodBudget!.remaining})`,
+  );
+  assert(
+    foodBudget!.percentage === Math.round((470 / 800) * 100),
+    `Food budget % = ${Math.round((470 / 800) * 100)} (got ${foodBudget!.percentage})`,
+  );
 
   // ─── 7. Recent Transactions ────────────────────────────────
   console.log("\n─── 7. Recent Transactions ───");
@@ -278,7 +342,10 @@ async function runTests() {
   // Verify relations are included
   const firstTxn = recent![0];
   assert(firstTxn.category != null, "Recent transaction has category relation");
-  assert(typeof (firstTxn.category as Record<string, unknown>)?.name === "string", "Category name is included");
+  assert(
+    typeof (firstTxn.category as Record<string, unknown>)?.name === "string",
+    "Category name is included",
+  );
 
   // ─── 8. Spending by Category ───────────────────────────────
   console.log("\n─── 8. Spending by Category ───");
@@ -288,9 +355,15 @@ async function runTests() {
   assert(catSpending!.length >= 3, "At least 3 categories with spending");
   const foodSpending = catSpending!.find((c) => c.categoryName === "Food");
   assert(foodSpending != null, "Food category found in spending");
-  assert(foodSpending!.totalSpent === 470, `Food totalSpent = 470 (got ${foodSpending!.totalSpent})`);
+  assert(
+    foodSpending!.totalSpent === 470,
+    `Food totalSpent = 470 (got ${foodSpending!.totalSpent})`,
+  );
   assert(typeof foodSpending!.percentage === "number", "Food percentage is a number");
-  assert(foodSpending!.percentage === Math.round((470 / 2015) * 100), `Food % = ${Math.round((470 / 2015) * 100)} (got ${foodSpending!.percentage})`);
+  assert(
+    foodSpending!.percentage === Math.round((470 / 2015) * 100),
+    `Food % = ${Math.round((470 / 2015) * 100)} (got ${foodSpending!.percentage})`,
+  );
 
   const housingSpending = catSpending!.find((c) => c.categoryName === "Housing");
   assert(housingSpending != null, "Housing category found in spending");
@@ -300,7 +373,7 @@ async function runTests() {
   for (let i = 1; i < catSpending!.length; i++) {
     assert(
       (catSpending![i - 1].totalSpent as number) >= (catSpending![i].totalSpent as number),
-      "Categories sorted descending by totalSpent"
+      "Categories sorted descending by totalSpent",
     );
   }
 
@@ -312,7 +385,10 @@ async function runTests() {
   assert(pmSpending!.length >= 1, "At least 1 payment method with spending");
   const cardSpending = pmSpending!.find((p) => p.paymentMethodName === "Dashboard Test Card");
   assert(cardSpending != null, "Test payment method found in spending");
-  assert(cardSpending!.totalExpense === 1895, `Card totalExpense = 1895 (got ${cardSpending!.totalExpense})`);
+  assert(
+    cardSpending!.totalExpense === 1895,
+    `Card totalExpense = 1895 (got ${cardSpending!.totalExpense})`,
+  );
   assert(cardSpending!.totalIncome === 0, "Card has no income");
   assert(cardSpending!.transactionCount === 3, "Card used in 3 transactions");
 

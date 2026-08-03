@@ -8,8 +8,7 @@ type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "outline";
 /** Supported button sizes. */
 type ButtonSize = "sm" | "md" | "lg";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual style variant. */
   variant?: ButtonVariant;
   /** Size preset. */
@@ -30,12 +29,10 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary:
-    "bg-primary hover:bg-primary-hover active:brightness-90 text-text-inverse shadow-md",
+  primary: "bg-primary hover:bg-primary-hover active:brightness-90 text-text-inverse shadow-md",
   secondary:
     "bg-secondary/10 hover:bg-secondary/20 active:bg-secondary/30 text-secondary border border-secondary/30",
-  danger:
-    "bg-error hover:brightness-90 active:brightness-80 text-white shadow-md",
+  danger: "bg-error hover:brightness-90 active:brightness-80 text-white shadow-md",
   ghost:
     "bg-transparent hover:bg-overlay/5 active:bg-overlay/10 text-text-secondary hover:text-text-primary",
   outline:
@@ -73,11 +70,7 @@ export const Button: React.FC<ButtonProps> = ({
       aria-busy={isLoading || undefined}
       {...props}
     >
-      {isLoading ? (
-        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-      ) : (
-        leftIcon
-      )}
+      {isLoading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : leftIcon}
       <span>{children}</span>
       {!isLoading && rightIcon}
     </button>

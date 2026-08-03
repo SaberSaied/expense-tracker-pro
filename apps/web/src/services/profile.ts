@@ -1,7 +1,7 @@
 /**
  * Profile and user management API service.
  */
-import { api, tokenStorage } from "./api";
+import { api, tokenStorage, API_BASE_URL } from "./api";
 import type { User } from "./auth";
 
 // ─── Types ────────────────────────────────────────────────────
@@ -38,8 +38,6 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
-
 export const profileApi = {
   /**
    * GET /api/v1/users/me
@@ -68,7 +66,7 @@ export const profileApi = {
     formData.append("avatar", file);
 
     const token = tokenStorage.getAccessToken();
-    const response = await fetch(`${API_BASE}/users/me/avatar`, {
+    const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
@@ -99,7 +97,7 @@ export const profileApi = {
   async updatePassword(input: UpdatePasswordInput): Promise<string> {
     const response = await api.post<{ success: boolean; message: string }>(
       "/users/me/password",
-      input
+      input,
     );
     return response.message;
   },
@@ -109,10 +107,9 @@ export const profileApi = {
    * Soft-deactivates the account. Data is preserved but login is blocked.
    */
   async deactivateAccount(password: string): Promise<string> {
-    const response = await api.post<{ success: boolean; message: string }>(
-      "/users/me/deactivate",
-      { password }
-    );
+    const response = await api.post<{ success: boolean; message: string }>("/users/me/deactivate", {
+      password,
+    });
     return response.message;
   },
 

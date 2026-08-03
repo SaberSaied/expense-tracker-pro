@@ -38,12 +38,7 @@ export interface DateRange {
 
 /** Date range preset identifiers for chart filtering. */
 export type DateRangePreset =
-  | "today"
-  | "this_week"
-  | "this_month"
-  | "last_month"
-  | "this_year"
-  | "custom";
+  "today" | "this_week" | "this_month" | "last_month" | "this_year" | "custom";
 
 /** Query params for date-range-filtered endpoints. */
 export interface DateRangeFilter {

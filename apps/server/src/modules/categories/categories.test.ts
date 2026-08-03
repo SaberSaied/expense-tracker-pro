@@ -58,7 +58,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -123,19 +123,22 @@ async function runTests() {
 
   const defaultCats = defaults.json.data?.categories as Array<Record<string, unknown>> | undefined;
   assert(defaultCats != null, "Categories array exists");
-  assert(defaultCats!.length >= 9, `At least 9 default categories created (got ${defaultCats!.length})`);
+  assert(
+    defaultCats!.length >= 9,
+    `At least 9 default categories created (got ${defaultCats!.length})`,
+  );
 
   // Verify specific default categories are present
   const foodCat = defaultCats!.find((c) => c.name === "Food");
   assert(foodCat != null, 'Default "Food" category exists');
-  assert(foodCat!.icon === "UtensilsCrossed", 'Food category has UtensilsCrossed icon');
-  assert(foodCat!.color === "#F59E0B", 'Food category has color #F59E0B');
+  assert(foodCat!.icon === "UtensilsCrossed", "Food category has UtensilsCrossed icon");
+  assert(foodCat!.color === "#F59E0B", "Food category has color #F59E0B");
   assert(foodCat!.isSystem === true, "Default category is marked as system");
 
   const salaryCat = defaultCats!.find((c) => c.name === "Salary");
   assert(salaryCat != null, 'Default "Salary" category exists');
-  assert(salaryCat!.icon === "Briefcase", 'Salary category has Briefcase icon');
-  assert(salaryCat!.color === "#22C55E", 'Salary category has color #22C55E');
+  assert(salaryCat!.icon === "Briefcase", "Salary category has Briefcase icon");
+  assert(salaryCat!.color === "#22C55E", "Salary category has color #22C55E");
 
   const transportCat = defaultCats!.find((c) => c.name === "Transportation");
   assert(transportCat != null, 'Default "Transportation" category exists');
@@ -146,7 +149,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Freelance Projects", icon: "Briefcase", color: "#6366F1" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(created.status === 201, "Create returns 201");
   assert(created.json.success === true, "Create success=true");
@@ -179,7 +182,7 @@ async function runTests() {
     "PATCH",
     `/categories/${createdId}`,
     { name: "Client Work", icon: "Cloud", color: "#3B82F6" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update returns 200");
   assert(updated.json.success === true, "Update success=true");
@@ -194,7 +197,7 @@ async function runTests() {
     "PATCH",
     `/categories/${createdId}`,
     { name: "Freelance Client Work" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(partialUpdate.status === 200, "Partial update returns 200");
   const partialCat = partialUpdate.json.data?.category as Record<string, unknown> | undefined;
@@ -210,24 +213,21 @@ async function runTests() {
     "GET",
     "/categories?q=Freelance",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchFreelance.status === 200, "Search returns 200");
-  const freelanceResults = searchFreelance.json.data?.categories as Array<Record<string, unknown>> | undefined;
+  const freelanceResults = searchFreelance.json.data?.categories as
+    Array<Record<string, unknown>> | undefined;
   assert(freelanceResults != null, "Search returns categories");
   assert(freelanceResults!.length >= 1, "Search found at least 1 category");
   const foundFreelance = freelanceResults!.find((c) => c.name === "Freelance Client Work");
   assert(foundFreelance != null, "Search found 'Freelance Client Work'");
 
   // Search by common word
-  const searchFood = await request(
-    "GET",
-    "/categories?q=ood",
-    undefined,
-    userTokens?.accessToken
-  );
+  const searchFood = await request("GET", "/categories?q=ood", undefined, userTokens?.accessToken);
   assert(searchFood.status === 200, "Search 'ood' returns 200");
-  const foodResults = searchFood.json.data?.categories as Array<Record<string, unknown>> | undefined;
+  const foodResults = searchFood.json.data?.categories as
+    Array<Record<string, unknown>> | undefined;
   const foundFood = foodResults!.find((c) => c.name === "Food");
   assert(foundFood != null, "Search 'ood' found 'Food' category");
 
@@ -236,10 +236,11 @@ async function runTests() {
     "GET",
     "/categories?q=zzzznotfound",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchNone.status === 200, "Search with no matches returns 200");
-  const emptyResults = searchNone.json.data?.categories as Array<Record<string, unknown>> | undefined;
+  const emptyResults = searchNone.json.data?.categories as
+    Array<Record<string, unknown>> | undefined;
   assert(emptyResults!.length === 0, "Search with no matches returns empty array");
 
   // ─── 7. Icon Validation ────────────────────────────────────
@@ -250,7 +251,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Bad Icon Cat", icon: "NonExistentIcon", color: "#6366F1" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidIcon.status === 400, "Invalid icon returns 400");
   const iconError = invalidIcon.json;
@@ -262,7 +263,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Miscellaneous", icon: "MoreHorizontal", color: "#94A3B8" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(validIcon.status === 201, "Valid icon 'MoreHorizontal' returns 201");
   assert(validIcon.json.success === true, "Valid icon success=true");
@@ -275,7 +276,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Bad Color Cat", icon: "Tag", color: "not-a-color" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badColor.status === 400, "Invalid color format returns 400");
   assert(badColor.json.success === false, "Invalid color response success=false");
@@ -285,7 +286,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Non-Palette Cat", icon: "Tag", color: "#000000" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(nonPaletteColor.status === 400, "Non-palette color returns 400");
   assert(nonPaletteColor.json.success === false, "Non-palette color rejected");
@@ -295,7 +296,7 @@ async function runTests() {
   const colorMsg = colorDetails!.color.join(" ").toLowerCase();
   assert(
     colorMsg.includes("palette") || colorMsg.includes("suggested"),
-    "Color validation mentions palette"
+    "Color validation mentions palette",
   );
 
   // Valid palette color should pass
@@ -303,7 +304,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Palette Color Cat", icon: "Heart", color: "#EC4899" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(validColor.status === 201, "Valid palette color returns 201");
   assert(validColor.json.success === true, "Valid palette color success=true");
@@ -325,10 +326,11 @@ async function runTests() {
     "GET",
     "/categories",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondUserCats.status === 200, "Second user list returns 200");
-  const secondCats = secondUserCats.json.data?.categories as Array<Record<string, unknown>> | undefined;
+  const secondCats = secondUserCats.json.data?.categories as
+    Array<Record<string, unknown>> | undefined;
   const hasFreelance = secondCats!.some((c) => c.name === "Freelance Client Work");
   assert(!hasFreelance, "Second user cannot see primary user's custom categories");
 
@@ -345,7 +347,7 @@ async function runTests() {
     "GET",
     `/categories/${createdId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user cannot get primary's category (404)");
 
@@ -354,7 +356,7 @@ async function runTests() {
     "PATCH",
     `/categories/${createdId}`,
     { name: "Hacked" },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenUpdate.status === 404, "Second user cannot update primary's category (404)");
 
@@ -363,7 +365,7 @@ async function runTests() {
     "DELETE",
     `/categories/${createdId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenDelete.status === 404, "Second user cannot delete primary's category (404)");
 
@@ -380,7 +382,7 @@ async function runTests() {
     "DELETE",
     `/categories/${systemCatId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleteSystem.status === 400, "Cannot delete system category (400)");
   assert(deleteSystem.json.success === false, "Delete system category fails");
@@ -390,7 +392,7 @@ async function runTests() {
     "PATCH",
     `/categories/${systemCatId}`,
     { name: "Renamed System Cat" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(renameSystem.status === 400, "Cannot rename system category (400)");
   assert(renameSystem.json.success === false, "Rename system category fails");
@@ -400,7 +402,7 @@ async function runTests() {
     "PATCH",
     `/categories/${systemCatId}`,
     { icon: "Heart", color: "#F43F5E" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateSystemIcon.status === 200, "Can update system category icon/color (200)");
   const sysUpdated = updateSystemIcon.json.data?.category as Record<string, unknown> | undefined;
@@ -414,7 +416,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "To Be Deleted", icon: "Tag", color: "#EF4444" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   const deleteId = (toDelete.json.data?.category as Record<string, unknown>)?.id as string;
   assert(toDelete.status === 201, "Category created for deletion test");
@@ -423,7 +425,7 @@ async function runTests() {
     "DELETE",
     `/categories/${deleteId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleted.status === 204, "Delete returns 204 No Content");
 
@@ -437,7 +439,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Food", icon: "Tag", color: "#F59E0B" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(duplicate.status === 409, "Duplicate category name returns 409");
 

@@ -24,7 +24,9 @@ export const updateNotificationPreferencesSchema = z.object({
     .optional(),
 });
 
-export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>;
+export type UpdateNotificationPreferencesInput = z.infer<
+  typeof updateNotificationPreferencesSchema
+>;
 
 /**
  * Query schema for the monthly summary endpoints.

@@ -15,8 +15,17 @@ export const updateBudgetSchema = createBudgetSchema.partial();
 export const budgetQuerySchema = z.object({
   period: budgetPeriodSchema.optional(),
   status: z.enum(["active", "inactive"]).optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
-  sortBy: z.enum(["startDate", "targetAmount", "period", "createdAt"]).optional().default("startDate"),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
+    .optional(),
+  sortBy: z
+    .enum(["startDate", "targetAmount", "period", "createdAt"])
+    .optional()
+    .default("startDate"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
 });

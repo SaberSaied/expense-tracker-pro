@@ -28,9 +28,7 @@ export const RecentTransactions = React.memo(function RecentTransactions({
   return (
     <div className="glass rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Recent Transactions
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Recent Transactions</h3>
         <Link
           to="/expenses"
           className="flex items-center gap-1 text-sm text-primary hover:text-primary-hover transition-colors"
@@ -65,26 +63,17 @@ export const RecentTransactions = React.memo(function RecentTransactions({
                 className="size-10 rounded-xl flex items-center justify-center shrink-0"
                 style={{ backgroundColor: `${txn.category.color}20` }}
               >
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: txn.category.color }}
-                >
+                <span className="text-sm font-bold" style={{ color: txn.category.color }}>
                   {txn.category.name.charAt(0)}
                 </span>
               </div>
 
               {/* Description & meta */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
-                  {txn.description}
-                </p>
+                <p className="text-sm font-medium text-text-primary truncate">{txn.description}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="default">
-                    {txn.category.name}
-                  </Badge>
-                  <span className="text-[11px] text-text-muted">
-                    {formatDate(txn.date)}
-                  </span>
+                  <Badge variant="default">{txn.category.name}</Badge>
+                  <span className="text-[11px] text-text-muted">{formatDate(txn.date)}</span>
                 </div>
               </div>
 

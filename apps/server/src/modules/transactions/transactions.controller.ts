@@ -9,8 +9,20 @@ export const transactionController = {
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       // Query params are validated & parsed by the validate(transactionQuerySchema) middleware
-      const { page, limit, type, categoryId, paymentMethodId, minAmount, maxAmount, startDate, endDate, sortBy, sortOrder, search } =
-        req.query as Record<string, string | undefined>;
+      const {
+        page,
+        limit,
+        type,
+        categoryId,
+        paymentMethodId,
+        minAmount,
+        maxAmount,
+        startDate,
+        endDate,
+        sortBy,
+        sortOrder,
+        search,
+      } = req.query as Record<string, string | undefined>;
 
       const result = await transactionService.findAll(req.user.id, {
         page: page ? Number(page) : undefined,
@@ -26,7 +38,12 @@ export const transactionController = {
         sortOrder: sortOrder as "asc" | "desc" | undefined,
         search,
       });
-      sendSuccess(res, { transactions: result.data }, 200, buildPaginationMeta(result.total, result.page, result.limit));
+      sendSuccess(
+        res,
+        { transactions: result.data },
+        200,
+        buildPaginationMeta(result.total, result.page, result.limit),
+      );
     } catch (err) {
       next(err);
     }
@@ -52,7 +69,11 @@ export const transactionController = {
 
   async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const transaction = await transactionService.update(req.user.id, req.params.id as string, req.body);
+      const transaction = await transactionService.update(
+        req.user.id,
+        req.params.id as string,
+        req.body,
+      );
       sendSuccess(res, { transaction });
     } catch (err) {
       next(err);
@@ -69,7 +90,7 @@ export const transactionController = {
       const transaction = await transactionService.uploadReceipt(
         req.user.id,
         req.params.id as string,
-        receiptUrl
+        receiptUrl,
       );
 
       sendSuccess(res, { transaction, receiptUrl });
@@ -82,7 +103,7 @@ export const transactionController = {
     try {
       const transaction = await transactionService.removeReceipt(
         req.user.id,
-        req.params.id as string
+        req.params.id as string,
       );
       sendSuccess(res, { transaction });
     } catch (err) {
@@ -116,7 +137,10 @@ export const transactionController = {
         categoryId?: string;
         paymentMethodId?: string | null;
       };
-      const result = await transactionService.bulkUpdate(req.user.id, ids, { categoryId, paymentMethodId });
+      const result = await transactionService.bulkUpdate(req.user.id, ids, {
+        categoryId,
+        paymentMethodId,
+      });
       sendSuccess(res, result);
     } catch (err) {
       next(err);
@@ -125,8 +149,16 @@ export const transactionController = {
 
   async getSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { startDate, endDate, type, categoryId, paymentMethodId, minAmount, maxAmount, search } =
-        req.query as Record<string, string | undefined>;
+      const {
+        startDate,
+        endDate,
+        type,
+        categoryId,
+        paymentMethodId,
+        minAmount,
+        maxAmount,
+        search,
+      } = req.query as Record<string, string | undefined>;
       const summary = await transactionService.getSummary(req.user.id, {
         startDate,
         endDate,

@@ -14,9 +14,7 @@ interface TransactionWithCategory {
 /**
  * Group transactions by category and compute per-category totals.
  */
-function groupTransactionsByCategory(
-  transactions: TransactionWithCategory[]
-): {
+function groupTransactionsByCategory(transactions: TransactionWithCategory[]): {
   categories: CategorySummaryItem[];
   grandTotal: number;
 } {
@@ -63,7 +61,7 @@ function groupTransactionsByCategory(
  */
 function buildMonthlyMap(
   transactions: Array<{ amount: number; date: Date; type: string }>,
-  year: number
+  year: number,
 ): Array<{ month: string; income: number; expense: number; net: number }> {
   const monthlyData: Record<string, { income: number; expense: number; net: number }> = {};
 

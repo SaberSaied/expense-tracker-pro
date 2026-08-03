@@ -55,7 +55,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -134,7 +134,7 @@ async function runTests() {
       username: `testuser-${Date.now()}`,
       bio: "Integration test user",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update profile returns 200");
   const updatedUser = updated.json.data?.user as Record<string, unknown> | undefined;
@@ -159,7 +159,7 @@ async function runTests() {
         weeklyDigest: true,
       },
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(prefs.status === 200, "Update preferences returns 200");
   const prefsUser = prefs.json.data?.user as Record<string, unknown> | undefined;
@@ -175,15 +175,74 @@ async function runTests() {
   function createTestPng(): Buffer {
     // Minimal valid PNG (1x1 red pixel)
     const png = Buffer.from([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
-      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 pixel
-      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, // 8-bit RGBA
-      0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, // IDAT chunk
-      0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
-      0x00, 0x00, 0x03, 0x00, 0x01, 0x36, 0x28, 0x19, // end IDAT
-      0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, // IEND chunk
-      0xae, 0x42, 0x60, 0x82,
+      0x89,
+      0x50,
+      0x4e,
+      0x47,
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a, // PNG signature
+      0x00,
+      0x00,
+      0x00,
+      0x0d,
+      0x49,
+      0x48,
+      0x44,
+      0x52, // IHDR chunk
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01, // 1x1 pixel
+      0x08,
+      0x02,
+      0x00,
+      0x00,
+      0x00,
+      0x90,
+      0x77,
+      0x53, // 8-bit RGBA
+      0xde,
+      0x00,
+      0x00,
+      0x00,
+      0x0c,
+      0x49,
+      0x44,
+      0x41, // IDAT chunk
+      0x54,
+      0x08,
+      0xd7,
+      0x63,
+      0xf8,
+      0xcf,
+      0xc0,
+      0x00,
+      0x00,
+      0x00,
+      0x03,
+      0x00,
+      0x01,
+      0x36,
+      0x28,
+      0x19, // end IDAT
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4e,
+      0x44, // IEND chunk
+      0xae,
+      0x42,
+      0x60,
+      0x82,
     ]);
     return png;
   }
@@ -203,7 +262,9 @@ async function runTests() {
   let avatarJson: ApiResult = { success: false };
   try {
     avatarJson = (await avatarUploadRes.json()) as ApiResult;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   assert(avatarJson.success === true, "Upload success=true");
   const avatarUser = avatarJson.data?.user as Record<string, unknown> | undefined;
   const uploadedUrl = avatarUser?.avatarUrl as string | undefined;
@@ -215,11 +276,14 @@ async function runTests() {
     "DELETE",
     "/users/me/avatar",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(removeAvatarRes.status === 200, "Remove avatar returns 200");
   const removedUser = removeAvatarRes.json.data?.user as Record<string, unknown> | undefined;
-  assert(removedUser?.avatarUrl == null || removedUser?.avatarUrl === "", "Avatar removed (user.avatarUrl is null)");
+  assert(
+    removedUser?.avatarUrl == null || removedUser?.avatarUrl === "",
+    "Avatar removed (user.avatarUrl is null)",
+  );
 
   // ─── 5. Change Password ────────────────────────────────────
   console.log("\n─── 5. Change Password (POST /users/me/password) ───");
@@ -227,10 +291,13 @@ async function runTests() {
     "POST",
     "/users/me/password",
     { currentPassword: TEST_PASSWORD, newPassword: TEST_NEW_PASSWORD },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(changePw.status === 200, "Change password returns 200");
-  assert(changePw.json.message === "Password updated successfully", "Password changed successfully");
+  assert(
+    changePw.json.message === "Password updated successfully",
+    "Password changed successfully",
+  );
 
   // Login with new password to verify
   const loginNew = await request("POST", "/auth/login", {
@@ -256,7 +323,7 @@ async function runTests() {
     "POST",
     "/users/me/deactivate",
     { password: "wrong-password" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deactivateBadPw.status === 401, "Deactivate with wrong password rejected (401)");
 
@@ -265,10 +332,13 @@ async function runTests() {
     "POST",
     "/users/me/deactivate",
     { password: TEST_NEW_PASSWORD },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deactivate.status === 200, "Deactivate returns 200");
-  assert(String(deactivate.json.message ?? "").includes("deactivated"), "Deactivation confirmation message");
+  assert(
+    String(deactivate.json.message ?? "").includes("deactivated"),
+    "Deactivation confirmation message",
+  );
 
   // ─── 7. Deactivated User Cannot Login ──────────────────────
   console.log("\n─── 7. Deactivated Login Rejection ───");
@@ -279,7 +349,7 @@ async function runTests() {
   assert(loginDeactivated.status === 401, "Deactivated user login rejected (401)");
   assert(
     String(loginDeactivated.json.message ?? "").includes("deactivated"),
-    "Login error mentions deactivation"
+    "Login error mentions deactivation",
   );
 
   // ─── 8. Reactivate Account ─────────────────────────────────
@@ -290,7 +360,7 @@ async function runTests() {
     "POST",
     "/users/me/reactivate",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(reactivate.status === 200, "Reactivate returns 200");
   const reactivatedUser = reactivate.json.data?.user as Record<string, unknown> | undefined;
@@ -302,7 +372,10 @@ async function runTests() {
     password: TEST_NEW_PASSWORD,
   });
   assert(loginAfterReactivate.status === 200, "Login works after reactivation");
-  userTokens = loginAfterReactivate.json.data?.tokens as { accessToken: string; refreshToken: string };
+  userTokens = loginAfterReactivate.json.data?.tokens as {
+    accessToken: string;
+    refreshToken: string;
+  };
 
   // ─── 9. Delete Account (with password confirmation) ────────
   console.log("\n─── 9. Delete Account (DELETE /users/me with password) ───");
@@ -312,7 +385,7 @@ async function runTests() {
     "DELETE",
     "/users/me",
     { password: "wrong-password" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleteBadPw.status === 401, "Delete with wrong password rejected (401)");
 
@@ -321,7 +394,7 @@ async function runTests() {
     "DELETE",
     "/users/me",
     { password: TEST_NEW_PASSWORD },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(del.status === 204, "Delete returns 204 No Content");
 

@@ -58,7 +58,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -159,10 +159,11 @@ async function runTests() {
       currentAmount: 500,
       priority: "LOW",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(completedOnCreate.status === 201, "Goal created with currentAmount = targetAmount");
-  const autoCompletedGoal = completedOnCreate.json.data?.savingsGoal as Record<string, unknown> | undefined;
+  const autoCompletedGoal = completedOnCreate.json.data?.savingsGoal as
+    Record<string, unknown> | undefined;
   assert(autoCompletedGoal != null, "Goal returned");
   assert(autoCompletedGoal!.isCompleted === true, "Goal is auto-completed");
   assert(autoCompletedGoal!.completedAt != null, "completedAt is set");
@@ -186,7 +187,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "No Deadline Goal", targetAmount: 1000, currentAmount: 100, priority: "LOW" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // Create a goal with close deadline (for insights: upcomingDeadlines and goalsAtRisk)
@@ -200,7 +201,7 @@ async function runTests() {
       deadline: futureDateStr(15),
       priority: "HIGH",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // ─── 4. Get All Goals ──────────────────────────────────────
@@ -218,10 +219,11 @@ async function runTests() {
     "GET",
     "/savings-goals?status=active",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(activeFilter.status === 200, "Active filter returns 200");
-  const activeGoals = activeFilter.json.data?.savingsGoals as Array<Record<string, unknown>> | undefined;
+  const activeGoals = activeFilter.json.data?.savingsGoals as
+    Array<Record<string, unknown>> | undefined;
   assert(activeGoals != null, "Active goals array exists");
   for (const g of activeGoals!) {
     assert(g.isCompleted === false, "Active filter only returns active goals");
@@ -232,10 +234,11 @@ async function runTests() {
     "GET",
     "/savings-goals?status=completed",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(completedFilter.status === 200, "Completed filter returns 200");
-  const completedGoals = completedFilter.json.data?.savingsGoals as Array<Record<string, unknown>> | undefined;
+  const completedGoals = completedFilter.json.data?.savingsGoals as
+    Array<Record<string, unknown>> | undefined;
   assert(completedGoals!.length >= 1, "At least 1 completed goal");
   for (const g of completedGoals!) {
     assert(g.isCompleted === true, "Completed filter only returns completed goals");
@@ -246,10 +249,11 @@ async function runTests() {
     "GET",
     "/savings-goals?priority=HIGH",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(highPriority.status === 200, "Priority filter returns 200");
-  const highGoals = highPriority.json.data?.savingsGoals as Array<Record<string, unknown>> | undefined;
+  const highGoals = highPriority.json.data?.savingsGoals as
+    Array<Record<string, unknown>> | undefined;
   assert(highGoals!.length >= 1, "At least 1 HIGH priority goal");
   for (const g of highGoals!) {
     assert(g.priority === "HIGH", "Priority filter only returns HIGH goals");
@@ -260,7 +264,7 @@ async function runTests() {
     "GET",
     "/savings-goals?sortBy=targetAmount&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAsc.status === 200, "Sort by targetAmount asc returns 200");
   const sortedAsc = sortAsc.json.data?.savingsGoals as Array<Record<string, unknown>> | undefined;
@@ -289,12 +293,17 @@ async function runTests() {
     "GET",
     "/savings-goals/00000000-0000-0000-0000-000000000000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(notFound.status === 404, "Non-existent goal returns 404");
 
   // Invalid UUID returns 400
-  const badId = await request("GET", "/savings-goals/not-a-uuid", undefined, userTokens?.accessToken);
+  const badId = await request(
+    "GET",
+    "/savings-goals/not-a-uuid",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badId.status === 400, "Invalid UUID returns 400");
 
   // ─── 6. Update Goal ────────────────────────────────────────
@@ -310,7 +319,7 @@ async function runTests() {
       currentAmount: 4000,
       priority: "CRITICAL",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update goal returns 200");
   assert(updated.json.success === true, "Update goal success=true");
@@ -327,7 +336,7 @@ async function runTests() {
     "PATCH",
     `/savings-goals/${goalId}`,
     { name: "Emergency Fund V2" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(partialUpdate.status === 200, "Partial update returns 200");
   const partialGoal = partialUpdate.json.data?.savingsGoal as Record<string, unknown> | undefined;
@@ -340,7 +349,7 @@ async function runTests() {
     "PATCH",
     `/savings-goals/${autoCompleteId}`,
     { name: "Should Not Update" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateCompleted.status === 400, "Update completed goal returns 400");
   assert(updateCompleted.json.success === false, "Update completed goal rejected");
@@ -351,7 +360,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress`,
     { amount: 3000 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(addProgress.status === 200, "Add progress returns 200");
   assert(addProgress.json.success === true, "Add progress success=true");
@@ -364,7 +373,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress`,
     { amount: 100000 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exceedBlocked.status === 400, "Exceeding target without allowExceed returns 400");
 
@@ -373,7 +382,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress`,
     { amount: 100000, allowExceed: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exceedAllowed.status === 200, "Exceeding with allowExceed returns 200");
   const afterExceed = exceedAllowed.json.data?.savingsGoal as Record<string, unknown> | undefined;
@@ -387,7 +396,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress/withdraw`,
     { amount: 100500 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(withdraw.status === 200, "Withdraw progress returns 200");
   const afterWithdraw = withdraw.json.data?.savingsGoal as Record<string, unknown> | undefined;
@@ -400,7 +409,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress/withdraw`,
     { amount: 999999 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(negativeCheck.status === 400, "Withdraw greater than balance returns 400");
 
@@ -409,7 +418,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress`,
     { amount: 0 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(zeroProgress.status === 400, "Zero progress amount returns 400");
 
@@ -422,7 +431,7 @@ async function runTests() {
     "PATCH",
     `/savings-goals/${goalId2}`,
     { currentAmount: 500, targetAmount: 2000 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(resetGoal.status === 200, "Goal reset for completion test");
 
@@ -431,10 +440,11 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId2}/progress`,
     { amount: 1500 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(completeProgress.status === 200, "Add progress to complete goal");
-  const completedByProgress = completeProgress.json.data?.savingsGoal as Record<string, unknown> | undefined;
+  const completedByProgress = completeProgress.json.data?.savingsGoal as
+    Record<string, unknown> | undefined;
   assert(completedByProgress!.isCompleted === true, "Goal completed by reaching target");
   assert(completedByProgress!.completedAt != null, "completedAt recorded");
   assert(completedByProgress!.progress === 100, "Progress is 100%");
@@ -458,14 +468,20 @@ async function runTests() {
 
   // ─── 12. Insights (GET /savings-goals/insights) ────────────
   console.log("\n─── 12. Insights (GET /savings-goals/insights) ───");
-  const insights = await request("GET", "/savings-goals/insights", undefined, userTokens?.accessToken);
+  const insights = await request(
+    "GET",
+    "/savings-goals/insights",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(insights.status === 200, "Insights endpoint returns 200");
   assert(insights.json.success === true, "Insights success=true");
   const insightData = insights.json.data?.insights as Record<string, unknown> | undefined;
   assert(insightData != null, "Insights data returned");
 
   // upcomingDeadlines
-  const upcomingDeadlines = insightData!.upcomingDeadlines as Array<Record<string, unknown>> | undefined;
+  const upcomingDeadlines = insightData!.upcomingDeadlines as
+    Array<Record<string, unknown>> | undefined;
   assert(upcomingDeadlines != null, "upcomingDeadlines array exists");
   assert(upcomingDeadlines!.length >= 1, "At least 1 upcoming deadline goal");
 
@@ -486,11 +502,12 @@ async function runTests() {
   // averageMonthlySavingsNeeded
   assert(
     insightData!.averageMonthlySavingsNeeded !== undefined,
-    "averageMonthlySavingsNeeded is computed"
+    "averageMonthlySavingsNeeded is computed",
   );
 
   // monthlySavingsPerGoal
-  const monthlyPerGoal = insightData!.monthlySavingsPerGoal as Array<Record<string, unknown>> | undefined;
+  const monthlyPerGoal = insightData!.monthlySavingsPerGoal as
+    Array<Record<string, unknown>> | undefined;
   assert(monthlyPerGoal != null, "monthlySavingsPerGoal array exists");
 
   // ─── 13. Ownership Validation ──────────────────────────────
@@ -510,10 +527,11 @@ async function runTests() {
     "GET",
     "/savings-goals",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondList.status === 200, "Second user list returns 200");
-  const secondGoals = secondList.json.data?.savingsGoals as Array<Record<string, unknown>> | undefined;
+  const secondGoals = secondList.json.data?.savingsGoals as
+    Array<Record<string, unknown>> | undefined;
   const hasPrimaryGoal = secondGoals!.some((g) => g.id === goalId);
   assert(!hasPrimaryGoal, "Second user cannot see primary user's goals");
 
@@ -522,7 +540,7 @@ async function runTests() {
     "GET",
     `/savings-goals/${goalId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user gets 404 on primary's goal");
 
@@ -531,7 +549,7 @@ async function runTests() {
     "PATCH",
     `/savings-goals/${goalId}`,
     { name: "Hacked" },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenUpdate.status === 404, "Second user gets 404 on update");
 
@@ -540,7 +558,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress`,
     { amount: 100 },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenProgress.status === 404, "Second user gets 404 on add progress");
 
@@ -549,7 +567,7 @@ async function runTests() {
     "POST",
     `/savings-goals/${goalId}/progress/withdraw`,
     { amount: 100 },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenWithdraw.status === 404, "Second user gets 404 on withdraw");
 
@@ -558,7 +576,7 @@ async function runTests() {
     "DELETE",
     `/savings-goals/${goalId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenDelete.status === 404, "Second user gets 404 on delete");
 
@@ -570,7 +588,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { targetAmount: 1000 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingName.status === 400, "Missing name returns 400");
 
@@ -578,7 +596,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Test Goal" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingTarget.status === 400, "Missing targetAmount returns 400");
 
@@ -587,7 +605,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Zero Target", targetAmount: 0 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(zeroTarget.status === 400, "Zero targetAmount returns 400");
 
@@ -596,7 +614,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Negative Target", targetAmount: -100 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(negativeTarget.status === 400, "Negative targetAmount returns 400");
 
@@ -605,7 +623,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Exceeds", targetAmount: 100, currentAmount: 200 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exceedOnCreate.status === 400, "currentAmount > targetAmount on create returns 400");
 
@@ -614,7 +632,7 @@ async function runTests() {
     "PATCH",
     `/savings-goals/${goalId}`,
     { currentAmount: 999999 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exceedOnUpdate.status === 400, "currentAmount > targetAmount on update returns 400");
 
@@ -623,7 +641,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Bad Priority", targetAmount: 100, priority: "URGENT" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badPriority.status === 400, "Invalid priority returns 400");
 
@@ -632,7 +650,7 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "Bad Date", targetAmount: 100, deadline: "not-a-date" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDeadline.status === 400, "Invalid deadline format returns 400");
 
@@ -641,7 +659,7 @@ async function runTests() {
     "GET",
     "/savings-goals/not-a-uuid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badUuid.status === 400, "Invalid UUID in route returns 400");
 
@@ -653,7 +671,7 @@ async function runTests() {
     "DELETE",
     `/savings-goals/${autoCompleteId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleteCompleted.status === 400, "Delete completed goal returns 400");
   assert(deleteCompleted.json.success === false, "Delete completed goal blocked");
@@ -663,17 +681,27 @@ async function runTests() {
     "POST",
     "/savings-goals",
     { name: "To Be Deleted", targetAmount: 500, currentAmount: 0 },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(toDelete.status === 201, "Goal created for deletion test");
   const deleteId = (toDelete.json.data?.savingsGoal as Record<string, unknown>)?.id as string;
 
   // Delete the active goal
-  const deleted = await request("DELETE", `/savings-goals/${deleteId}`, undefined, userTokens?.accessToken);
+  const deleted = await request(
+    "DELETE",
+    `/savings-goals/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleted.status === 204, "Delete returns 204 No Content");
 
   // Verify it's gone
-  const gone = await request("GET", `/savings-goals/${deleteId}`, undefined, userTokens?.accessToken);
+  const gone = await request(
+    "GET",
+    `/savings-goals/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(gone.status === 404, "Deleted goal returns 404");
 
   // Delete non-existent goal
@@ -681,7 +709,7 @@ async function runTests() {
     "DELETE",
     `/savings-goals/${deleteId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(deleteGone.status === 404, "Delete non-existent returns 404");
 

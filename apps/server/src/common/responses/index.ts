@@ -65,7 +65,7 @@ export function sendError(
   statusCode: number,
   error: string,
   message: string,
-  details?: Record<string, string[]>
+  details?: Record<string, string[]>,
 ) {
   const body: ErrorResponse = { success: false, error, message, statusCode };
   if (details) body.details = details;
@@ -87,11 +87,7 @@ export function sendMessage(res: Response, message: string, statusCode = 200) {
 /**
  * Build pagination metadata from raw values.
  */
-export function buildPaginationMeta(
-  total: number,
-  page: number,
-  limit: number
-): PaginationMeta {
+export function buildPaginationMeta(total: number, page: number, limit: number): PaginationMeta {
   const totalPages = Math.ceil(total / limit);
   return {
     page,

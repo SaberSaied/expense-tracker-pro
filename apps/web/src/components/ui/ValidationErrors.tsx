@@ -28,17 +28,12 @@ export const ValidationErrors: React.FC<ValidationErrorsProps> = ({
   return (
     <div
       role="alert"
-      className={clsx(
-        "rounded-xl border border-error/30 bg-error/10 p-4 text-left",
-        className,
-      )}
+      className={clsx("rounded-xl border border-error/30 bg-error/10 p-4 text-left", className)}
     >
       <div className="flex items-start gap-3">
         <AlertCircle className="size-5 text-error shrink-0 mt-0.5" aria-hidden="true" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-text-primary">
-            Please fix the following:
-          </p>
+          <p className="text-sm font-semibold text-text-primary">Please fix the following:</p>
           <ul className="mt-2 space-y-1.5">
             {entries.map(([field, messages]) => (
               <li key={field} className="text-xs text-text-secondary leading-relaxed">

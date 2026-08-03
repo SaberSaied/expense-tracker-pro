@@ -71,15 +71,33 @@ declare module "pdfkit" {
     // Font & text
     font(font: string, size?: number): this;
     fontSize(size: number): this;
-    widthOfString(text: string, options?: { font?: string; fontSize?: number; characterSpacing?: number; wordSpacing?: number; features?: unknown[] }): number;
+    widthOfString(
+      text: string,
+      options?: {
+        font?: string;
+        fontSize?: number;
+        characterSpacing?: number;
+        wordSpacing?: number;
+        features?: unknown[];
+      },
+    ): number;
     heightOfString(text: string, options?: TextOptions): number;
-    text(text: string, x?: number | TextOptions, y?: number | TextOptions, options?: TextOptions): this;
+    text(
+      text: string,
+      x?: number | TextOptions,
+      y?: number | TextOptions,
+      options?: TextOptions,
+    ): this;
     text(text: string, options?: TextOptions): this;
 
     // Position
     x: number;
     y: number;
-    page: { width: number; height: number; margins: { top: number; bottom: number; left: number; right: number } };
+    page: {
+      width: number;
+      height: number;
+      margins: { top: number; bottom: number; left: number; right: number };
+    };
     pageCount: number;
     lineCap(cap: "butt" | "round" | "square"): this;
     lineJoin(join: "miter" | "round" | "bevel"): this;
@@ -107,7 +125,7 @@ declare module "pdfkit" {
     roundedRect(x: number, y: number, width: number, height: number, radius: number): this;
     circle(x: number, y: number, radius: number): this;
     ellipse(x: number, y: number, xRadius: number, yRadius: number): this;
-    polygon(...points: (number[])[]): this;
+    polygon(...points: number[][]): this;
     path(path: string): this;
     moveTo(x: number, y: number): this;
     lineTo(x: number, y: number): this;

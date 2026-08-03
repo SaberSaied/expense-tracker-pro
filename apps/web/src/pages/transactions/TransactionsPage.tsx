@@ -79,7 +79,9 @@ export const TransactionsPage: React.FC = () => {
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState<"date" | "amount" | "createdAt" | "updatedAt" | "description">("date");
+  const [sortField, setSortField] = useState<
+    "date" | "amount" | "createdAt" | "updatedAt" | "description"
+  >("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -188,9 +190,7 @@ export const TransactionsPage: React.FC = () => {
   // Arrow/Home/End move between items; Enter/Space/Escape already activate/close.
   const handleDropdownKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menu = e.currentTarget;
-    const items = Array.from(
-      menu.querySelectorAll<HTMLElement>("[role='menuitem']"),
-    );
+    const items = Array.from(menu.querySelectorAll<HTMLElement>("[role='menuitem']"));
     if (items.length === 0) return;
     const currentIndex = items.indexOf(document.activeElement as HTMLElement);
     let nextIndex: number;
@@ -199,7 +199,8 @@ export const TransactionsPage: React.FC = () => {
       nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      nextIndex = currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+      nextIndex =
+        currentIndex === -1 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
     } else if (e.key === "Home") {
       e.preventDefault();
       nextIndex = 0;
@@ -253,10 +254,12 @@ export const TransactionsPage: React.FC = () => {
 
   // ─── Fetch categories & payment methods ─────────────────
   useEffect(() => {
-    categoriesApi.findAll()
+    categoriesApi
+      .findAll()
       .then(setCategories)
       .catch(() => toast.error("Failed to load categories"));
-    paymentMethodsApi.findAll()
+    paymentMethodsApi
+      .findAll()
       .then(setPaymentMethods)
       .catch(() => toast.error("Failed to load payment methods"));
   }, []);
@@ -302,7 +305,19 @@ export const TransactionsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, typeFilter, categoryFilter, paymentMethodFilter, startDate, endDate, minAmount, maxAmount, sortField, sortDir, debouncedSearch]);
+  }, [
+    currentPage,
+    typeFilter,
+    categoryFilter,
+    paymentMethodFilter,
+    startDate,
+    endDate,
+    minAmount,
+    maxAmount,
+    sortField,
+    sortDir,
+    debouncedSearch,
+  ]);
 
   useEffect(() => {
     fetchTransactions();
@@ -334,7 +349,15 @@ export const TransactionsPage: React.FC = () => {
   ];
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-  const hasFilters = searchQuery || categoryFilter || typeFilter || paymentMethodFilter || startDate || endDate || minAmount || maxAmount;
+  const hasFilters =
+    searchQuery ||
+    categoryFilter ||
+    typeFilter ||
+    paymentMethodFilter ||
+    startDate ||
+    endDate ||
+    minAmount ||
+    maxAmount;
 
   // ─── Helpers ─────────────────────────────────────────────
   const toggleSort = (field: "date" | "amount" | "description") => {
@@ -518,9 +541,7 @@ export const TransactionsPage: React.FC = () => {
   // Focus the first menu item when a row dropdown opens (keyboard users).
   useEffect(() => {
     if (!openDropdownId) return;
-    dropdownRef.current
-      ?.querySelector<HTMLElement>("[role='menuitem']")
-      ?.focus();
+    dropdownRef.current?.querySelector<HTMLElement>("[role='menuitem']")?.focus();
   }, [openDropdownId]);
 
   // ─── Close dropdown on outside click / Escape ─────────────
@@ -705,7 +726,9 @@ export const TransactionsPage: React.FC = () => {
               className="w-full sm:w-auto px-3 py-2 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
               aria-label="Start date"
             />
-            <span className="text-text-muted text-sm" aria-hidden="true">—</span>
+            <span className="text-text-muted text-sm" aria-hidden="true">
+              —
+            </span>
             <input
               type="date"
               value={endDate}
@@ -732,7 +755,9 @@ export const TransactionsPage: React.FC = () => {
               step="0.01"
               className="w-24 px-3 py-2 rounded-lg bg-bg-input border border-border-input text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border-focus transition-all"
             />
-            <span className="text-text-muted text-sm" aria-hidden="true">—</span>
+            <span className="text-text-muted text-sm" aria-hidden="true">
+              —
+            </span>
             <input
               type="number"
               placeholder="Max"
@@ -748,10 +773,7 @@ export const TransactionsPage: React.FC = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className="text-sm text-text-muted whitespace-nowrap"
-              id="sort-by-label"
-            >
+            <span className="text-sm text-text-muted whitespace-nowrap" id="sort-by-label">
               Sort by
             </span>
             <Select
@@ -784,9 +806,7 @@ export const TransactionsPage: React.FC = () => {
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
         <div className="glass rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-[fade-in_0.2s_ease-out]">
-          <span className="text-sm text-text-primary font-medium">
-            {selectedIds.size} selected
-          </span>
+          <span className="text-sm text-text-primary font-medium">{selectedIds.size} selected</span>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="ghost"
@@ -820,11 +840,7 @@ export const TransactionsPage: React.FC = () => {
             >
               Delete
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearSelection}
-            >
+            <Button variant="ghost" size="sm" onClick={clearSelection}>
               Cancel
             </Button>
           </div>
@@ -864,9 +880,12 @@ export const TransactionsPage: React.FC = () => {
               aria-label={`Sort by date${sortField === "date" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
             >
               <span>Date</span>
-              {sortField === "date" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
-              )}
+              {sortField === "date" &&
+                (sortDir === "asc" ? (
+                  <ArrowUp className="size-3" aria-hidden="true" />
+                ) : (
+                  <ArrowDown className="size-3" aria-hidden="true" />
+                ))}
               {sortField !== "date" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
             <button
@@ -875,9 +894,12 @@ export const TransactionsPage: React.FC = () => {
               aria-label={`Sort by description${sortField === "description" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
             >
               <span>Description</span>
-              {sortField === "description" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
-              )}
+              {sortField === "description" &&
+                (sortDir === "asc" ? (
+                  <ArrowUp className="size-3" aria-hidden="true" />
+                ) : (
+                  <ArrowDown className="size-3" aria-hidden="true" />
+                ))}
               {sortField !== "description" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
             <div className="flex items-center gap-1">Category</div>
@@ -887,9 +909,12 @@ export const TransactionsPage: React.FC = () => {
               aria-label={`Sort by amount${sortField === "amount" ? `, currently ${sortDir === "asc" ? "ascending" : "descending"}` : ""}`}
             >
               <span>Amount</span>
-              {sortField === "amount" && (
-                sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />
-              )}
+              {sortField === "amount" &&
+                (sortDir === "asc" ? (
+                  <ArrowUp className="size-3" aria-hidden="true" />
+                ) : (
+                  <ArrowDown className="size-3" aria-hidden="true" />
+                ))}
               {sortField !== "amount" && <ArrowUpDown className="size-3" aria-hidden="true" />}
             </button>
             <span className="sr-only">Actions</span>
@@ -939,7 +964,11 @@ export const TransactionsPage: React.FC = () => {
                       className="size-4 rounded flex items-center justify-center shrink-0"
                       style={{ backgroundColor: `${txn.category.color}20` }}
                     >
-                      <CategoryIcon name={txn.category.icon} size={10} style={{ color: txn.category.color }} />
+                      <CategoryIcon
+                        name={txn.category.icon}
+                        size={10}
+                        style={{ color: txn.category.color }}
+                      />
                     </div>
                     <span className="text-xs text-text-secondary truncate">
                       {txn.category.name}
@@ -960,8 +989,8 @@ export const TransactionsPage: React.FC = () => {
                           : "text-text-secondary",
                     )}
                   >
-                    {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}
-                    ${txn.amount.toFixed(2)}
+                    {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}$
+                    {txn.amount.toFixed(2)}
                   </span>
                   <button
                     onClick={(e) => {
@@ -1013,7 +1042,11 @@ export const TransactionsPage: React.FC = () => {
                     className="size-5 rounded-md flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${txn.category.color}20` }}
                   >
-                    <CategoryIcon name={txn.category.icon} size={12} style={{ color: txn.category.color }} />
+                    <CategoryIcon
+                      name={txn.category.icon}
+                      size={12}
+                      style={{ color: txn.category.color }}
+                    />
                   </div>
                   <Badge variant="default" className="truncate max-w-28">
                     {txn.category.name}
@@ -1029,8 +1062,8 @@ export const TransactionsPage: React.FC = () => {
                         : "text-text-secondary",
                   )}
                 >
-                  {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}
-                  ${txn.amount.toFixed(2)}
+                  {txn.type === "INCOME" ? "+" : txn.type === "EXPENSE" ? "-" : ""}$
+                  {txn.amount.toFixed(2)}
                 </span>
                 <button
                   onClick={(e) => {
@@ -1123,8 +1156,7 @@ export const TransactionsPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 gap-4">
             <span className="text-sm text-text-muted">
               Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-              {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of{" "}
-              {totalCount}
+              {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount}
             </span>
             <Pagination
               currentPage={currentPage}
@@ -1142,7 +1174,9 @@ export const TransactionsPage: React.FC = () => {
         title="Add Transaction"
         description="Record a new income, expense, or transfer transaction."
       >
-        <form className="space-y-4" onSubmit={handleFormSubmit}>              <div className="space-y-1.5">
+        <form className="space-y-4" onSubmit={handleFormSubmit}>
+          {" "}
+          <div className="space-y-1.5">
             <span
               className="block text-sm font-medium text-text-secondary"
               id="transaction-type-label-add"
@@ -1173,7 +1207,6 @@ export const TransactionsPage: React.FC = () => {
               ))}
             </div>
           </div>
-
           <Input
             label="Amount"
             type="number"
@@ -1184,7 +1217,6 @@ export const TransactionsPage: React.FC = () => {
             onChange={(e) => setFormAmount(e.target.value)}
             required
           />
-
           <Select
             label="Category"
             options={categoryOptions}
@@ -1193,7 +1225,6 @@ export const TransactionsPage: React.FC = () => {
             onChange={(e) => setFormCategoryId(e.target.value)}
             required
           />
-
           <Select
             label="Payment Method (Optional)"
             options={paymentMethodOptions}
@@ -1201,7 +1232,6 @@ export const TransactionsPage: React.FC = () => {
             value={formPaymentMethodId}
             onChange={(e) => setFormPaymentMethodId(e.target.value)}
           />
-
           <Input
             label="Date"
             type="date"
@@ -1209,7 +1239,6 @@ export const TransactionsPage: React.FC = () => {
             onChange={(e) => setFormDate(e.target.value)}
             required
           />
-
           <Input
             label="Description"
             type="text"
@@ -1218,7 +1247,6 @@ export const TransactionsPage: React.FC = () => {
             onChange={(e) => setFormDescription(e.target.value)}
             required
           />
-
           <Input
             label="Notes (Optional)"
             type="text"
@@ -1226,7 +1254,6 @@ export const TransactionsPage: React.FC = () => {
             value={formNotes}
             onChange={(e) => setFormNotes(e.target.value)}
           />
-
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
               Cancel
@@ -1241,7 +1268,10 @@ export const TransactionsPage: React.FC = () => {
       {/* Edit Transaction Modal */}
       <Modal
         isOpen={showEditModal}
-        onClose={() => { setShowEditModal(false); setSelectedTransaction(null); }}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedTransaction(null);
+        }}
         title="Edit Transaction"
         description="Update the details of this transaction."
       >
@@ -1332,7 +1362,14 @@ export const TransactionsPage: React.FC = () => {
           />
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" type="button" onClick={() => { setShowEditModal(false); setSelectedTransaction(null); }}>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => {
+                setShowEditModal(false);
+                setSelectedTransaction(null);
+              }}
+            >
               Cancel
             </Button>
             <Button type="submit" isLoading={editSubmitting}>
@@ -1345,7 +1382,10 @@ export const TransactionsPage: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
-        onClose={() => { setShowDeleteDialog(false); setSelectedTransaction(null); }}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setSelectedTransaction(null);
+        }}
         onConfirm={handleDelete}
         title={`Delete "${selectedTransaction?.description ?? ""}"?`}
         description="This action cannot be undone. The transaction will be permanently removed."
@@ -1367,7 +1407,11 @@ export const TransactionsPage: React.FC = () => {
       {/* Bulk Update Modal */}
       <Modal
         isOpen={showBulkUpdateModal}
-        onClose={() => { setShowBulkUpdateModal(false); setBulkUpdateCategory(""); setBulkUpdatePaymentMethod(""); }}
+        onClose={() => {
+          setShowBulkUpdateModal(false);
+          setBulkUpdateCategory("");
+          setBulkUpdatePaymentMethod("");
+        }}
         title={`Update ${selectedIds.size} Transaction${selectedIds.size !== 1 ? "s" : ""}`}
         description="Change the category or payment method for all selected transactions."
       >
@@ -1387,7 +1431,14 @@ export const TransactionsPage: React.FC = () => {
             onChange={(e) => setBulkUpdatePaymentMethod(e.target.value)}
           />
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={() => { setShowBulkUpdateModal(false); setBulkUpdateCategory(""); setBulkUpdatePaymentMethod(""); }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowBulkUpdateModal(false);
+                setBulkUpdateCategory("");
+                setBulkUpdatePaymentMethod("");
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleBulkUpdate} isLoading={bulkActionLoading}>

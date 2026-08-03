@@ -130,7 +130,12 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
     setIsLoading(true);
     setError(null);
     try {
-      const params: { months?: number; range?: DateRangePreset; startDate?: string; endDate?: string } = {};
+      const params: {
+        months?: number;
+        range?: DateRangePreset;
+        startDate?: string;
+        endDate?: string;
+      } = {};
       if (filter.range === "custom" && filter.startDate && filter.endDate) {
         params.range = "custom";
         params.startDate = filter.startDate;
@@ -177,9 +182,7 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Cash Flow
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Cash Flow</h3>
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <DollarSign className="size-10 text-text-muted/40" />
@@ -198,20 +201,19 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
 
   // ─── Empty State ───────────────────────────────────────────────
 
-  if (chartData.length === 0 || (summary && summary.totalIncome === 0 && summary.totalExpense === 0)) {
+  if (
+    chartData.length === 0 ||
+    (summary && summary.totalIncome === 0 && summary.totalExpense === 0)
+  ) {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Cash Flow
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Cash Flow</h3>
           <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <DollarSign className="size-10 text-text-muted/40" />
-          <p className="text-sm text-text-muted">
-            No transactions recorded yet
-          </p>
+          <p className="text-sm text-text-muted">No transactions recorded yet</p>
           <p className="text-xs text-text-muted">
             Add income and expense transactions to see your cash flow
           </p>
@@ -229,9 +231,7 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
     <div className="glass rounded-xl p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Cash Flow
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Cash Flow</h3>
         <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
       </div>
 
@@ -322,10 +322,7 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
               tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
               width={40}
             />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{ stroke: "var(--color-chart-grid)" }}
-            />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "var(--color-chart-grid)" }} />
             <Legend content={<CustomLegend />} />
             <Area
               type="monotone"
@@ -381,9 +378,7 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
               </div>
               <div>
                 <p className="text-xs text-text-muted">Best Cash Flow Month</p>
-                <p className="text-sm font-semibold text-text-primary">
-                  {summary.bestMonth.label}
-                </p>
+                <p className="text-sm font-semibold text-text-primary">{summary.bestMonth.label}</p>
               </div>
             </div>
             <div className="text-right">
@@ -391,7 +386,8 @@ export const CashFlowChart = React.memo(function CashFlowChart() {
                 +{formatCurrency(summary.bestMonth.net)}
               </p>
               <p className="text-xs text-text-muted">
-                Income: {formatCurrency(summary.bestMonth.income)} | Expenses: {formatCurrency(summary.bestMonth.expense)}
+                Income: {formatCurrency(summary.bestMonth.income)} | Expenses:{" "}
+                {formatCurrency(summary.bestMonth.expense)}
               </p>
             </div>
           </div>

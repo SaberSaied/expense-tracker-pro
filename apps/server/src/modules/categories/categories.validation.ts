@@ -2,11 +2,9 @@ import { z } from "zod";
 import { nameSchema, hexColorSchema } from "@/common/validators";
 import { CATEGORY_ICONS, CATEGORY_COLORS } from "@/common/constants";
 
-const iconSchema = z
-  .string()
-  .refine((val) => (CATEGORY_ICONS as readonly string[]).includes(val), {
-    message: `Icon must be one of: ${CATEGORY_ICONS.join(", ")}`,
-  });
+const iconSchema = z.string().refine((val) => (CATEGORY_ICONS as readonly string[]).includes(val), {
+  message: `Icon must be one of: ${CATEGORY_ICONS.join(", ")}`,
+});
 
 /**
  * Validates a category color value:

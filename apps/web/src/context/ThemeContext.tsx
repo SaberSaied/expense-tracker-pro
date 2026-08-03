@@ -2,14 +2,7 @@
  * Theme context — provides the active theme preference, the resolved theme,
  * and a setter that applies + persists the change immediately.
  */
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   applyThemeToDom,

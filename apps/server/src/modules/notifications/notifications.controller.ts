@@ -44,12 +44,10 @@ export const notificationController = {
     }
   },
 
-
   async findAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       // Query params are validated & parsed by the validate(notificationQuerySchema) middleware
-      const { page, limit, read, type } =
-        req.query as Record<string, string | undefined>;
+      const { page, limit, read, type } = req.query as Record<string, string | undefined>;
 
       const result = await notificationService.findAll(req.user.id, {
         page: page ? Number(page) : undefined,
@@ -61,7 +59,7 @@ export const notificationController = {
         res,
         { notifications: result.data },
         200,
-        buildPaginationMeta(result.total, result.page, result.limit)
+        buildPaginationMeta(result.total, result.page, result.limit),
       );
     } catch (err) {
       next(err);

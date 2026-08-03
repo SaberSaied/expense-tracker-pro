@@ -19,7 +19,9 @@ function getFormat(req: AuthenticatedRequest): "csv" | "pdf" | "xlsx" {
 function parseColumns(val: unknown): string[] | undefined {
   if (!val) return undefined;
   if (Array.isArray(val)) return val.map((c) => String(c).trim().toLowerCase());
-  return String(val).split(",").map((c) => c.trim().toLowerCase());
+  return String(val)
+    .split(",")
+    .map((c) => c.trim().toLowerCase());
 }
 
 /**
@@ -34,8 +36,18 @@ function setSecurityHeaders(res: Response): void {
 // ─── File Naming ────────────────────────────────────────────────
 
 const MONTH_NAMES = [
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december",
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
 ];
 
 const TYPE_LABELS: Record<string, string> = {
@@ -50,19 +62,17 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 /**
  * Build a descriptive export filename.
  */
-function buildExportFilename(
-  context: {
-    type: "transactions" | "report";
-    reportType?: string;
-    transactionType?: string;
-    format: string;
-    date?: string;
-    year?: number;
-    month?: number;
-    startDate?: string;
-    endDate?: string;
-  }
-): string {
+function buildExportFilename(context: {
+  type: "transactions" | "report";
+  reportType?: string;
+  transactionType?: string;
+  format: string;
+  date?: string;
+  year?: number;
+  month?: number;
+  startDate?: string;
+  endDate?: string;
+}): string {
   const ext = context.format === "pdf" ? "pdf" : context.format === "xlsx" ? "xlsx" : "csv";
 
   if (context.type === "transactions") {
@@ -92,15 +102,17 @@ function buildExportFilename(
     case "yearly":
       return `yearly-report-${context.year ?? new Date().getFullYear()}.${ext}`;
     case "summary": {
-      const range = context.startDate && context.endDate
-        ? `${context.startDate}-to-${context.endDate}`
-        : todayStr();
+      const range =
+        context.startDate && context.endDate
+          ? `${context.startDate}-to-${context.endDate}`
+          : todayStr();
       return `summary-report-${range}.${ext}`;
     }
     case "breakdown": {
-      const range = context.startDate && context.endDate
-        ? `${context.startDate}-to-${context.endDate}`
-        : todayStr();
+      const range =
+        context.startDate && context.endDate
+          ? `${context.startDate}-to-${context.endDate}`
+          : todayStr();
       return `breakdown-report-${range}.${ext}`;
     }
     default:
@@ -156,7 +168,11 @@ export const exportController = {
       };
 
       if (format === "pdf") {
-        const pdfBuffer = await pdfExportService.generateTransactionsPdf(req.user.id, filters as any, req.user.email);
+        const pdfBuffer = await pdfExportService.generateTransactionsPdf(
+          req.user.id,
+          filters as any,
+          req.user.email,
+        );
         const filename = buildExportFilename({
           type: "transactions",
           transactionType: type,
@@ -171,7 +187,10 @@ export const exportController = {
         res.setHeader("Content-Length", pdfBuffer.length);
         res.end(pdfBuffer);
       } else if (format === "xlsx") {
-        const result = await xlsxExportService.generateTransactionsXlsx(req.user.id, filters as any);
+        const result = await xlsxExportService.generateTransactionsXlsx(
+          req.user.id,
+          filters as any,
+        );
 
         // Set pagination metadata headers
         res.setHeader("X-Total-Count", String(result.totalCount));
@@ -188,7 +207,10 @@ export const exportController = {
           date: todayStr(),
         });
 
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Content-Length", result.buffer.length);
         res.end(result.buffer);
@@ -259,7 +281,11 @@ export const exportController = {
       };
 
       if (format === "pdf") {
-        const pdfBuffer = await pdfExportService.generateReportPdf(req.user.id, query, req.user.email);
+        const pdfBuffer = await pdfExportService.generateReportPdf(
+          req.user.id,
+          query,
+          req.user.email,
+        );
         const filename = buildExportFilename({
           type: "report",
           reportType: type ?? "summary",
@@ -288,7 +314,10 @@ export const exportController = {
           endDate,
         });
 
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Content-Length", xlsxBuffer.length);
         res.end(xlsxBuffer);

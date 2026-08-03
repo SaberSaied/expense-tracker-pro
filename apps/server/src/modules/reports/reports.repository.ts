@@ -1,11 +1,7 @@
 import { prisma } from "@/db/prisma";
 
 export const reportRepository = {
-  async findTransactionsInRange(
-    userId: string,
-    startDate: Date,
-    endDate: Date
-  ) {
+  async findTransactionsInRange(userId: string, startDate: Date, endDate: Date) {
     return prisma.transaction.findMany({
       where: {
         userId,
@@ -43,11 +39,7 @@ export const reportRepository = {
     });
   },
 
-  async findTransactionsInMonth(
-    userId: string,
-    startOfMonth: Date,
-    endOfMonth: Date
-  ) {
+  async findTransactionsInMonth(userId: string, startOfMonth: Date, endOfMonth: Date) {
     return prisma.transaction.findMany({
       where: {
         userId,
@@ -85,11 +77,7 @@ export const reportRepository = {
     });
   },
 
-  async getSummary(
-    userId: string,
-    startDate?: Date,
-    endDate?: Date
-  ) {
+  async getSummary(userId: string, startDate?: Date, endDate?: Date) {
     const where: Record<string, unknown> = { userId };
 
     if (startDate || endDate) {
@@ -110,11 +98,7 @@ export const reportRepository = {
     return aggregation;
   },
 
-  async getBreakdown(
-    userId: string,
-    startDate?: Date,
-    endDate?: Date
-  ) {
+  async getBreakdown(userId: string, startDate?: Date, endDate?: Date) {
     const buildWhere = () => {
       const w: Record<string, unknown> = { userId };
       if (startDate || endDate) {
@@ -166,10 +150,21 @@ export const reportRepository = {
         include: { category: true },
       }),
       prisma.paymentMethod.findMany({ where: { userId } }),
-      prisma.category.findMany({ where: { userId }, select: { id: true, name: true, color: true, icon: true } }),
+      prisma.category.findMany({
+        where: { userId },
+        select: { id: true, name: true, color: true, icon: true },
+      }),
     ]);
 
-    return { categoryGroup, paymentMethodGroup, incomeExpenseGroup, largestTx, smallestTx, paymentMethods, userCategories };
+    return {
+      categoryGroup,
+      paymentMethodGroup,
+      incomeExpenseGroup,
+      largestTx,
+      smallestTx,
+      paymentMethods,
+      userCategories,
+    };
   },
 
   /** Build the base where clause used by both findCustomTransactions and countCustomTransactions. */
@@ -183,7 +178,7 @@ export const reportRepository = {
       type?: string;
       minAmount?: number;
       maxAmount?: number;
-    }
+    },
   ): Record<string, unknown> {
     const where: Record<string, unknown> = { userId };
 
@@ -228,7 +223,7 @@ export const reportRepository = {
       maxAmount?: number;
     },
     pagination?: { skip: number; take: number },
-    sort?: { sortBy?: string; sortOrder?: "asc" | "desc" }
+    sort?: { sortBy?: string; sortOrder?: "asc" | "desc" },
   ) {
     const where = this.buildCustomFilter(userId, filters);
 
@@ -255,7 +250,7 @@ export const reportRepository = {
       type?: string;
       minAmount?: number;
       maxAmount?: number;
-    }
+    },
   ): Promise<number> {
     const where = this.buildCustomFilter(userId, filters);
 

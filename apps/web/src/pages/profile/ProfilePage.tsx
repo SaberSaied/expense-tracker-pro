@@ -140,11 +140,12 @@ export const ProfilePage: React.FC = () => {
   };
 
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || user?.name || "User";
-  const userInitials = [firstName, lastName]
-    .filter(Boolean)
-    .map((n) => n[0].toUpperCase())
-    .join("")
-    .slice(0, 2) || "U";
+  const userInitials =
+    [firstName, lastName]
+      .filter(Boolean)
+      .map((n) => n[0].toUpperCase())
+      .join("")
+      .slice(0, 2) || "U";
 
   const hasAvatar = !!user?.avatarUrl;
 
@@ -223,9 +224,7 @@ export const ProfilePage: React.FC = () => {
 
       {/* Personal Information */}
       <div className="glass rounded-xl p-6">
-        <h3 className="text-base font-semibold text-text-primary mb-4">
-          Personal Information
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary mb-4">Personal Information</h3>
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input

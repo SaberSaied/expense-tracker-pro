@@ -2,9 +2,7 @@
  * Transactions API service.
  * All CRUD operations for managing user income/expense transactions.
  */
-import { api, tokenStorage, ApiError } from "./api";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+import { api, tokenStorage, ApiError, API_BASE_URL } from "./api";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -135,7 +133,9 @@ export const transactionsApi = {
    * Returns a single transaction by ID.
    */
   async findById(id: string): Promise<ApiTransaction> {
-    const response = await api.get<ApiResponse<{ transaction: ApiTransaction }>>(`/transactions/${id}`);
+    const response = await api.get<ApiResponse<{ transaction: ApiTransaction }>>(
+      `/transactions/${id}`,
+    );
     return response.data.transaction;
   },
 
@@ -144,7 +144,10 @@ export const transactionsApi = {
    * Creates a new transaction.
    */
   async create(input: CreateTransactionInput): Promise<ApiTransaction> {
-    const response = await api.post<ApiResponse<{ transaction: ApiTransaction }>>("/transactions", input);
+    const response = await api.post<ApiResponse<{ transaction: ApiTransaction }>>(
+      "/transactions",
+      input,
+    );
     return response.data.transaction;
   },
 
@@ -155,7 +158,7 @@ export const transactionsApi = {
   async update(id: string, input: UpdateTransactionInput): Promise<ApiTransaction> {
     const response = await api.patch<ApiResponse<{ transaction: ApiTransaction }>>(
       `/transactions/${id}`,
-      input
+      input,
     );
     return response.data.transaction;
   },
@@ -164,19 +167,19 @@ export const transactionsApi = {
    * POST /api/v1/transactions/:id/receipt
    * Uploads a receipt image for a transaction.
    */
-  async uploadReceipt(id: string, file: File): Promise<{ transaction: ApiTransaction; receiptUrl: string }> {
+  async uploadReceipt(
+    id: string,
+    file: File,
+  ): Promise<{ transaction: ApiTransaction; receiptUrl: string }> {
     const formData = new FormData();
     formData.append("receipt", file);
 
     const token = tokenStorage.getAccessToken();
-    const response = await fetch(
-      `${API_BASE_URL}/transactions/${id}/receipt`,
-      {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}/receipt`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
@@ -184,7 +187,7 @@ export const transactionsApi = {
         data.statusCode ?? response.status,
         data.error ?? "Upload Failed",
         data.message ?? "Failed to upload receipt",
-        data.details
+        data.details,
       );
     }
 
@@ -198,7 +201,7 @@ export const transactionsApi = {
    */
   async removeReceipt(id: string): Promise<ApiTransaction> {
     const response = await api.delete<{ success: boolean; data: { transaction: ApiTransaction } }>(
-      `/transactions/${id}/receipt`
+      `/transactions/${id}/receipt`,
     );
     return response.data.transaction;
   },
@@ -216,7 +219,9 @@ export const transactionsApi = {
    * Deletes multiple transactions by ID.
    */
   async bulkDelete(ids: string[]): Promise<{ count: number }> {
-    const response = await api.post<ApiResponse<{ count: number }>>("/transactions/bulk/delete", { ids });
+    const response = await api.post<ApiResponse<{ count: number }>>("/transactions/bulk/delete", {
+      ids,
+    });
     return response.data;
   },
 
@@ -226,12 +231,12 @@ export const transactionsApi = {
    */
   async bulkUpdate(
     ids: string[],
-    data: { categoryId?: string; paymentMethodId?: string | null }
+    data: { categoryId?: string; paymentMethodId?: string | null },
   ): Promise<{ count: number }> {
-    const response = await api.post<ApiResponse<{ count: number }>>(
-      "/transactions/bulk/update",
-      { ids, ...data }
-    );
+    const response = await api.post<ApiResponse<{ count: number }>>("/transactions/bulk/update", {
+      ids,
+      ...data,
+    });
     return response.data;
   },
 
@@ -239,16 +244,18 @@ export const transactionsApi = {
    * GET /api/v1/transactions/summary
    * Returns spending summary for a date range with optional filters.
    */
-  async getSummary(filters: {
-    startDate?: string;
-    endDate?: string;
-    type?: string;
-    categoryId?: string;
-    paymentMethodId?: string;
-    minAmount?: number;
-    maxAmount?: number;
-    search?: string;
-  } = {}): Promise<TransactionSummary> {
+  async getSummary(
+    filters: {
+      startDate?: string;
+      endDate?: string;
+      type?: string;
+      categoryId?: string;
+      paymentMethodId?: string;
+      minAmount?: number;
+      maxAmount?: number;
+      search?: string;
+    } = {},
+  ): Promise<TransactionSummary> {
     const params = new URLSearchParams();
     if (filters.startDate) params.set("startDate", filters.startDate);
     if (filters.endDate) params.set("endDate", filters.endDate);

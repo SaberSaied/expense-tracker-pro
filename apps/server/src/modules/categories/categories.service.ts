@@ -14,10 +14,7 @@ export const categoryService = {
     return category;
   },
 
-  async create(
-    userId: string,
-    data: Parameters<typeof categoryRepository.create>[1]
-  ) {
+  async create(userId: string, data: Parameters<typeof categoryRepository.create>[1]) {
     // Check for duplicate name
     const existing = await categoryRepository.findByName(userId, data.name);
     if (existing) {
@@ -58,7 +55,7 @@ export const categoryService = {
     // Check for related transactions — prevent deletion to maintain data integrity
     if (category.transactionCount > 0) {
       throw new ValidationError(
-        `Cannot delete "${category.name}": ${category.transactionCount} transaction(s) are using this category. Reassign them first.`
+        `Cannot delete "${category.name}": ${category.transactionCount} transaction(s) are using this category. Reassign them first.`,
       );
     }
 

@@ -1,11 +1,6 @@
 import React from "react";
 import { clsx } from "clsx";
-import {
-  CreditCard,
-  TrendingUp,
-  TrendingDown,
-  Star,
-} from "lucide-react";
+import { CreditCard, TrendingUp, TrendingDown, Star } from "lucide-react";
 import type { PaymentMethodSpending, MostUsedPaymentMethod } from "@/services/dashboard";
 
 interface AccountOverviewProps {
@@ -17,7 +12,10 @@ interface AccountOverviewProps {
  * Account Overview widget — displays spending breakdown by payment method,
  * net activity per method, and highlights the most-used payment method.
  */
-export const AccountOverview = React.memo(function AccountOverview({ methods, mostUsed }: AccountOverviewProps) {
+export const AccountOverview = React.memo(function AccountOverview({
+  methods,
+  mostUsed,
+}: AccountOverviewProps) {
   const formatCurrency = (value: number) =>
     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -26,13 +24,12 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
 
   return (
     <div className="glass rounded-xl p-5">
-      <h3 className="text-base font-semibold text-text-primary mb-4">
-        Account Overview
-      </h3>
+      <h3 className="text-base font-semibold text-text-primary mb-4">Account Overview</h3>
 
       {methods.length === 0 && (
         <p className="text-sm text-text-muted py-6 text-center">
-          No transactions with payment methods yet. Add a payment method to see your account overview.
+          No transactions with payment methods yet. Add a payment method to see your account
+          overview.
         </p>
       )}
 
@@ -51,7 +48,8 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
                     {mostUsed.paymentMethodName}
                   </p>
                   <p className="text-[11px] text-text-muted">
-                    {mostUsed.transactionCount} transaction{mostUsed.transactionCount !== 1 ? "s" : ""}
+                    {mostUsed.transactionCount} transaction
+                    {mostUsed.transactionCount !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
@@ -61,9 +59,8 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
           {/* Payment method list */}
           <div className="space-y-3">
             {methods.map((method) => {
-              const expensePercentage = totalExpenseAll > 0
-                ? Math.round((method.totalExpense / totalExpenseAll) * 100)
-                : 0;
+              const expensePercentage =
+                totalExpenseAll > 0 ? Math.round((method.totalExpense / totalExpenseAll) * 100) : 0;
               const isMostUsed = mostUsed?.paymentMethodId === method.paymentMethodId;
 
               return (
@@ -80,10 +77,7 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
                       className="size-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{ backgroundColor: `${method.paymentMethodColor}20` }}
                     >
-                      <CreditCard
-                        className="size-4"
-                        style={{ color: method.paymentMethodColor }}
-                      />
+                      <CreditCard className="size-4" style={{ color: method.paymentMethodColor }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-text-primary truncate">
@@ -93,7 +87,8 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
                         )}
                       </p>
                       <p className="text-[11px] text-text-muted">
-                        {method.transactionCount} transaction{method.transactionCount !== 1 ? "s" : ""}
+                        {method.transactionCount} transaction
+                        {method.transactionCount !== 1 ? "s" : ""}
                       </p>
                     </div>
                     <div className="text-right">
@@ -140,16 +135,19 @@ export const AccountOverview = React.memo(function AccountOverview({ methods, mo
                       <div
                         className="h-full rounded-full transition-all duration-500 bg-success"
                         style={{
-                          width: `${totalIncomeAll > 0
-                            ? Math.min(100, (method.totalIncome / totalIncomeAll) * 100)
-                            : 0}%`,
+                          width: `${
+                            totalIncomeAll > 0
+                              ? Math.min(100, (method.totalIncome / totalIncomeAll) * 100)
+                              : 0
+                          }%`,
                         }}
                       />
                     </div>
                     <span className="text-[11px] text-text-muted tabular-nums w-10 text-right shrink-0">
                       {totalIncomeAll > 0
                         ? Math.round((method.totalIncome / totalIncomeAll) * 100)
-                        : 0}%
+                        : 0}
+                      %
                     </span>
                   </div>
                 </div>

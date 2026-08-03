@@ -56,7 +56,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -118,7 +118,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { monthlySummary: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(enablePrefs.status === 200, "Enable monthlySummary preference");
 
@@ -130,7 +130,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Notification Center Rent", icon: "Home", color: "#6366F1" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(category.status === 201, "Category created");
   const categoryId = (category.json.data?.category as Record<string, unknown>)?.id as string;
@@ -149,7 +149,7 @@ async function runTests() {
         startDate: pastDateStr(1),
         categoryId,
       },
-      userTokens?.accessToken
+      userTokens?.accessToken,
     );
   }
 
@@ -162,7 +162,7 @@ async function runTests() {
     "POST",
     "/notifications/monthly-summary/generate?month=2026-06",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(generate.status === 200, "Generate monthly summary returns 200");
 
@@ -186,10 +186,11 @@ async function runTests() {
     "GET",
     "/notifications?read=false",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(unreadFilter.status === 200, "Filter read=false returns 200");
-  const unreadList = unreadFilter.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const unreadList = unreadFilter.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(unreadList!.length >= 3, "All seeded notifications are unread");
   for (const n of unreadList!) {
     assert(n.read === false, "Filtered list only contains unread");
@@ -201,10 +202,11 @@ async function runTests() {
     "GET",
     "/notifications?read=true",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(readFilter.status === 200, "Filter read=true returns 200");
-  const readList = readFilter.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const readList = readFilter.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(readList!.length === 0, "No read notifications yet");
   const readMeta = readFilter.json.meta;
   assert((readMeta!.total as number) === 0, "Read total is 0");
@@ -215,10 +217,11 @@ async function runTests() {
     "GET",
     "/notifications?type=REMINDER",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(typeFilter.status === 200, "Filter by type returns 200");
-  const typeList = typeFilter.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const typeList = typeFilter.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(typeList!.length === 3, "Three REMINDER notifications");
   for (const n of typeList!) {
     assert(n.type === "REMINDER", "Filtered list only contains REMINDER type");
@@ -226,7 +229,12 @@ async function runTests() {
 
   // ─── 7. Pagination ─────────────────────────────────────────
   console.log("\n─── 7. Pagination (limit=2) ───");
-  const paged = await request("GET", "/notifications?page=1&limit=2", undefined, userTokens?.accessToken);
+  const paged = await request(
+    "GET",
+    "/notifications?page=1&limit=2",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(paged.status === 200, "Paginated request returns 200");
   const page1 = paged.json.data?.notifications as Array<Record<string, unknown>> | undefined;
   assert(page1!.length === 2, "Page 1 has 2 items");
@@ -234,14 +242,24 @@ async function runTests() {
   assert((page1Meta!.totalPages as number) >= 2, "Has multiple pages");
   assert(page1Meta!.hasNextPage === true, "Has next page");
 
-  const page2 = await request("GET", "/notifications?page=2&limit=2", undefined, userTokens?.accessToken);
+  const page2 = await request(
+    "GET",
+    "/notifications?page=2&limit=2",
+    undefined,
+    userTokens?.accessToken,
+  );
   const page2List = page2.json.data?.notifications as Array<Record<string, unknown>> | undefined;
   assert(page2List!.length >= 1, "Page 2 has remaining items");
 
   // ─── 8. Get Single Notification ────────────────────────────
   console.log("\n─── 8. Get Notification (GET /notifications/:id) ───");
   const firstId = notifications![0].id as string;
-  const byId = await request("GET", `/notifications/${firstId}`, undefined, userTokens?.accessToken);
+  const byId = await request(
+    "GET",
+    `/notifications/${firstId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(byId.status === 200, "Get by ID returns 200");
   const fetched = byId.json.data?.notification as Record<string, unknown> | undefined;
   assert(fetched != null, "Notification returned");
@@ -249,26 +267,52 @@ async function runTests() {
   assert(fetched!.read === false, "Notification is unread");
 
   // Invalid UUID returns 400
-  const badId = await request("GET", "/notifications/not-a-uuid", undefined, userTokens?.accessToken);
+  const badId = await request(
+    "GET",
+    "/notifications/not-a-uuid",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badId.status === 400, "Invalid UUID returns 400");
 
   // ─── 9. Mark as Read ───────────────────────────────────────
   console.log("\n─── 9. Mark as Read (PATCH /notifications/:id/read) ───");
-  const markRead = await request("PATCH", `/notifications/${firstId}/read`, undefined, userTokens?.accessToken);
+  const markRead = await request(
+    "PATCH",
+    `/notifications/${firstId}/read`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(markRead.status === 204, "Mark as read returns 204");
 
-  const afterRead = await request("GET", `/notifications/${firstId}`, undefined, userTokens?.accessToken);
+  const afterRead = await request(
+    "GET",
+    `/notifications/${firstId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   const afterReadData = afterRead.json.data?.notification as Record<string, unknown> | undefined;
   assert(afterReadData!.read === true, "Notification now read");
 
   // Unread count decreases
-  const unreadCount = await request("GET", "/notifications/unread/count", undefined, userTokens?.accessToken);
+  const unreadCount = await request(
+    "GET",
+    "/notifications/unread/count",
+    undefined,
+    userTokens?.accessToken,
+  );
   const count = unreadCount.json.data?.count as number | undefined;
   assert(count === notifications!.length - 1, "Unread count decreased by 1");
 
   // read=true filter now returns it
-  const readFilter2 = await request("GET", "/notifications?read=true", undefined, userTokens?.accessToken);
-  const readList2 = readFilter2.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const readFilter2 = await request(
+    "GET",
+    "/notifications?read=true",
+    undefined,
+    userTokens?.accessToken,
+  );
+  const readList2 = readFilter2.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(readList2!.length === 1, "Read filter returns the marked notification");
   assert(readList2![0].id === firstId, "Marked notification appears in read filter");
 
@@ -277,42 +321,83 @@ async function runTests() {
     "PATCH",
     "/notifications/00000000-0000-0000-0000-000000000000/read",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(markGone.status === 404, "Mark non-existent returns 404");
 
   // ─── 10. Mark All as Read ──────────────────────────────────
   console.log("\n─── 10. Mark All as Read (PATCH /notifications/read-all) ───");
-  const markAll = await request("PATCH", "/notifications/read-all", undefined, userTokens?.accessToken);
+  const markAll = await request(
+    "PATCH",
+    "/notifications/read-all",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(markAll.status === 204, "Mark all as read returns 204");
 
-  const unreadAfter = await request("GET", "/notifications/unread/count", undefined, userTokens?.accessToken);
+  const unreadAfter = await request(
+    "GET",
+    "/notifications/unread/count",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(unreadAfter.json.data?.count === 0, "Unread count is 0 after mark-all");
 
   // ─── 11. Unread Endpoint ───────────────────────────────────
   console.log("\n─── 11. Unread List (GET /notifications/unread) ───");
-  const unreadList2 = await request("GET", "/notifications/unread", undefined, userTokens?.accessToken);
+  const unreadList2 = await request(
+    "GET",
+    "/notifications/unread",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(unreadList2.status === 200, "Unread list returns 200");
-  const unreadNotifs = unreadList2.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const unreadNotifs = unreadList2.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(unreadNotifs!.length === 0, "Unread list is empty after mark-all");
 
   // ─── 12. Delete Notification ───────────────────────────────
   console.log("\n─── 12. Delete (DELETE /notifications/:id) ───");
-  const deleted = await request("DELETE", `/notifications/${firstId}`, undefined, userTokens?.accessToken);
+  const deleted = await request(
+    "DELETE",
+    `/notifications/${firstId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleted.status === 204, "Delete returns 204");
 
-  const gone = await request("GET", `/notifications/${firstId}`, undefined, userTokens?.accessToken);
+  const gone = await request(
+    "GET",
+    `/notifications/${firstId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(gone.status === 404, "Deleted notification returns 404");
 
-  const deleteGone = await request("DELETE", `/notifications/${firstId}`, undefined, userTokens?.accessToken);
+  const deleteGone = await request(
+    "DELETE",
+    `/notifications/${firstId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleteGone.status === 404, "Delete non-existent returns 404");
 
   // ─── 13. Validation ────────────────────────────────────────
   console.log("\n─── 13. Validation ───");
-  const badRead = await request("GET", "/notifications?read=maybe", undefined, userTokens?.accessToken);
+  const badRead = await request(
+    "GET",
+    "/notifications?read=maybe",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badRead.status === 400, "Invalid read filter returns 400");
 
-  const badType = await request("GET", "/notifications?type=NOT_A_TYPE", undefined, userTokens?.accessToken);
+  const badType = await request(
+    "GET",
+    "/notifications?type=NOT_A_TYPE",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(badType.status === 400, "Invalid type filter returns 400");
 
   const badPage = await request("GET", "/notifications?page=0", undefined, userTokens?.accessToken);
@@ -328,8 +413,14 @@ async function runTests() {
   assert(register2.status === 201, "Second user registered");
   secondUserTokens = register2.json.data?.tokens as { accessToken: string; refreshToken: string };
 
-  const secondList = await request("GET", "/notifications", undefined, secondUserTokens?.accessToken);
-  const secondNotifs = secondList.json.data?.notifications as Array<Record<string, unknown>> | undefined;
+  const secondList = await request(
+    "GET",
+    "/notifications",
+    undefined,
+    secondUserTokens?.accessToken,
+  );
+  const secondNotifs = secondList.json.data?.notifications as
+    Array<Record<string, unknown>> | undefined;
   assert(secondNotifs!.length === 0, "Second user sees no notifications");
 
   // Second user cannot fetch primary's notification by ID
@@ -338,7 +429,7 @@ async function runTests() {
     "GET",
     `/notifications/${secondNotifId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user gets 404 on primary's notification");
 
@@ -347,7 +438,7 @@ async function runTests() {
     "PATCH",
     `/notifications/${secondNotifId}/read`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenMark.status === 404, "Second user gets 404 on mark-read");
 
@@ -356,7 +447,7 @@ async function runTests() {
     "DELETE",
     `/notifications/${secondNotifId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenDelete.status === 404, "Second user gets 404 on delete");
 

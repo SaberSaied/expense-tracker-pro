@@ -17,7 +17,7 @@ export const transactionRepository = {
       sortBy?: string;
       sortOrder?: "asc" | "desc";
       search?: string;
-    } = {}
+    } = {},
   ) {
     const where: Prisma.TransactionWhereInput = { userId };
 
@@ -120,7 +120,7 @@ export const transactionRepository = {
       minAmount?: number;
       maxAmount?: number;
       search?: string;
-    } = {}
+    } = {},
   ) {
     const where: Prisma.TransactionWhereInput = { userId };
 

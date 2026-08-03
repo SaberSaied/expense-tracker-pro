@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { ChartDataPoint } from "@/types";
 import { usePrefersReducedMotion } from "@/hooks";
 
@@ -18,16 +12,11 @@ interface CategoryChartProps {
  * Category breakdown doughnut chart using Recharts.
  * Shows interactive hover tooltips and center summary text.
  */
-export const CategoryChart: React.FC<CategoryChartProps> = ({
-  data,
-  totalSpent,
-}) => {
+export const CategoryChart: React.FC<CategoryChartProps> = ({ data, totalSpent }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   return (
     <div className="glass rounded-xl p-5">
-      <h3 className="text-base font-semibold text-text-primary mb-4">
-        Category Breakdown
-      </h3>
+      <h3 className="text-base font-semibold text-text-primary mb-4">Category Breakdown</h3>
       <div className="relative h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart accessibilityLayer>
@@ -78,9 +67,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({
               className="size-2.5 rounded-full shrink-0"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-xs text-text-secondary truncate">
-              {entry.label}
-            </span>
+            <span className="text-xs text-text-secondary truncate">{entry.label}</span>
           </div>
         ))}
       </div>

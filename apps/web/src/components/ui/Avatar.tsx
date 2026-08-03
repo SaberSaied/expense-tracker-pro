@@ -50,7 +50,9 @@ export const Avatar = React.memo(function Avatar({
           className="size-full object-cover"
         />
       ) : (
-        <span role="img" aria-label={alt}>{initials ?? "?"}</span>
+        <span role="img" aria-label={alt}>
+          {initials ?? "?"}
+        </span>
       )}
     </div>
   );

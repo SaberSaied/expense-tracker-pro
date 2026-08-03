@@ -24,9 +24,22 @@ const PAYMENT_TYPE_OPTIONS = [
 ];
 
 const COLOR_PALETTE = [
-  "#3B82F6", "#8B5CF6", "#10B981", "#F59E0B", "#EC4899", "#F43F5E",
-  "#6366F1", "#14B8A6", "#D946EF", "#EAB308", "#06B6D4", "#A855F7",
-  "#F97316", "#22C55E", "#64748B", "#94A3B8",
+  "#3B82F6",
+  "#8B5CF6",
+  "#10B981",
+  "#F59E0B",
+  "#EC4899",
+  "#F43F5E",
+  "#6366F1",
+  "#14B8A6",
+  "#D946EF",
+  "#EAB308",
+  "#06B6D4",
+  "#A855F7",
+  "#F97316",
+  "#22C55E",
+  "#64748B",
+  "#94A3B8",
 ];
 
 const ICON_OPTIONS = [
@@ -257,73 +270,80 @@ export const PaymentMethodsPage: React.FC = () => {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-reveal">
-            {paymentMethods.map((pm) => (
-              <div
-                key={pm.id}
-                className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150 group cursor-pointer"
-                role="button"
-                tabIndex={0}
-                aria-label={`View details for ${pm.name}`}
-                onClick={() => void openDetails(pm)}
-                onKeyDown={(e) => {
-                  // Only activate when the card itself (not a nested button like
-                  // Edit/Delete) has focus — prevents opening two modals at once.
-                  if (e.target !== e.currentTarget) return;
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    void openDetails(pm);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className="size-11 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${pm.color}20` }}
-                  >
-                    <CategoryIcon name={pm.icon} size={22} style={{ color: pm.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-text-primary truncate flex items-center gap-2">
-                      {pm.name}
-                      {pm.isDefault && (
-                        <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                          Default
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-text-muted">
-                      {PAYMENT_TYPE_OPTIONS.find((o) => o.value === pm.type)?.label ?? pm.type}
-                      {pm.lastFour && ` ••••${pm.lastFour}`}
-                    </p>
-                  </div>
+          {paymentMethods.map((pm) => (
+            <div
+              key={pm.id}
+              className="glass rounded-xl p-5 hover:shadow-hover hover:-translate-y-0.5 transition-all duration-150 group cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`View details for ${pm.name}`}
+              onClick={() => void openDetails(pm)}
+              onKeyDown={(e) => {
+                // Only activate when the card itself (not a nested button like
+                // Edit/Delete) has focus — prevents opening two modals at once.
+                if (e.target !== e.currentTarget) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  void openDetails(pm);
+                }
+              }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="size-11 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: `${pm.color}20` }}
+                >
+                  <CategoryIcon name={pm.icon} size={22} style={{ color: pm.color }} />
                 </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-border-card/50">
-                  <span className="text-xs text-text-muted">
-                    {pm._count?.transactions ?? 0} transaction{(pm._count?.transactions ?? 0) !== 1 ? "s" : ""}
-                  </span>
-                  <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-150">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      leftIcon={<Pencil className="size-3.5" />}
-                      onClick={(e) => { e.stopPropagation(); openEditModal(pm); }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-error/70 hover:text-error"
-                      leftIcon={<Trash2 className="size-3.5" />}
-                      onClick={(e) => { e.stopPropagation(); openDeleteDialog(pm); }}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-text-primary truncate flex items-center gap-2">
+                    {pm.name}
+                    {pm.isDefault && (
+                      <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-text-muted">
+                    {PAYMENT_TYPE_OPTIONS.find((o) => o.value === pm.type)?.label ?? pm.type}
+                    {pm.lastFour && ` ••••${pm.lastFour}`}
+                  </p>
                 </div>
               </div>
-            ))}
+
+              <div className="flex items-center justify-between pt-3 border-t border-border-card/50">
+                <span className="text-xs text-text-muted">
+                  {pm._count?.transactions ?? 0} transaction
+                  {(pm._count?.transactions ?? 0) !== 1 ? "s" : ""}
+                </span>
+                <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-150">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Pencil className="size-3.5" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditModal(pm);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-error/70 hover:text-error"
+                    leftIcon={<Trash2 className="size-3.5" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDeleteDialog(pm);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -430,9 +450,7 @@ export const PaymentMethodsPage: React.FC = () => {
                       size={22}
                       className={isSelected ? "text-primary" : "text-text-secondary"}
                     />
-                    {isSelected && (
-                      <Check className="size-3 text-primary" aria-hidden="true" />
-                    )}
+                    {isSelected && <Check className="size-3 text-primary" aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -500,11 +518,17 @@ export const PaymentMethodsPage: React.FC = () => {
             </div>
 
             {/* Net Amount */}
-            <div className={`rounded-xl p-4 ${selectedPaymentMethod.stats.netAmount >= 0 ? "bg-primary/5" : "bg-error/5"}`}>
+            <div
+              className={`rounded-xl p-4 ${selectedPaymentMethod.stats.netAmount >= 0 ? "bg-primary/5" : "bg-error/5"}`}
+            >
               <p className="text-xs text-text-secondary font-medium mb-1">Net Balance Impact</p>
-              <p className={`text-lg font-bold ${selectedPaymentMethod.stats.netAmount >= 0 ? "text-primary" : "text-error"}`}>
+              <p
+                className={`text-lg font-bold ${selectedPaymentMethod.stats.netAmount >= 0 ? "text-primary" : "text-error"}`}
+              >
                 {formatCurrency(Math.abs(selectedPaymentMethod.stats.netAmount))}
-                <span className="text-sm ml-1">{selectedPaymentMethod.stats.netAmount >= 0 ? "(inflow)" : "(outflow)"}</span>
+                <span className="text-sm ml-1">
+                  {selectedPaymentMethod.stats.netAmount >= 0 ? "(inflow)" : "(outflow)"}
+                </span>
               </p>
             </div>
 
@@ -543,10 +567,13 @@ export const PaymentMethodsPage: React.FC = () => {
             </div>
 
             <div className="flex justify-end pt-2 border-t border-border-card/50">
-              <Button variant="ghost" onClick={() => {
-                setShowDetailsModal(false);
-                setSelectedPaymentMethod(null);
-              }}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPaymentMethod(null);
+                }}
+              >
                 Close
               </Button>
             </div>

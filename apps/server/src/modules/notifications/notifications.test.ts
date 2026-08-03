@@ -43,7 +43,7 @@ async function request(
   method: string,
   path: string,
   reqBody?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; data: any; text: string }> {
   const headers: Record<string, string> = {};
   if (reqBody !== undefined) headers["Content-Type"] = "application/json";
@@ -101,7 +101,12 @@ async function runTests() {
 
   // ─── 2. Get Default Notification Preferences ───────────────
   console.log("\n─── 2. Get Default Preferences ───");
-  const getPrefs = await request("GET", "/notifications/preferences", undefined, userTokens?.accessToken);
+  const getPrefs = await request(
+    "GET",
+    "/notifications/preferences",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(getPrefs.status === 200, "GET preferences returns 200");
   assert(getPrefs.data?.success === true, "Response has success: true");
 
@@ -124,7 +129,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { weeklyDigest: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateWeeklyDigest.status === 200, "PUT preferences returns 200");
   const updated = updateWeeklyDigest.data?.data?.preferences;
@@ -142,7 +147,7 @@ async function runTests() {
       budgetAlerts: false,
       reminderTime: "14:30",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateMultiple.status === 200, "PUT multiple preferences returns 200");
   const multiUpdated = updateMultiple.data?.data?.preferences;
@@ -153,7 +158,12 @@ async function runTests() {
 
   // ─── 5. Verify Persistence ─────────────────────────────────
   console.log("\n─── 5. Verify Persistence ───");
-  const verifyPrefs = await request("GET", "/notifications/preferences", undefined, userTokens?.accessToken);
+  const verifyPrefs = await request(
+    "GET",
+    "/notifications/preferences",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(verifyPrefs.status === 200, "GET preferences still returns 200");
   const verified = verifyPrefs.data?.data?.preferences;
   assert(verified?.enabled === false, "Persisted: enabled is false");
@@ -165,7 +175,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { channels: { push: true, email: false } },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateChannels.status === 200, "PUT channels returns 200");
   const channelsUpdated = updateChannels.data?.data?.preferences;
@@ -179,7 +189,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { reminderTime: "25:00" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badTime1.status === 400, "Invalid reminderTime (25:00) returns 400");
 
@@ -187,7 +197,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { reminderTime: "not-a-time" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badTime2.status === 400, "Invalid reminderTime (not-a-time) returns 400");
 
@@ -197,7 +207,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { enabled: "not-a-boolean" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badBool.status === 400, "Non-boolean value returns 400");
 
@@ -224,7 +234,7 @@ async function runTests() {
       reminderTime: "09:00",
       channels: { inApp: true, email: true, push: false },
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(reset.status === 200, "Reset preferences returns 200");
   const resetPrefs = reset.data?.data?.preferences;

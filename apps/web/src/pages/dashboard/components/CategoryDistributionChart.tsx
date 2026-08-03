@@ -12,14 +12,13 @@ import {
   CartesianGrid,
   Tooltip as BarTooltip,
 } from "recharts";
-import {
-  PieChart as PieChartIcon,
-  TrendingUp,
-  Layers,
-  RefreshCw,
-} from "lucide-react";
+import { PieChart as PieChartIcon, TrendingUp, Layers, RefreshCw } from "lucide-react";
 import { dashboardApi } from "@/services/dashboard";
-import type { CategoryDistribution, CategoryDistributionSummary, DateRangePreset } from "@/services/dashboard";
+import type {
+  CategoryDistribution,
+  CategoryDistributionSummary,
+  DateRangePreset,
+} from "@/services/dashboard";
 import { DateRangeFilter } from "./DateRangeFilter";
 import type { DateRangeFilterValue } from "./DateRangeFilter";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -62,7 +61,12 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
     setIsLoading(true);
     setError(null);
     try {
-      const params: { months?: number; range?: DateRangePreset; startDate?: string; endDate?: string } = {};
+      const params: {
+        months?: number;
+        range?: DateRangePreset;
+        startDate?: string;
+        endDate?: string;
+      } = {};
       if (filter.range === "custom" && filter.startDate && filter.endDate) {
         params.range = "custom";
         params.startDate = filter.startDate;
@@ -115,9 +119,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Category Distribution
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Category Distribution</h3>
         </div>
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
           <PieChartIcon className="size-10 text-text-muted/40" />
@@ -140,9 +142,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Category Distribution
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Category Distribution</h3>
           <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         </div>
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
@@ -173,9 +173,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
   let pieData = doughnutData;
   if (doughnutData.length > MAX_DOUGHNUT_SLICES) {
     const topSlices = doughnutData.slice(0, MAX_DOUGHNUT_SLICES);
-    const otherTotal = doughnutData
-      .slice(MAX_DOUGHNUT_SLICES)
-      .reduce((sum, d) => sum + d.value, 0);
+    const otherTotal = doughnutData.slice(MAX_DOUGHNUT_SLICES).reduce((sum, d) => sum + d.value, 0);
     pieData = [
       ...topSlices,
       {
@@ -190,9 +188,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
     <div className="glass rounded-xl p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Category Distribution
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Category Distribution</h3>
         <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
       </div>
 
@@ -340,11 +336,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
                     isAnimationActive={!prefersReducedMotion}
                   >
                     {distribution.map((entry, index) => (
-                      <Cell
-                        key={`bar-${index}`}
-                        fill={entry.categoryColor}
-                        fillOpacity={0.85}
-                      />
+                      <Cell key={`bar-${index}`} fill={entry.categoryColor} fillOpacity={0.85} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -374,9 +366,7 @@ export const CategoryDistributionChart = React.memo(function CategoryDistributio
                   className="size-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: cat.categoryColor }}
                 />
-                <span className="text-xs text-text-primary truncate">
-                  {cat.categoryName}
-                </span>
+                <span className="text-xs text-text-primary truncate">{cat.categoryName}</span>
               </div>
               <span className="col-span-2 text-xs font-semibold text-text-primary tabular-nums text-right">
                 {formatCurrency(cat.totalSpent)}

@@ -16,9 +16,10 @@ export const reminderRepository = {
     if (filters.frequency) where.frequency = filters.frequency;
     if (filters.enabled !== undefined) where.enabled = filters.enabled;
 
-    const orderBy = filters.sortBy === "title"
-      ? { title: (filters.sortOrder ?? "desc") as "asc" | "desc" }
-      : { [filters.sortBy ?? "createdAt"]: (filters.sortOrder ?? "desc") as "asc" | "desc" };
+    const orderBy =
+      filters.sortBy === "title"
+        ? { title: (filters.sortOrder ?? "desc") as "asc" | "desc" }
+        : { [filters.sortBy ?? "createdAt"]: (filters.sortOrder ?? "desc") as "asc" | "desc" };
 
     return prisma.reminder.findMany({
       where: where as any,
@@ -70,21 +71,24 @@ export const reminderRepository = {
     });
   },
 
-  async create(userId: string, data: {
-    type: ReminderType;
-    title: string;
-    message?: string;
-    amount?: number;
-    frequency?: ReminderFrequency;
-    interval?: number;
-    dayOfWeek?: number;
-    dayOfMonth?: number;
-    startDate: Date;
-    nextTriggerDate: Date;
-    enabled?: boolean;
-    categoryId?: string;
-    savingsGoalId?: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      type: ReminderType;
+      title: string;
+      message?: string;
+      amount?: number;
+      frequency?: ReminderFrequency;
+      interval?: number;
+      dayOfWeek?: number;
+      dayOfMonth?: number;
+      startDate: Date;
+      nextTriggerDate: Date;
+      enabled?: boolean;
+      categoryId?: string;
+      savingsGoalId?: string;
+    },
+  ) {
     return prisma.reminder.create({
       data: { ...data, userId } as any,
       include: {

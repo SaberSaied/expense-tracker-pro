@@ -4,11 +4,10 @@ import { PrismaClient } from "@/generated/prisma/client";
 import { env } from "@/config/env";
 
 const pool = new pg.Pool({
-  user: env.POSTGRES_USER,
-  password: env.POSTGRES_PASSWORD,
-  host: env.POSTGRES_HOST,
-  port: env.POSTGRES_PORT,
-  database: env.POSTGRES_DB,
+  connectionString: env.DATABASE_URL,
+  max: env.NODE_ENV === "production" ? 10 : 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 const adapter = new PrismaPg(pool);

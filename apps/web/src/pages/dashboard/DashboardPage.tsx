@@ -218,9 +218,7 @@ export const DashboardPage: React.FC = () => {
       {/* Quick Statistics */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-text-primary">
-            Quick Statistics
-          </h2>
+          <h2 className="text-base font-semibold text-text-primary">Quick Statistics</h2>
         </div>
         <QuickStatsCards stats={overview.quickStats} />
       </section>
@@ -229,7 +227,7 @@ export const DashboardPage: React.FC = () => {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-text-primary">
-            Monthly Overview —{' '}
+            Monthly Overview —{" "}
             <span className="text-text-muted font-normal">
               {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </span>
@@ -275,9 +273,7 @@ export const DashboardPage: React.FC = () => {
                 : "—"
             }
             subtext={
-              overview.monthlyIncome > 0
-                ? `of income saved this month`
-                : "No income recorded"
+              overview.monthlyIncome > 0 ? `of income saved this month` : "No income recorded"
             }
             icon={PiggyBank}
             trend={overview.monthlyNet >= 0 ? "up" : "down"}

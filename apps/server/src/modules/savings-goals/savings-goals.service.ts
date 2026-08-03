@@ -3,10 +3,7 @@ import { NotFoundError, ValidationError } from "@/common/errors";
 import type { SavingsGoalQueryFilters } from "./savings-goals.types";
 
 export const savingsGoalService = {
-  async findAll(
-    userId: string,
-    filters: SavingsGoalQueryFilters = {}
-  ) {
+  async findAll(userId: string, filters: SavingsGoalQueryFilters = {}) {
     return savingsGoalRepository.findAllByUser(userId, {
       status: filters.status,
       priority: filters.priority,
@@ -23,15 +20,18 @@ export const savingsGoalService = {
     return goal;
   },
 
-  async create(userId: string, data: {
-    name: string;
-    targetAmount: number;
-    currentAmount?: number;
-    deadline?: string;
-    priority?: string;
-    icon?: string;
-    color?: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      name: string;
+      targetAmount: number;
+      currentAmount?: number;
+      deadline?: string;
+      priority?: string;
+      icon?: string;
+      color?: string;
+    },
+  ) {
     if (data.currentAmount && data.currentAmount > data.targetAmount) {
       throw new ValidationError("Current amount cannot exceed target amount");
     }
@@ -60,7 +60,7 @@ export const savingsGoalService = {
       priority?: string;
       icon?: string;
       color?: string;
-    }
+    },
   ) {
     const existing = await savingsGoalRepository.findById(id);
     if (!existing || existing.userId !== userId) {
@@ -76,9 +76,7 @@ export const savingsGoalService = {
 
     // Block updates on completed goals (archived state)
     if (existing.completedAt) {
-      throw new ValidationError(
-        "Cannot update a completed savings goal. The goal is archived."
-      );
+      throw new ValidationError("Cannot update a completed savings goal. The goal is archived.");
     }
 
     // Build update payload with proper date conversion
@@ -86,7 +84,8 @@ export const savingsGoalService = {
     if (data.name !== undefined) updateData.name = data.name;
     if (data.targetAmount !== undefined) updateData.targetAmount = data.targetAmount;
     if (data.currentAmount !== undefined) updateData.currentAmount = data.currentAmount;
-    if (data.deadline !== undefined) updateData.deadline = data.deadline ? new Date(data.deadline) : null;
+    if (data.deadline !== undefined)
+      updateData.deadline = data.deadline ? new Date(data.deadline) : null;
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.icon !== undefined) updateData.icon = data.icon;
     if (data.color !== undefined) updateData.color = data.color;
@@ -110,19 +109,13 @@ export const savingsGoalService = {
 
     // Prevent deletion of completed goals to maintain data integrity
     if (goal.currentAmount >= goal.targetAmount) {
-      throw new ValidationError(
-        "Cannot delete a completed savings goal. Archive it instead."
-      );
+      throw new ValidationError("Cannot delete a completed savings goal. Archive it instead.");
     }
 
     return savingsGoalRepository.delete(id);
   },
 
-  async addProgress(
-    userId: string,
-    id: string,
-    data: { amount: number; allowExceed?: boolean }
-  ) {
+  async addProgress(userId: string, id: string, data: { amount: number; allowExceed?: boolean }) {
     const goal = await savingsGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) {
       throw new NotFoundError("Savings goal not found");
@@ -135,7 +128,7 @@ export const savingsGoalService = {
     const newAmount = goal.currentAmount + data.amount;
     if (!data.allowExceed && newAmount > goal.targetAmount) {
       throw new ValidationError(
-        `This addition would exceed the target. You can add at most $${(goal.targetAmount - goal.currentAmount).toFixed(2)}. Use allowExceed to override.`
+        `This addition would exceed the target. You can add at most $${(goal.targetAmount - goal.currentAmount).toFixed(2)}. Use allowExceed to override.`,
       );
     }
 
@@ -169,7 +162,7 @@ export const savingsGoalService = {
     // Prevent negative balance
     if (amount > goal.currentAmount) {
       throw new ValidationError(
-        `Insufficient funds. Current balance is $${goal.currentAmount.toFixed(2)}, but you tried to withdraw $${amount.toFixed(2)}.`
+        `Insufficient funds. Current balance is $${goal.currentAmount.toFixed(2)}, but you tried to withdraw $${amount.toFixed(2)}.`,
       );
     }
 

@@ -1,4 +1,9 @@
-import { budgetRepository, computePeriodEnd, computeSpending, computeDaysRemaining } from "./budgets.repository";
+import {
+  budgetRepository,
+  computePeriodEnd,
+  computeSpending,
+  computeDaysRemaining,
+} from "./budgets.repository";
 import { categoryRepository } from "@/modules/categories/categories.repository";
 import { notificationRepository } from "@/modules/notifications/notifications.repository";
 import { NotFoundError, ConflictError, ValidationError } from "@/common/errors";
@@ -13,10 +18,7 @@ const EXPIRATION_WARNING_DAYS = 3;
 const DEDUP_WINDOW_HOURS = 24;
 
 export const budgetService = {
-  async findAll(
-    userId: string,
-    filters: BudgetQueryFilters = {}
-  ) {
+  async findAll(userId: string, filters: BudgetQueryFilters = {}) {
     return budgetRepository.findAllByUser(userId, {
       period: filters.period,
       status: filters.status,
@@ -83,8 +85,7 @@ export const budgetService = {
 
     // Respect the user's notification preferences
     const prefs = await notificationRepository.findPreferences(userId);
-    const notificationsDisabled =
-      prefs.enabled === false || prefs.channels?.inApp === false;
+    const notificationsDisabled = prefs.enabled === false || prefs.channels?.inApp === false;
 
     // When notifications are globally disabled, report the scan result without creating any
     if (notificationsDisabled) {
@@ -106,7 +107,7 @@ export const budgetService = {
     const recentNotifications = await notificationRepository.findRecentByTypes(
       userId,
       ["BUDGET_WARNING", "BUDGET_CRITICAL"],
-      new Date(now.getTime() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000)
+      new Date(now.getTime() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000),
     );
     const recentAlertTypes = new Set(recentNotifications.map((n) => n.type));
 
@@ -115,15 +116,19 @@ export const budgetService = {
       const categoryName = category?.name ?? "Unknown";
       const end = computePeriodEnd(budget.startDate, budget.period);
       const spent = await computeSpending(userId, budget.categoryId, budget.startDate, end);
-      const progress = budget.targetAmount > 0
-        ? Math.round((spent / budget.targetAmount) * 100)
-        : 0;
+      const progress =
+        budget.targetAmount > 0 ? Math.round((spent / budget.targetAmount) * 100) : 0;
       const daysRemaining = computeDaysRemaining(budget.startDate, end);
       const isExpired = now > end;
       const isActive = now >= budget.startDate && now <= end;
 
       // 1. Budget almost exhausted (warning threshold reached, < 100%)
-      if (isActive && progress >= budget.alertThreshold && progress < 100 && prefs.budgetAlerts !== false) {
+      if (
+        isActive &&
+        progress >= budget.alertThreshold &&
+        progress < 100 &&
+        prefs.budgetAlerts !== false
+      ) {
         if (!recentAlertTypes.has("BUDGET_WARNING")) {
           toCreate.push({
             type: "BUDGET_WARNING",
@@ -167,7 +172,12 @@ export const budgetService = {
       }
 
       // 4. Upcoming budget expiration (3 days or fewer remaining)
-      if (isActive && daysRemaining > 0 && daysRemaining <= EXPIRATION_WARNING_DAYS && prefs.budgetAlerts !== false) {
+      if (
+        isActive &&
+        daysRemaining > 0 &&
+        daysRemaining <= EXPIRATION_WARNING_DAYS &&
+        prefs.budgetAlerts !== false
+      ) {
         if (!recentAlertTypes.has("BUDGET_WARNING")) {
           toCreate.push({
             type: "BUDGET_WARNING",
@@ -189,13 +199,16 @@ export const budgetService = {
     return { generated: generated.length, alerts: generated };
   },
 
-  async create(userId: string, data: {
-    targetAmount: number;
-    alertThreshold?: number;
-    period?: string;
-    startDate: string;
-    categoryId: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      targetAmount: number;
+      alertThreshold?: number;
+      period?: string;
+      startDate: string;
+      categoryId: string;
+    },
+  ) {
     const startDate = new Date(data.startDate);
 
     // Validate category exists and belongs to the user
@@ -211,7 +224,7 @@ export const budgetService = {
     const existing = await budgetRepository.findByCategoryAndPeriod(
       userId,
       data.categoryId,
-      startDate
+      startDate,
     );
     if (existing) {
       throw new ConflictError("A budget already exists for this category and period");
@@ -232,7 +245,7 @@ export const budgetService = {
       period?: string;
       startDate?: string;
       categoryId?: string;
-    }
+    },
   ) {
     // Fetch existing budget and verify ownership
     const existing = await budgetRepository.findById(id);
@@ -253,9 +266,7 @@ export const budgetService = {
 
     // If categoryId or startDate changed, check for duplicate budgets
     const effectiveCategoryId = data.categoryId ?? existing.categoryId;
-    const effectiveStartDate = data.startDate
-      ? new Date(data.startDate)
-      : existing.startDate;
+    const effectiveStartDate = data.startDate ? new Date(data.startDate) : existing.startDate;
 
     if (
       data.categoryId ||
@@ -264,7 +275,7 @@ export const budgetService = {
       const duplicate = await budgetRepository.findByCategoryAndPeriod(
         userId,
         effectiveCategoryId,
-        effectiveStartDate
+        effectiveStartDate,
       );
       if (duplicate && duplicate.id !== id) {
         throw new ConflictError("A budget already exists for this category and period");

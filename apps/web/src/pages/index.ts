@@ -1,7 +1,13 @@
 /**
  * Page view barrel exports for router integration.
  */
-export { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from "./auth";
+export {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from "./auth";
 export { DashboardPage } from "./dashboard";
 export { TransactionsPage } from "./transactions";
 export { CategoriesPage } from "./categories";

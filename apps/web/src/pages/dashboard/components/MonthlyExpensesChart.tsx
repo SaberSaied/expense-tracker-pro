@@ -32,9 +32,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload, label }) => {
     `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const data = payload[0].payload;
-  const avgPerTxn = data.transactionCount > 0
-    ? data.total / data.transactionCount
-    : 0;
+  const avgPerTxn = data.transactionCount > 0 ? data.total / data.transactionCount : 0;
 
   return (
     <div className="glass-heavy rounded-xl px-4 py-3 shadow-dropdown min-w-[160px]">
@@ -86,7 +84,12 @@ export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
     setIsLoading(true);
     setError(null);
     try {
-      const params: { months?: number; range?: DateRangePreset; startDate?: string; endDate?: string } = {};
+      const params: {
+        months?: number;
+        range?: DateRangePreset;
+        startDate?: string;
+        endDate?: string;
+      } = {};
       if (filter.range === "custom" && filter.startDate && filter.endDate) {
         params.range = "custom";
         params.startDate = filter.startDate;
@@ -137,9 +140,7 @@ export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Monthly Expenses
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Monthly Expenses</h3>
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <DollarSign className="size-10 text-text-muted/40" />
@@ -162,16 +163,12 @@ export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Monthly Expenses
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Monthly Expenses</h3>
           <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
           <DollarSign className="size-10 text-text-muted/40" />
-          <p className="text-sm text-text-muted">
-            No expenses recorded yet for this period
-          </p>
+          <p className="text-sm text-text-muted">No expenses recorded yet for this period</p>
           <p className="text-xs text-text-muted">
             Add expense transactions to see your monthly expense trends
           </p>
@@ -185,22 +182,18 @@ export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
   const formatCurrency = (value: number) =>
     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const trend = summary && summary.monthsWithData >= 2
-    ? chartData
-        .filter((d) => d.transactionCount > 0)
-        .slice(-2)
-    : null;
-  const trendDirection = trend && trend.length === 2
-    ? trend[1].total > trend[0].total ? "up" : "down"
-    : "neutral";
+  const trend =
+    summary && summary.monthsWithData >= 2
+      ? chartData.filter((d) => d.transactionCount > 0).slice(-2)
+      : null;
+  const trendDirection =
+    trend && trend.length === 2 ? (trend[1].total > trend[0].total ? "up" : "down") : "neutral";
 
   return (
     <div className="glass rounded-xl p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Monthly Expenses
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Monthly Expenses</h3>
         <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
       </div>
 
@@ -233,15 +226,25 @@ export const MonthlyExpensesChart = React.memo(function MonthlyExpensesChart() {
           </div>
           <div className="text-center p-2 rounded-lg bg-overlay/[0.02]">
             <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
-              {trendDirection === "up" ? "Trending Up" : trendDirection === "down" ? "Trending Down" : "Trend"}
+              {trendDirection === "up"
+                ? "Trending Up"
+                : trendDirection === "down"
+                  ? "Trending Down"
+                  : "Trend"}
             </p>
             <div className="flex items-center justify-center gap-1.5">
               {trendDirection === "up" && <TrendingUp className="size-3.5 text-error" />}
               {trendDirection === "down" && <TrendingDown className="size-3.5 text-success" />}
-              <p className={clsx(
-                "text-sm font-bold tabular-nums",
-                trendDirection === "up" ? "text-error" : trendDirection === "down" ? "text-success" : "text-text-muted",
-              )}>
+              <p
+                className={clsx(
+                  "text-sm font-bold tabular-nums",
+                  trendDirection === "up"
+                    ? "text-error"
+                    : trendDirection === "down"
+                      ? "text-success"
+                      : "text-text-muted",
+                )}
+              >
                 {trendDirection === "up" ? "Rising" : trendDirection === "down" ? "Falling" : "—"}
               </p>
             </div>

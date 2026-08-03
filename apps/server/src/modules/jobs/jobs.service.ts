@@ -33,7 +33,7 @@ function previousMonth(): { year: number; month: number } {
  */
 async function runForAllUsers(
   job: JobName,
-  task: (userId: string) => Promise<{ generated?: number; suppressedByPreferences?: boolean }>
+  task: (userId: string) => Promise<{ generated?: number; suppressedByPreferences?: boolean }>,
 ): Promise<JobRunSummary> {
   const userIds = await getAllUserIds();
   const results: Array<Record<string, unknown>> = [];
@@ -55,7 +55,7 @@ async function runForAllUsers(
             error: err instanceof Error ? err.message : String(err),
           };
         }
-      })
+      }),
     );
 
     for (const { userId, outcome, error } of batchOutcomes) {
@@ -84,7 +84,7 @@ export const jobsService = {
   async checkBudgets(): Promise<JobRunSummary> {
     logger.info("[jobs] checkBudgets started");
     const summary = await runForAllUsers("check-budgets", (userId) =>
-      budgetService.generateAlerts(userId)
+      budgetService.generateAlerts(userId),
     );
     logger.info(`[jobs] checkBudgets done: ${summary.generated} notifications`);
     return summary;
@@ -96,7 +96,7 @@ export const jobsService = {
   async processReminders(): Promise<JobRunSummary> {
     logger.info("[jobs] processReminders started");
     const summary = await runForAllUsers("process-reminders", (userId) =>
-      reminderService.triggerDue(userId)
+      reminderService.triggerDue(userId),
     );
     logger.info(`[jobs] processReminders done: ${summary.generated} notifications`);
     return summary;
@@ -109,7 +109,7 @@ export const jobsService = {
   async detectUpcomingBills(windowDays = 7): Promise<JobRunSummary> {
     logger.info(`[jobs] detectUpcomingBills started (window=${windowDays}d)`);
     const summary = await runForAllUsers("detect-upcoming-bills", (userId) =>
-      reminderService.detectUpcomingBills(userId, { windowDays })
+      reminderService.detectUpcomingBills(userId, { windowDays }),
     );
     logger.info(`[jobs] detectUpcomingBills done: ${summary.generated} notifications`);
     return summary;
@@ -125,7 +125,7 @@ export const jobsService = {
     const y = year ?? prevYear;
     const m = month ?? prevMonth;
     const summary = await runForAllUsers("generate-monthly-summaries", (userId) =>
-      monthlySummaryService.generate(userId, y, m)
+      monthlySummaryService.generate(userId, y, m),
     );
     logger.info(`[jobs] generateMonthlySummaries done: ${summary.generated} notifications`);
     return summary;
@@ -146,7 +146,9 @@ export const jobsService = {
       generated: result.count,
       suppressed: 0,
       errors: [],
-      results: [{ deleted: result.count, olderThanDays: result.olderThanDays, cutoff: result.cutoff }],
+      results: [
+        { deleted: result.count, olderThanDays: result.olderThanDays, cutoff: result.cutoff },
+      ],
     };
     logger.info(`[jobs] cleanupNotifications done: ${result.count} notifications removed`);
     return summary;
@@ -159,7 +161,7 @@ export const jobsService = {
    */
   async run(
     name: JobName,
-    options: { windowDays?: number; year?: number; month?: number; retentionDays?: number } = {}
+    options: { windowDays?: number; year?: number; month?: number; retentionDays?: number } = {},
   ): Promise<JobRunSummary> {
     switch (name) {
       case "check-budgets":
@@ -184,14 +186,8 @@ export const jobsService = {
       "generate-monthly-summaries": await this.generateMonthlySummaries(),
       "cleanup-notifications": await this.cleanupNotifications(),
     };
-    const totalGenerated = Object.values(results).reduce(
-      (sum, r) => sum + r.generated,
-      0
-    );
-    const totalErrors = Object.values(results).reduce(
-      (sum, r) => sum + r.errors.length,
-      0
-    );
+    const totalGenerated = Object.values(results).reduce((sum, r) => sum + r.generated, 0);
+    const totalErrors = Object.values(results).reduce((sum, r) => sum + r.errors.length, 0);
     return { results, totalGenerated, totalErrors };
   },
 };

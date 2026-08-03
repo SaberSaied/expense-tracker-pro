@@ -56,7 +56,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -118,7 +118,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Groceries Plus", icon: "Apple", color: "#22C55E" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(groceries.status === 201, "Groceries category created");
   const groceriesId = (groceries.json.data?.category as Record<string, unknown>)?.id as string;
@@ -127,7 +127,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Power & Water", icon: "Zap", color: "#F59E0B" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(utilities.status === 201, "Utilities category created");
   const utilitiesId = (utilities.json.data?.category as Record<string, unknown>)?.id as string;
@@ -136,7 +136,7 @@ async function runTests() {
     "POST",
     "/categories",
     { name: "Freelance Income", icon: "Briefcase", color: "#3B82F6" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeCat.status === 201, "Income category created");
   const incomeCatId = (incomeCat.json.data?.category as Record<string, unknown>)?.id as string;
@@ -154,7 +154,7 @@ async function runTests() {
       date: "2026-06-05",
       categoryId: groceriesId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   await request(
     "POST",
@@ -166,7 +166,7 @@ async function runTests() {
       date: "2026-06-18",
       categoryId: groceriesId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   await request(
     "POST",
@@ -178,7 +178,7 @@ async function runTests() {
       date: "2026-06-10",
       categoryId: utilitiesId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   await request(
     "POST",
@@ -190,7 +190,7 @@ async function runTests() {
       date: "2026-06-01",
       categoryId: incomeCatId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // A transaction outside the month (must be excluded)
@@ -204,7 +204,7 @@ async function runTests() {
       date: "2026-05-20",
       categoryId: utilitiesId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // Budget on Groceries: $500 target → $600 spent → over budget
@@ -218,7 +218,7 @@ async function runTests() {
       startDate: "2026-06-01",
       categoryId: groceriesId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
   const budgetId = (budget.json.data?.budget as Record<string, unknown>)?.id as string;
@@ -230,7 +230,7 @@ async function runTests() {
     "GET",
     `/notifications/monthly-summary?month=${TEST_MONTH_STR}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(summaryRes.status === 200, "Get summary returns 200");
   assert(summaryRes.json.success === true, "Get summary success=true");
@@ -274,7 +274,7 @@ async function runTests() {
     "GET",
     "/notifications/monthly-summary?month=2025-01",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(emptySummary.status === 200, "Empty month returns 200");
   const emptyData = emptySummary.json.data?.summary as Record<string, any> | undefined;
@@ -291,7 +291,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { monthlySummary: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(enablePrefs.status === 200, "Enable monthlySummary preference");
   const prefsData = enablePrefs.json.data?.preferences as Record<string, unknown> | undefined;
@@ -301,7 +301,7 @@ async function runTests() {
     "POST",
     `/notifications/monthly-summary/generate?month=${TEST_MONTH_STR}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(generate.status === 200, "Generate returns 200");
   const genData = generate.json.data as Record<string, any> | undefined;
@@ -312,7 +312,7 @@ async function runTests() {
   assert(genData!.notification.type === "MONTHLY_SUMMARY", "Notification type is MONTHLY_SUMMARY");
   assert(
     (genData!.notification.title as string).includes("June 2026"),
-    "Notification title contains the month label"
+    "Notification title contains the month label",
   );
   const notifId = genData!.notification.id as string;
   assert(notifId != null, "Notification has an ID");
@@ -322,10 +322,14 @@ async function runTests() {
   assert(notifs.status === 200, "List notifications returns 200");
   const notifList = notifs.json.data?.notifications as Array<Record<string, any>> | undefined;
   const monthlyNotifs = notifList?.filter((n) => n.type === "MONTHLY_SUMMARY");
-  assert(monthlyNotifs != null && monthlyNotifs.length === 1, "Exactly one MONTHLY_SUMMARY notification");
   assert(
-    typeof monthlyNotifs![0].message === "string" && (monthlyNotifs![0].message as string).includes("Income: $5,000.00"),
-    "Notification message contains income line"
+    monthlyNotifs != null && monthlyNotifs.length === 1,
+    "Exactly one MONTHLY_SUMMARY notification",
+  );
+  assert(
+    typeof monthlyNotifs![0].message === "string" &&
+      (monthlyNotifs![0].message as string).includes("Income: $5,000.00"),
+    "Notification message contains income line",
   );
 
   // ─── 6. Dedup Within 24h ───────────────────────────────────
@@ -334,7 +338,7 @@ async function runTests() {
     "POST",
     `/notifications/monthly-summary/generate?month=${TEST_MONTH_STR}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(generateAgain.status === 200, "Second generate returns 200");
   const genData2 = generateAgain.json.data as Record<string, any> | undefined;
@@ -343,7 +347,8 @@ async function runTests() {
 
   // Still only one notification
   const notifsAfter = await request("GET", "/notifications", undefined, userTokens?.accessToken);
-  const notifListAfter = notifsAfter.json.data?.notifications as Array<Record<string, any>> | undefined;
+  const notifListAfter = notifsAfter.json.data?.notifications as
+    Array<Record<string, any>> | undefined;
   const monthlyAfter = notifListAfter?.filter((n) => n.type === "MONTHLY_SUMMARY");
   assert(monthlyAfter?.length === 1, "Still exactly one MONTHLY_SUMMARY notification");
 
@@ -353,7 +358,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { monthlySummary: false },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(disablePrefs.status === 200, "Disable monthlySummary preference");
 
@@ -361,7 +366,7 @@ async function runTests() {
     "POST",
     "/notifications/monthly-summary/generate?month=2025-01",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(generateDisabled.status === 200, "Generate with pref disabled returns 200");
   const genDisabled = generateDisabled.json.data as Record<string, any> | undefined;
@@ -371,7 +376,8 @@ async function runTests() {
 
   // No notification created for January 2025
   const notifsDisabled = await request("GET", "/notifications", undefined, userTokens?.accessToken);
-  const notifListDisabled = notifsDisabled.json.data?.notifications as Array<Record<string, any>> | undefined;
+  const notifListDisabled = notifsDisabled.json.data?.notifications as
+    Array<Record<string, any>> | undefined;
   const janNotifs = notifListDisabled?.filter((n) => (n.title as string).includes("January 2025"));
   assert(janNotifs?.length === 0, "No notification created while disabled");
 
@@ -380,7 +386,7 @@ async function runTests() {
     "GET",
     "/notifications/monthly-summary?month=2025-01",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(previewDisabled.status === 200, "GET preview works regardless of preference");
 
@@ -389,7 +395,7 @@ async function runTests() {
     "PUT",
     "/notifications/preferences",
     { monthlySummary: true },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
 
   // ─── 8. Validation ─────────────────────────────────────────
@@ -398,7 +404,7 @@ async function runTests() {
     "GET",
     "/notifications/monthly-summary?month=not-a-month",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badMonth.status === 400, "Invalid month format returns 400");
 
@@ -406,7 +412,7 @@ async function runTests() {
     "POST",
     "/notifications/monthly-summary/generate?month=2026-13",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badMonth2.status === 400, "Month 13 returns 400");
 
@@ -433,7 +439,7 @@ async function runTests() {
     "GET",
     `/notifications/monthly-summary?month=${TEST_MONTH_STR}`,
     undefined,
-    secondTokens.accessToken
+    secondTokens.accessToken,
   );
   assert(secondSummary.status === 200, "Second user summary returns 200");
   const secondData = secondSummary.json.data?.summary as Record<string, any> | undefined;

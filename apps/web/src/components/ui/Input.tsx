@@ -1,8 +1,7 @@
 import React from "react";
 import { clsx } from "clsx";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Label text displayed above the input. */
   label?: string;
   /** Error message displayed below the input. */
@@ -19,10 +18,7 @@ export interface InputProps
  * Glassmorphic text input with label, icon slots, and error states.
  */
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  (
-    { label, error, leftIcon, rightIcon, helperText, required, className, id, ...props },
-    ref,
-  ) => {
+  ({ label, error, leftIcon, rightIcon, helperText, required, className, id, ...props }, ref) => {
     // Guard against label-less, id-less inputs so aria ids never collide as
     // "undefined-error" / "undefined-helper" (WCAG 1.3.1).
     const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
@@ -32,10 +28,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium text-text-secondary"
-          >
+          <label htmlFor={inputId} className="text-sm font-medium text-text-secondary">
             {label}
             {required && (
               <span className="text-error ml-0.5" aria-hidden="true">
@@ -68,9 +61,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
             aria-invalid={!!error}
             aria-required={required || undefined}
-            aria-describedby={
-              error ? errorId : helperText ? helperId : undefined
-            }
+            aria-describedby={error ? errorId : helperText ? helperId : undefined}
             {...props}
           />
           {rightIcon && (
@@ -80,11 +71,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && errorId && (
-          <p
-            id={errorId}
-            className="text-xs text-error flex items-center gap-1"
-            role="alert"
-          >
+          <p id={errorId} className="text-xs text-error flex items-center gap-1" role="alert">
             {error}
           </p>
         )}

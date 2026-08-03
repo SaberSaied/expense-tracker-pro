@@ -1,4 +1,5 @@
-export type ColumnName = "id" | "date" | "type" | "amount" | "description" | "category" | "paymentmethod" | "notes";
+export type ColumnName =
+  "id" | "date" | "type" | "amount" | "description" | "category" | "paymentmethod" | "notes";
 
 export type SortField = "date" | "amount" | "description" | "type";
 

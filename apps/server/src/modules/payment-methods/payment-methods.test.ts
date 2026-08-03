@@ -59,7 +59,7 @@ async function request(
   method: string,
   path: string,
   body?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; json: ApiResult }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -121,9 +121,13 @@ async function runTests() {
   assert(defaults.status === 200, "List payment methods returns 200");
   assert(defaults.json.success === true, "List payment methods success=true");
 
-  const defaultPms = defaults.json.data?.paymentMethods as Array<Record<string, unknown>> | undefined;
+  const defaultPms = defaults.json.data?.paymentMethods as
+    Array<Record<string, unknown>> | undefined;
   assert(defaultPms != null, "Payment methods array exists");
-  assert(defaultPms!.length >= 5, `At least 5 default payment methods created (got ${defaultPms!.length})`);
+  assert(
+    defaultPms!.length >= 5,
+    `At least 5 default payment methods created (got ${defaultPms!.length})`,
+  );
 
   // Verify specific default payment methods
   const cashPm = defaultPms!.find((pm) => pm.name === "Cash");
@@ -152,8 +156,15 @@ async function runTests() {
   const created = await request(
     "POST",
     "/payment-methods",
-    { type: "CREDIT_CARD", name: "Chase Sapphire", lastFour: "1234", isDefault: true, icon: "CreditCard", color: "#3B82F6" },
-    userTokens?.accessToken
+    {
+      type: "CREDIT_CARD",
+      name: "Chase Sapphire",
+      lastFour: "1234",
+      isDefault: true,
+      icon: "CreditCard",
+      color: "#3B82F6",
+    },
+    userTokens?.accessToken,
   );
   assert(created.status === 201, "Create returns 201");
   assert(created.json.success === true, "Create success=true");
@@ -175,7 +186,10 @@ async function runTests() {
   assert(list.json.success === true, "List success=true");
   const allPms = list.json.data?.paymentMethods as Array<Record<string, unknown>> | undefined;
   assert(allPms != null, "Payment methods array exists");
-  assert(allPms!.length >= 6, `At least 6 payment methods (defaults + custom) (got ${allPms!.length})`);
+  assert(
+    allPms!.length >= 6,
+    `At least 6 payment methods (defaults + custom) (got ${allPms!.length})`,
+  );
 
   // Verify default payment method (isDefault should be ours now)
   const defaultPm = allPms!.find((pm) => pm.isDefault === true);
@@ -184,7 +198,12 @@ async function runTests() {
 
   // ─── 4. Get Payment Method Details (With Statistics) ─────────
   console.log("\n─── 4. Get Payment Method Details (GET /payment-methods/:id) ───");
-  const byId = await request("GET", `/payment-methods/${createdId}`, undefined, userTokens?.accessToken);
+  const byId = await request(
+    "GET",
+    `/payment-methods/${createdId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(byId.status === 200, "Get by ID returns 200");
   assert(byId.json.success === true, "Get by ID success=true");
   const fetchedPm = byId.json.data?.paymentMethod as Record<string, unknown> | undefined;
@@ -210,7 +229,7 @@ async function runTests() {
     "PATCH",
     `/payment-methods/${createdId}`,
     { name: "Chase Sapphire Preferred", icon: "Shield", color: "#6366F1", isDefault: false },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updated.status === 200, "Update returns 200");
   assert(updated.json.success === true, "Update success=true");
@@ -226,7 +245,7 @@ async function runTests() {
     "PATCH",
     `/payment-methods/${createdId}`,
     { name: "Chase Sapphire Reserve" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(partialUpdate.status === 200, "Partial update returns 200");
   const partialPm = partialUpdate.json.data?.paymentMethod as Record<string, unknown> | undefined;
@@ -242,16 +261,26 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "DEBIT_CARD", name: "Temp Card", icon: "CreditCard", color: "#8B5CF6" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   const deleteId = (toDelete.json.data?.paymentMethod as Record<string, unknown>)?.id as string;
   assert(toDelete.status === 201, "Payment method created for deletion test");
 
-  const deleted = await request("DELETE", `/payment-methods/${deleteId}`, undefined, userTokens?.accessToken);
+  const deleted = await request(
+    "DELETE",
+    `/payment-methods/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(deleted.status === 204, "Delete returns 204 No Content");
 
   // Verify it's gone
-  const gone = await request("GET", `/payment-methods/${deleteId}`, undefined, userTokens?.accessToken);
+  const gone = await request(
+    "GET",
+    `/payment-methods/${deleteId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(gone.status === 404, "Deleted payment method returns 404");
 
   // ─── 7. Delete Payment Method (With Transactions — Should Fail) ──
@@ -276,13 +305,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Test transaction for payment method delete guard",
       date: "2026-07-01",
       categoryId: foodCat!.id,
       paymentMethodId: targetPmId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(txn.status === 201, "Transaction created with payment method");
 
@@ -291,22 +320,30 @@ async function runTests() {
     "DELETE",
     `/payment-methods/${targetPmId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
-  assert(deleteWithTxn.status === 400, "Cannot delete payment method with linked transactions (400)");
+  assert(
+    deleteWithTxn.status === 400,
+    "Cannot delete payment method with linked transactions (400)",
+  );
   const deleteErr = deleteWithTxn.json;
   assert(deleteErr.success === false, "Delete with transactions fails");
   const errMsg = String(deleteErr.message ?? "");
   assert(
     errMsg.includes("transaction") || errMsg.includes("reassign"),
-    "Error message mentions transactions/reassignment"
+    "Error message mentions transactions/reassignment",
   );
 
   // ─── 8. Transaction Integration (Statistics Update) ─────────
   console.log("\n─── 8. Payment Method Statistics via Transaction Integration ───");
 
   // Get the stats for the payment method that now has a transaction
-  const statsById = await request("GET", `/payment-methods/${targetPmId}`, undefined, userTokens?.accessToken);
+  const statsById = await request(
+    "GET",
+    `/payment-methods/${targetPmId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(statsById.status === 200, "Get payment method with stats returns 200");
 
   const pmWithStats = statsById.json.data?.paymentMethod as Record<string, unknown> | undefined;
@@ -325,18 +362,29 @@ async function runTests() {
       categoryId: foodCat!.id,
       paymentMethodId: targetPmId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeTxn.status === 201, "Income transaction created with payment method");
 
   // Fetch stats again to verify aggregation
-  const statsAfterIncome = await request("GET", `/payment-methods/${targetPmId}`, undefined, userTokens?.accessToken);
+  const statsAfterIncome = await request(
+    "GET",
+    `/payment-methods/${targetPmId}`,
+    undefined,
+    userTokens?.accessToken,
+  );
   const pmStatsAfter = statsAfterIncome.json.data?.paymentMethod as Record<string, unknown>;
   const stats2 = pmStatsAfter.stats as Record<string, unknown>;
 
-  assert(stats2.totalTransactions === 2, `Stats shows 2 transactions (got ${stats2.totalTransactions})`);
+  assert(
+    stats2.totalTransactions === 2,
+    `Stats shows 2 transactions (got ${stats2.totalTransactions})`,
+  );
   assert(stats2.totalIncome === 1000, `Stats shows total income $1000 (got ${stats2.totalIncome})`);
-  assert(stats2.totalExpense === 42.5, `Stats shows total expense $42.5 (got ${stats2.totalExpense})`);
+  assert(
+    stats2.totalExpense === 42.5,
+    `Stats shows total expense $42.5 (got ${stats2.totalExpense})`,
+  );
   assert(stats2.netAmount === 957.5, `Stats shows net amount $957.5 (got ${stats2.netAmount})`);
   assert(stats2.firstUsed != null, "Stats has firstUsed date");
   assert(stats2.lastUsed != null, "Stats has lastUsed date");
@@ -354,9 +402,15 @@ async function runTests() {
   secondUserTokens = register2.json.data?.tokens as { accessToken: string; refreshToken: string };
 
   // Second user's list should NOT include primary user's custom payment methods
-  const secondUserPms = await request("GET", "/payment-methods", undefined, secondUserTokens?.accessToken);
+  const secondUserPms = await request(
+    "GET",
+    "/payment-methods",
+    undefined,
+    secondUserTokens?.accessToken,
+  );
   assert(secondUserPms.status === 200, "Second user list returns 200");
-  const secondPms = secondUserPms.json.data?.paymentMethods as Array<Record<string, unknown>> | undefined;
+  const secondPms = secondUserPms.json.data?.paymentMethods as
+    Array<Record<string, unknown>> | undefined;
   const hasChase = secondPms!.some((pm) => pm.name === "Chase Sapphire Reserve");
   assert(!hasChase, "Second user cannot see primary user's custom payment methods");
 
@@ -369,7 +423,7 @@ async function runTests() {
     "GET",
     `/payment-methods/${createdId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(forbiddenGet.status === 404, "Second user cannot get primary's payment method (404)");
 
@@ -378,18 +432,24 @@ async function runTests() {
     "PATCH",
     `/payment-methods/${createdId}`,
     { name: "Hacked" },
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
-  assert(forbiddenUpdate.status === 404, "Second user cannot update primary's payment method (404)");
+  assert(
+    forbiddenUpdate.status === 404,
+    "Second user cannot update primary's payment method (404)",
+  );
 
   // Second user cannot delete primary user's payment method
   const forbiddenDelete = await request(
     "DELETE",
     `/payment-methods/${createdId}`,
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
-  assert(forbiddenDelete.status === 404, "Second user cannot delete primary's payment method (404)");
+  assert(
+    forbiddenDelete.status === 404,
+    "Second user cannot delete primary's payment method (404)",
+  );
 
   // ─── 10. Validation Errors ──────────────────────────────────
   console.log("\n─── 10. Validation Errors ───");
@@ -399,7 +459,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH", name: "Bad Icon PM", icon: "NonExistentIcon", color: "#10B981" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidIcon.status === 400, "Invalid icon returns 400");
   assert(invalidIcon.json.success === false, "Invalid icon response success=false");
@@ -410,7 +470,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH", name: "Bad Color PM", icon: "Wallet", color: "not-a-color" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badColor.status === 400, "Invalid color format returns 400");
   assert(badColor.json.success === false, "Invalid color response success=false");
@@ -420,7 +480,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH", name: "Non-Palette PM", icon: "Wallet", color: "#000000" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(nonPaletteColor.status === 400, "Non-palette color returns 400");
   assert(nonPaletteColor.json.success === false, "Non-palette color rejected");
@@ -430,7 +490,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingName.status === 400, "Missing name returns 400");
 
@@ -439,7 +499,7 @@ async function runTests() {
     "GET",
     "/payment-methods/not-a-uuid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(invalidUuid.status === 400, "Invalid UUID returns 400");
 
@@ -448,7 +508,7 @@ async function runTests() {
     "GET",
     "/payment-methods/00000000-0000-0000-0000-000000000000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(nonExistent.status === 404, "Non-existent UUID returns 404");
 
@@ -458,7 +518,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH", name: "Cash", icon: "Wallet", color: "#10B981" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(duplicate.status === 409, "Duplicate payment method name returns 409");
   assert(duplicate.json.success === false, "Duplicate name fails");
@@ -468,7 +528,7 @@ async function runTests() {
     "PATCH",
     `/payment-methods/${createdId}`,
     { name: "Cash" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(updateDuplicate.status === 409, "Updating to duplicate name returns 409");
 
@@ -481,7 +541,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CASH", name: "Unauth", icon: "Wallet", color: "#10B981" },
-    null
+    null,
   );
   assert(unauthCreate.status === 401, "Create without auth returns 401");
 

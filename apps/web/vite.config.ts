@@ -11,7 +11,20 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
+    target: "es2022",
+    sourcemap: false,
+    minify: "esbuild",
+    cssMinify: true,
+    chunkSizeWarningLimit: 600,
     // Long-lived vendor chunks split by purpose so route chunks stay small
     // and browsers can cache libraries independently of app code.
     rollupOptions: {

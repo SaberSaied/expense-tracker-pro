@@ -3,10 +3,7 @@ export { notificationService } from "./notifications.service";
 export { monthlySummaryService } from "./monthly-summary.service";
 export { notificationRepository } from "./notifications.repository";
 export { notificationRoutes } from "./notifications.routes";
-export type {
-  NotificationPreferences,
-  NotificationPreferencesInput,
-} from "./notifications.types";
+export type { NotificationPreferences, NotificationPreferencesInput } from "./notifications.types";
 export { DEFAULT_NOTIFICATION_PREFERENCES } from "./notifications.types";
 export {
   updateNotificationPreferencesSchema,

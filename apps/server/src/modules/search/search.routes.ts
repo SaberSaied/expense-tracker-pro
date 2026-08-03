@@ -18,7 +18,7 @@ router.get(
   "/suggestions",
   validate(searchSuggestionsSchema, "query"),
   authMiddleware,
-  asyncHandler(searchController.suggestions)
+  asyncHandler(searchController.suggestions),
 );
 
 /**
@@ -34,7 +34,7 @@ router.get(
   "/",
   validate(globalSearchQuerySchema, "query"),
   authMiddleware,
-  asyncHandler(searchController.globalSearch)
+  asyncHandler(searchController.globalSearch),
 );
 
 export { router as searchRoutes };

@@ -81,7 +81,7 @@ export const categoriesApi = {
   async update(id: string, input: UpdateCategoryInput): Promise<ApiCategory> {
     const response = await api.patch<ApiResponse<{ category: ApiCategory }>>(
       `/categories/${id}`,
-      input
+      input,
     );
     return response.data.category;
   },

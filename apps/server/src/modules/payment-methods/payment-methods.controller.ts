@@ -15,7 +15,10 @@ export const paymentMethodController = {
 
   async findById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const paymentMethod = await paymentMethodService.findById(req.user.id, req.params.id as string);
+      const paymentMethod = await paymentMethodService.findById(
+        req.user.id,
+        req.params.id as string,
+      );
       sendSuccess(res, { paymentMethod });
     } catch (err) {
       next(err);
@@ -33,7 +36,11 @@ export const paymentMethodController = {
 
   async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const paymentMethod = await paymentMethodService.update(req.user.id, req.params.id as string, req.body);
+      const paymentMethod = await paymentMethodService.update(
+        req.user.id,
+        req.params.id as string,
+        req.body,
+      );
       sendSuccess(res, { paymentMethod });
     } catch (err) {
       next(err);

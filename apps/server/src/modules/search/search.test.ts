@@ -48,7 +48,7 @@ async function request(
   method: string,
   path: string,
   reqBody?: unknown,
-  token?: string | null
+  token?: string | null,
 ): Promise<{ status: number; data: any; text: string }> {
   const headers: Record<string, string> = {};
   if (reqBody !== undefined) headers["Content-Type"] = "application/json";
@@ -122,7 +122,7 @@ async function runTests() {
     "POST",
     "/payment-methods",
     { type: "CREDIT_CARD", name: "Test Visa", lastFour: "1234" },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(pm.status === 201, "Payment method created");
   testPaymentMethodId = pm.data?.data?.paymentMethod?.id ?? pm.data?.data?.id ?? null;
@@ -136,13 +136,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 42.50,
+      amount: 42.5,
       description: "Whole Foods Market groceries",
       date: today,
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx1.status === 201, "Created expense transaction");
 
@@ -151,12 +151,12 @@ async function runTests() {
     "/transactions",
     {
       type: "INCOME",
-      amount: 5000.00,
+      amount: 5000.0,
       description: "Monthly Paycheck",
       date: today,
       categoryId: incomeCategoryId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx2.status === 201, "Created income transaction");
 
@@ -170,7 +170,7 @@ async function runTests() {
       startDate: today,
       period: "MONTHLY",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(budget.status === 201, "Budget created");
 
@@ -184,7 +184,7 @@ async function runTests() {
       deadline: "2027-01-01",
       priority: "HIGH",
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(goal.status === 201, "Savings goal created");
 
@@ -200,7 +200,7 @@ async function runTests() {
 
   // Should find the transaction
   const hasTx = search1.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(hasTx === true, "Search finds transaction by description");
 
@@ -210,13 +210,13 @@ async function runTests() {
   const searchPartial = await request("GET", "/search?q=Food", undefined, userTokens?.accessToken);
   assert(searchPartial.status === 200, "Search for 'Food' returns 200");
   const partialMatch = searchPartial.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title.includes("Whole Foods")
+    (r: any) => r.entity === "transactions" && r.title.includes("Whole Foods"),
   );
   assert(partialMatch === true, "Partial match finds 'Whole Foods' from 'Food'");
 
   // Should also find the "Food" category
   const catMatch = searchPartial.data?.data?.results?.some(
-    (r: any) => r.entity === "categories" && r.title === "Food"
+    (r: any) => r.entity === "categories" && r.title === "Food",
   );
   assert(catMatch === true, "Partial match also finds 'Food' category");
 
@@ -226,24 +226,34 @@ async function runTests() {
   const searchUpper = await request("GET", "/search?q=WHOLE", undefined, userTokens?.accessToken);
   assert(searchUpper.status === 200, "Search for 'WHOLE' returns 200");
   const upperMatch = searchUpper.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title.includes("Whole Foods")
+    (r: any) => r.entity === "transactions" && r.title.includes("Whole Foods"),
   );
   assert(upperMatch === true, "Case-insensitive search finds match");
 
-  const searchLower = await request("GET", "/search?q=paycheck", undefined, userTokens?.accessToken);
+  const searchLower = await request(
+    "GET",
+    "/search?q=paycheck",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(searchLower.status === 200, "Search for 'paycheck' returns 200");
   const lowerMatch = searchLower.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(lowerMatch === true, "Case-insensitive search finds 'Monthly Paycheck'");
 
   // ─── 5. Multiple Keywords ──────────────────────────────────
   console.log("\n─── 5. Multiple Keywords ───");
 
-  const searchMulti = await request("GET", "/search?q=Whole+groceries", undefined, userTokens?.accessToken);
+  const searchMulti = await request(
+    "GET",
+    "/search?q=Whole+groceries",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(searchMulti.status === 200, "Search for 'Whole groceries' returns 200");
   const multiMatch = searchMulti.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(multiMatch === true, "Multiple keywords find transaction");
 
@@ -255,7 +265,7 @@ async function runTests() {
     "GET",
     "/search?q=Whole&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchTxOnly.status === 200, "Entity-specific search returns 200");
   const allTx = searchTxOnly.data?.data?.results?.every((r: any) => r.entity === "transactions");
@@ -266,7 +276,7 @@ async function runTests() {
     "GET",
     "/search?q=Food&entities=categories",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchCatOnly.status === 200, "Category-only search returns 200");
   const allCat = searchCatOnly.data?.data?.results?.every((r: any) => r.entity === "categories");
@@ -277,11 +287,11 @@ async function runTests() {
     "GET",
     "/search?q=Emergency&entities=savings-goals",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchGoalOnly.status === 200, "Savings goal search returns 200");
   const goalMatch = searchGoalOnly.data?.data?.results?.some(
-    (r: any) => r.entity === "savings-goals" && r.title === "Emergency Fund"
+    (r: any) => r.entity === "savings-goals" && r.title === "Emergency Fund",
   );
   assert(goalMatch === true, "Finds savings goal by name");
 
@@ -290,11 +300,11 @@ async function runTests() {
     "GET",
     "/search?q=Visa&entities=payment-methods",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(searchPm.status === 200, "Payment method search returns 200");
   const pmMatch = searchPm.data?.data?.results?.some(
-    (r: any) => r.entity === "payment-methods" && r.title === "Test Visa"
+    (r: any) => r.entity === "payment-methods" && r.title === "Test Visa",
   );
   assert(pmMatch === true, "Finds payment method by name");
 
@@ -305,13 +315,18 @@ async function runTests() {
   assert(searchCounts.data?.data?.countsByEntity != null, "Response includes countsByEntity");
   assert(
     typeof searchCounts.data?.data?.countsByEntity === "object",
-    "countsByEntity is an object"
+    "countsByEntity is an object",
   );
 
   // ─── 8. Limit Parameter ────────────────────────────────────
   console.log("\n─── 8. Limit Parameter ───");
 
-  const searchLimit = await request("GET", "/search?q=a&limit=1", undefined, userTokens?.accessToken);
+  const searchLimit = await request(
+    "GET",
+    "/search?q=a&limit=1",
+    undefined,
+    userTokens?.accessToken,
+  );
   assert(searchLimit.status === 200, "Search with limit returns 200");
 
   // ─── 9. Empty Query ────────────────────────────────────────
@@ -327,7 +342,7 @@ async function runTests() {
     "GET",
     "/search?q=test&entities=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badEntity.status === 400, "Invalid entity returns 400");
 
@@ -338,7 +353,7 @@ async function runTests() {
     "GET",
     "/search?q=xyznonexistent2026",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(noResults.status === 200, "Search with no matches returns 200");
   assert(noResults.data?.data?.results?.length === 0, "Empty results array");
@@ -358,21 +373,21 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(catFilter.status === 200, "Category filter returns 200");
   const catFilteredTx = catFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(catFilteredTx === true, "Category filter finds expense transaction");
   const catFilteredBudget = catFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "budgets" && r.title === "Food"
+    (r: any) => r.entity === "budgets" && r.title === "Food",
   );
   assert(catFilteredBudget === true, "Category filter finds budget by category");
 
   // Should NOT find income transaction (different category)
   const catFilteredIncome = catFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(catFilteredIncome !== true, "Category filter excludes other category transactions");
 
@@ -383,15 +398,15 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId},${incomeCategoryId}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(multiCatFilter.status === 200, "Multi-category filter returns 200");
   const multiTx1 = multiCatFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(multiTx1 === true, "Multi-category finds expense transaction");
   const multiTx2 = multiCatFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(multiTx2 === true, "Multi-category finds income transaction");
 
@@ -402,15 +417,15 @@ async function runTests() {
     "GET",
     "/search?q=a&categoryType=income",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(incomeTypeFilter.status === 200, "Income category type filter returns 200");
   const incomeTx = incomeTypeFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(incomeTx === true, "Income type filter finds income transaction");
   const incomeNoExpense = incomeTypeFilter.data?.data?.results?.every(
-    (r: any) => r.entity !== "transactions" || !r.title.includes("Whole Foods")
+    (r: any) => r.entity !== "transactions" || !r.title.includes("Whole Foods"),
   );
   assert(incomeNoExpense !== false, "Income type filter excludes expense transactions");
 
@@ -421,11 +436,11 @@ async function runTests() {
     "GET",
     "/search?q=a&categoryType=expense",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(expenseTypeFilter.status === 200, "Expense category type filter returns 200");
   const expenseTx = expenseTypeFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(expenseTx === true, "Expense type filter finds expense transaction");
 
@@ -436,17 +451,20 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId},${incomeCategoryId}&categoryType=income`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(combinedFilter.status === 200, "Combined filter returns 200");
   const combinedIncome = combinedFilter.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(combinedIncome === true, "Combined filter finds income transaction");
   const combinedNoExpense = combinedFilter.data?.data?.results?.every(
-    (r: any) => r.entity !== "transactions" || !r.title.includes("Whole Foods")
+    (r: any) => r.entity !== "transactions" || !r.title.includes("Whole Foods"),
   );
-  assert(combinedNoExpense !== false, "Combined filter excludes expense even though Food category is in categoryIds");
+  assert(
+    combinedNoExpense !== false,
+    "Combined filter excludes expense even though Food category is in categoryIds",
+  );
 
   // ─── 19. Validation: Invalid Category UUID ─────────────────
   console.log("\n─── 19. Validation: Invalid Category UUID ───");
@@ -455,7 +473,7 @@ async function runTests() {
     "GET",
     "/search?q=a&categoryIds=not-a-uuid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badCategoryUuid.status === 400, "Invalid category UUID returns 400");
 
@@ -466,7 +484,7 @@ async function runTests() {
     "GET",
     "/search?q=a&categoryType=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badCategoryType.status === 400, "Invalid category type returns 400");
 
@@ -477,11 +495,11 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=this_month",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateThisMonth.status === 200, "Date preset 'this_month' returns 200");
   const thisMonthTx = dateThisMonth.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   assert(thisMonthTx === true, "Date filter 'this_month' finds transactions");
 
@@ -492,11 +510,11 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=this_year",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateThisYear.status === 200, "Date preset 'this_year' returns 200");
   const thisYearTx = dateThisYear.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   assert(thisYearTx === true, "Date filter 'this_year' finds transactions");
 
@@ -507,12 +525,10 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=today",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateToday.status === 200, "Date preset 'today' returns 200");
-  const todayTx = dateToday.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions"
-  );
+  const todayTx = dateToday.data?.data?.results?.some((r: any) => r.entity === "transactions");
   assert(todayTx === true, "Date filter 'today' finds today's transactions");
 
   // ─── 24. Date Filters: Yesterday ───────────────────────────
@@ -522,12 +538,15 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=yesterday",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateYesterday.status === 200, "Date preset 'yesterday' returns 200");
   // Yesterday may not have transactions (depends on when tests run)
   // Just verify the request succeeds and returns valid structure
-  assert(typeof dateYesterday.data?.data?.totalCount === "number", "Date filter 'yesterday' returns valid count");
+  assert(
+    typeof dateYesterday.data?.data?.totalCount === "number",
+    "Date filter 'yesterday' returns valid count",
+  );
 
   // ─── 25. Date Filters: This Week ───────────────────────────
   console.log("\n─── 25. Date Filters: This Week ───");
@@ -536,11 +555,11 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=this_week",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateThisWeek.status === 200, "Date preset 'this_week' returns 200");
   const thisWeekTx = dateThisWeek.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   assert(thisWeekTx === true, "Date filter 'this_week' finds transactions");
 
@@ -551,11 +570,14 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=last_week",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateLastWeek.status === 200, "Date preset 'last_week' returns 200");
   // Just verify structure
-  assert(typeof dateLastWeek.data?.data?.totalCount === "number", "Date filter 'last_week' returns valid count");
+  assert(
+    typeof dateLastWeek.data?.data?.totalCount === "number",
+    "Date filter 'last_week' returns valid count",
+  );
 
   // ─── 27. Date Filters: Last Month ──────────────────────────
   console.log("\n─── 27. Date Filters: Last Month ───");
@@ -564,10 +586,13 @@ async function runTests() {
     "GET",
     "/search?q=a&datePreset=last_month",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateLastMonth.status === 200, "Date preset 'last_month' returns 200");
-  assert(typeof dateLastMonth.data?.data?.totalCount === "number", "Date filter 'last_month' returns valid count");
+  assert(
+    typeof dateLastMonth.data?.data?.totalCount === "number",
+    "Date filter 'last_month' returns valid count",
+  );
 
   // ─── 28. Date Filters: Custom Date Range ───────────────────
   console.log("\n─── 28. Date Filters: Custom Date Range ───");
@@ -581,12 +606,10 @@ async function runTests() {
     "GET",
     `/search?q=a&startDate=${startStr}&endDate=${endStr}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(customRange.status === 200, "Custom date range returns 200");
-  const rangeTx = customRange.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions"
-  );
+  const rangeTx = customRange.data?.data?.results?.some((r: any) => r.entity === "transactions");
   assert(rangeTx === true, "Custom date range finds transactions");
 
   // ─── 29. Date Filters: datePreset + startDate Conflict ─────
@@ -596,7 +619,7 @@ async function runTests() {
     "GET",
     `/search?q=a&datePreset=today&startDate=${startStr}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(conflict.status === 400, "datePreset + startDate returns 400");
 
@@ -607,7 +630,7 @@ async function runTests() {
     "GET",
     `/search?q=a&startDate=${startStr}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingEnd.status === 400, "startDate without endDate returns 400");
 
@@ -618,7 +641,7 @@ async function runTests() {
     "GET",
     `/search?q=a&endDate=${endStr}`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(missingStart.status === 400, "endDate without startDate returns 400");
 
@@ -629,7 +652,7 @@ async function runTests() {
     "GET",
     "/search?q=a&startDate=not-a-date&endDate=also-bad",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDate.status === 400, "Invalid date format returns 400");
 
@@ -640,11 +663,11 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId}&datePreset=this_year`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(combinedCatDate.status === 200, "Category + date filter returns 200");
   const comboMatch = combinedCatDate.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(comboMatch === true, "Category + date filter finds expected transaction");
 
@@ -654,13 +677,13 @@ async function runTests() {
     "/transactions",
     {
       type: "EXPENSE",
-      amount: 3.50,
+      amount: 3.5,
       description: "Coffee and bagel",
       date: today,
       categoryId: testCategoryId,
       paymentMethodId: testPaymentMethodId,
     },
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(tx3.status === 201, "Created small expense transaction");
 
@@ -671,15 +694,15 @@ async function runTests() {
     "GET",
     "/search?q=a&minAmount=10",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(minAmountSearch.status === 200, "Min amount filter returns 200");
   const minAmtTx = minAmountSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(minAmtTx === true, "minAmount=10 finds $42.50 transaction");
   const minAmtSmall = minAmountSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel"
+    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel",
   );
   assert(minAmtSmall !== true, "minAmount=10 excludes $3.50 transaction");
 
@@ -690,15 +713,15 @@ async function runTests() {
     "GET",
     "/search?q=a&maxAmount=10",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(maxAmountSearch.status === 200, "Max amount filter returns 200");
   const maxAmtSmall = maxAmountSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel"
+    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel",
   );
   assert(maxAmtSmall === true, "maxAmount=10 finds $3.50 transaction");
   const maxAmtLarge = maxAmountSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(maxAmtLarge !== true, "maxAmount=10 excludes $5000 transaction");
 
@@ -709,11 +732,11 @@ async function runTests() {
     "GET",
     "/search?q=a&minAmount=40&maxAmount=100",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(rangeSearch.status === 200, "Amount range filter returns 200");
   const amountRangeTx = rangeSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(amountRangeTx === true, "Range 40-100 finds $42.50 transaction");
 
@@ -724,15 +747,15 @@ async function runTests() {
     "GET",
     "/search?q=a&exactAmount=5000",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(exactSearch.status === 200, "Exact amount filter returns 200");
   const exactTx = exactSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(exactTx === true, "exactAmount=5000 finds $5000 transaction");
   const exactNoMatch = exactSearch.data?.data?.results?.every(
-    (r: any) => r.entity !== "transactions" || r.amount === 5000
+    (r: any) => r.entity !== "transactions" || r.amount === 5000,
   );
   assert(exactNoMatch !== false, "exactAmount=5000 excludes other amounts");
 
@@ -743,11 +766,11 @@ async function runTests() {
     "GET",
     "/search?q=a&exactAmount=42.50",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(decimalSearch.status === 200, "Decimal exact amount filter returns 200");
   const decimalTx = decimalSearch.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(decimalTx === true, "exactAmount=42.50 finds $42.50 transaction");
 
@@ -758,7 +781,7 @@ async function runTests() {
     "GET",
     "/search?q=a&exactAmount=100&minAmount=50",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(conflictAmt.status === 400, "exactAmount + minAmount returns 400");
 
@@ -766,7 +789,7 @@ async function runTests() {
     "GET",
     "/search?q=a&exactAmount=100&maxAmount=200",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(conflictAmt2.status === 400, "exactAmount + maxAmount returns 400");
 
@@ -777,7 +800,7 @@ async function runTests() {
     "GET",
     "/search?q=a&minAmount=100&maxAmount=50",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badRange.status === 400, "minAmount > maxAmount returns 400");
 
@@ -788,7 +811,7 @@ async function runTests() {
     "GET",
     "/search?q=a&minAmount=-10",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(negativeAmt.status === 400, "Negative minAmount returns 400");
 
@@ -799,7 +822,7 @@ async function runTests() {
     "GET",
     "/search?q=a&exactAmount=1.234",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badDecimals.status === 400, "Three decimal places returns 400");
 
@@ -810,11 +833,11 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId}&minAmount=1&maxAmount=100`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(amtCatCombo.status === 200, "Amount + category filter returns 200");
   const comboFound = amtCatCombo.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(comboFound === true, "Amount + category finds expense in Food category in 1-100 range");
 
@@ -825,15 +848,15 @@ async function runTests() {
     "GET",
     `/search?q=a&datePreset=this_year&minAmount=10&maxAmount=100`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(dateAmtCombo.status === 200, "Date + amount filter returns 200");
   const dateAmtTx = dateAmtCombo.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(dateAmtTx === true, "Date + amount finds $42.50 transaction in this year");
   const dateAmtExcluded = dateAmtCombo.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck"
+    (r: any) => r.entity === "transactions" && r.title === "Monthly Paycheck",
   );
   assert(dateAmtExcluded !== true, "Date + amount excludes $5000 transaction (above max)");
 
@@ -844,17 +867,20 @@ async function runTests() {
     "GET",
     `/search?q=groceries&categoryIds=${testCategoryId}&datePreset=this_year&minAmount=1&maxAmount=100`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(allFilters.status === 200, "All filters combined returns 200");
   const allMatch = allFilters.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries"
+    (r: any) => r.entity === "transactions" && r.title === "Whole Foods Market groceries",
   );
   assert(allMatch === true, "All filters finds 'groceries' in Food category, this year, $1-100");
   const allExcludedCoffee = allFilters.data?.data?.results?.some(
-    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel"
+    (r: any) => r.entity === "transactions" && r.title === "Coffee and bagel",
   );
-  assert(allExcludedCoffee !== true, "All filters excludes Coffee (description doesn't match 'groceries')");
+  assert(
+    allExcludedCoffee !== true,
+    "All filters excludes Coffee (description doesn't match 'groceries')",
+  );
 
   // ─── 46. Combined: Category + Amount + Date + Sort ──────────
   console.log("\n─── 46. Combined: Category + Amount + Date + Sort ───");
@@ -863,12 +889,10 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId},${incomeCategoryId}&datePreset=this_year&minAmount=1&sortBy=amount&sortOrder=asc`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(allWithSort.status === 200, "All filters + sort returns 200");
-  const sortedTx = allWithSort.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
-  );
+  const sortedTx = allWithSort.data?.data?.results?.filter((r: any) => r.entity === "transactions");
   if (sortedTx && sortedTx.length >= 2) {
     const amounts = sortedTx.map((r: any) => r.amount);
     assert(amounts[0] <= amounts[1], "Combined filters + sort: amounts in ascending order");
@@ -881,12 +905,10 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=amount&sortOrder=asc&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAmtAsc.status === 200, "Sort by amount asc returns 200");
-  const txResults = sortAmtAsc.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
-  );
+  const txResults = sortAmtAsc.data?.data?.results?.filter((r: any) => r.entity === "transactions");
   if (txResults && txResults.length >= 2) {
     const amounts = txResults.map((r: any) => r.amount);
     assert(amounts[0] <= amounts[1], "Amount asc: first <= second");
@@ -899,11 +921,11 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=amount&sortOrder=desc&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortAmtDesc.status === 200, "Sort by amount desc returns 200");
   const txResultsDesc = sortAmtDesc.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   if (txResultsDesc && txResultsDesc.length >= 2) {
     const amounts = txResultsDesc.map((r: any) => r.amount);
@@ -917,11 +939,11 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=title&sortOrder=asc&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortTitleAsc.status === 200, "Sort by title asc returns 200");
   const titleResults = sortTitleAsc.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   if (titleResults && titleResults.length >= 2) {
     const titles = titleResults.map((r: any) => r.title.toLowerCase());
@@ -935,11 +957,11 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=title&sortOrder=desc&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortTitleDesc.status === 200, "Sort by title desc returns 200");
   const titleResultsDesc = sortTitleDesc.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
+    (r: any) => r.entity === "transactions",
   );
   if (titleResultsDesc && titleResultsDesc.length >= 2) {
     const titles = titleResultsDesc.map((r: any) => r.title.toLowerCase());
@@ -953,12 +975,10 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=date&sortOrder=asc&entities=transactions",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sortDate.status === 200, "Sort by date returns 200");
-  const dateResults = sortDate.data?.data?.results?.filter(
-    (r: any) => r.entity === "transactions"
-  );
+  const dateResults = sortDate.data?.data?.results?.filter((r: any) => r.entity === "transactions");
   if (dateResults && dateResults.length >= 2) {
     const dates = dateResults.map((r: any) => r.date);
     assert(dates[0] <= dates[1], "Date asc: chronological order");
@@ -971,7 +991,7 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badSortBy.status === 400, "Invalid sortBy returns 400");
 
@@ -982,7 +1002,7 @@ async function runTests() {
     "GET",
     "/search?q=a&sortOrder=invalid",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(badSortOrder.status === 400, "Invalid sortOrder returns 400");
 
@@ -1002,11 +1022,11 @@ async function runTests() {
     "GET",
     "/search?q=Whole+Foods",
     undefined,
-    secondUserTokens?.accessToken
+    secondUserTokens?.accessToken,
   );
   assert(secondSearch.status === 200, "Second user search returns 200");
   const noCrossUser = secondSearch.data?.data?.results?.every(
-    (r: any) => !r.title.includes("Whole Foods")
+    (r: any) => !r.title.includes("Whole Foods"),
   );
   assert(noCrossUser !== false, "Second user cannot see first user's data");
 
@@ -1017,7 +1037,7 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=Food",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sug1.status === 200, "Suggestions for 'Food' returns 200");
   assert(sug1.data?.success === true, "Suggestions has success: true");
@@ -1026,7 +1046,7 @@ async function runTests() {
 
   // Should find the Food category as a suggestion
   const hasCategory = sug1.data?.data?.suggestions?.some(
-    (g: any) => g.entity === "category" && g.items?.some((i: any) => i.label === "Food")
+    (g: any) => g.entity === "category" && g.items?.some((i: any) => i.label === "Food"),
   );
   assert(hasCategory === true, "Suggestions finds Food category");
 
@@ -1037,13 +1057,13 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=Whole",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sug2.status === 200, "Suggestions for 'Whole' returns 200");
   const hasTxTitle = sug2.data?.data?.suggestions?.some(
     (g: any) =>
       g.entity === "transaction-title" &&
-      g.items?.some((i: any) => i.label === "Whole Foods Market groceries")
+      g.items?.some((i: any) => i.label === "Whole Foods Market groceries"),
   );
   assert(hasTxTitle === true, "Suggestions finds transaction title matching 'Whole'");
 
@@ -1054,11 +1074,11 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=Visa",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sug3.status === 200, "Suggestions for 'Visa' returns 200");
   const hasPM = sug3.data?.data?.suggestions?.some(
-    (g: any) => g.entity === "payment-method" && g.items?.some((i: any) => i.label === "Test Visa")
+    (g: any) => g.entity === "payment-method" && g.items?.some((i: any) => i.label === "Test Visa"),
   );
   assert(hasPM === true, "Suggestions finds payment method matching 'Visa'");
 
@@ -1069,11 +1089,11 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=food",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(sug4.status === 200, "Suggestions for 'food' returns 200");
   const hasLower = sug4.data?.data?.suggestions?.some(
-    (g: any) => g.entity === "category" && g.items?.some((i: any) => i.label === "Food")
+    (g: any) => g.entity === "category" && g.items?.some((i: any) => i.label === "Food"),
   );
   assert(hasLower === true, "Case-insensitive suggestions find Food category");
 
@@ -1084,7 +1104,7 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=a",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(shortQuery.status === 400, "Single-char suggestions query returns 400");
 
@@ -1110,7 +1130,7 @@ async function runTests() {
         categoryId: i % 3 === 0 ? testCategoryId : incomeCategoryId,
         paymentMethodId: i % 2 === 0 ? testPaymentMethodId : undefined,
       },
-      userTokens?.accessToken
+      userTokens?.accessToken,
     );
   }
 
@@ -1119,7 +1139,7 @@ async function runTests() {
     "GET",
     "/search?q=a&sortBy=amount&sortOrder=asc",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   const elapsed = Date.now() - startTime;
   assert(perfSearch.status === 200, "Performance search returns 200");
@@ -1131,7 +1151,7 @@ async function runTests() {
     "GET",
     `/search?q=a&categoryIds=${testCategoryId}&datePreset=this_year`,
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(perfCatFilter.status === 200, "Category + date filter with 50+ transactions returns 200");
 
@@ -1139,11 +1159,11 @@ async function runTests() {
     "GET",
     "/search/suggestions?q=Performance",
     undefined,
-    userTokens?.accessToken
+    userTokens?.accessToken,
   );
   assert(perfSuggest.status === 200, "Suggestions with 50+ transactions returns 200");
   const hasPerfSugg = perfSuggest.data?.data?.suggestions?.some(
-    (g: any) => g.entity === "transaction-title" && g.items?.length > 0
+    (g: any) => g.entity === "transaction-title" && g.items?.length > 0,
   );
   assert(hasPerfSugg === true, "Suggestions finds transaction titles with larger dataset");
 

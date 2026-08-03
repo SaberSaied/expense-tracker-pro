@@ -27,7 +27,11 @@ export const paymentMethodService = {
     return paymentMethodRepository.create(userId, data);
   },
 
-  async update(userId: string, id: string, data: Parameters<typeof paymentMethodRepository.update>[1]) {
+  async update(
+    userId: string,
+    id: string,
+    data: Parameters<typeof paymentMethodRepository.update>[1],
+  ) {
     const pm = await paymentMethodRepository.findById(id);
     if (!pm || pm.userId !== userId) {
       throw new NotFoundError("Payment method not found");
@@ -54,7 +58,7 @@ export const paymentMethodService = {
     const transactionCount = await paymentMethodRepository.countTransactions(id);
     if (transactionCount > 0) {
       throw new ValidationError(
-        `Cannot delete "${pm.name}": ${transactionCount} transaction(s) are using this payment method. Reassign them first.`
+        `Cannot delete "${pm.name}": ${transactionCount} transaction(s) are using this payment method. Reassign them first.`,
       );
     }
 

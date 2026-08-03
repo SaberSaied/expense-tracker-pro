@@ -56,7 +56,9 @@ const SettingsPage = lazy(() =>
   import("@/pages/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
 const PaymentMethodsPage = lazy(() =>
-  import("@/pages/payment-methods/PaymentMethodsPage").then((m) => ({ default: m.PaymentMethodsPage })),
+  import("@/pages/payment-methods/PaymentMethodsPage").then((m) => ({
+    default: m.PaymentMethodsPage,
+  })),
 );
 
 /**
@@ -74,7 +76,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         aria-label="Loading"
         aria-live="polite"
       >
-        <div className="size-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" aria-hidden="true" />
+        <div
+          className="size-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+          aria-hidden="true"
+        />
       </div>
     );
   }
@@ -100,7 +105,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
         aria-label="Loading"
         aria-live="polite"
       >
-        <div className="size-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" aria-hidden="true" />
+        <div
+          className="size-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+          aria-hidden="true"
+        />
       </div>
     );
   }

@@ -9,11 +9,7 @@ import type { AuthenticatedRequest, JwtPayload } from "@/common/types";
  * Attaches the decoded user payload to `req.user`.
  * Returns 401 if the token is missing, expired, or invalid.
  */
-export function authMiddleware(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-) {
+export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {

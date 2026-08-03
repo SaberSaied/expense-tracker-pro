@@ -22,33 +22,45 @@ function getMonthKey(date: Date): string {
 
 function getStatusColor(status: "on_track" | "warning" | "critical"): string {
   switch (status) {
-    case "on_track": return "text-success";
-    case "warning": return "text-warning";
-    case "critical": return "text-error";
+    case "on_track":
+      return "text-success";
+    case "warning":
+      return "text-warning";
+    case "critical":
+      return "text-error";
   }
 }
 
 function getStatusBg(status: "on_track" | "warning" | "critical"): string {
   switch (status) {
-    case "on_track": return "bg-success";
-    case "warning": return "bg-warning";
-    case "critical": return "bg-error";
+    case "on_track":
+      return "bg-success";
+    case "warning":
+      return "bg-warning";
+    case "critical":
+      return "bg-error";
   }
 }
 
 function getStatusBgLight(status: "on_track" | "warning" | "critical"): string {
   switch (status) {
-    case "on_track": return "bg-success/10";
-    case "warning": return "bg-warning/10";
-    case "critical": return "bg-error/10";
+    case "on_track":
+      return "bg-success/10";
+    case "warning":
+      return "bg-warning/10";
+    case "critical":
+      return "bg-error/10";
   }
 }
 
 function getStatusBorder(status: "on_track" | "warning" | "critical"): string {
   switch (status) {
-    case "on_track": return "border-success/20";
-    case "warning": return "border-warning/20";
-    case "critical": return "border-error/20";
+    case "on_track":
+      return "border-success/20";
+    case "warning":
+      return "border-warning/20";
+    case "critical":
+      return "border-error/20";
   }
 }
 
@@ -123,9 +135,7 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Budget Usage
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Budget Usage</h3>
         </div>
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
           <Wallet className="size-10 text-text-muted/40" />
@@ -148,16 +158,12 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
     return (
       <div className="glass rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-text-primary">
-            Budget Usage
-          </h3>
+          <h3 className="text-base font-semibold text-text-primary">Budget Usage</h3>
         </div>
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
           <Wallet className="size-10 text-text-muted/40" />
           <p className="text-sm text-text-muted">No budgets set for {periodLabel}</p>
-          <p className="text-xs text-text-muted">
-            Create budgets to track your spending limits
-          </p>
+          <p className="text-xs text-text-muted">Create budgets to track your spending limits</p>
         </div>
       </div>
     );
@@ -176,9 +182,7 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
     <div className="glass rounded-xl p-5">
       {/* Header with month picker */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-text-primary">
-          Budget Usage
-        </h3>
+        <h3 className="text-base font-semibold text-text-primary">Budget Usage</h3>
         <div className="flex items-center gap-1">
           <button
             onClick={goToPrevMonth}
@@ -215,12 +219,16 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
                 <CheckCircle2 className="size-3.5 text-success" />
               )}
             </div>
-            <span className={clsx(
-              "text-xs font-semibold tabular-nums",
-              summary.overallPercentage >= 100 ? "text-error" :
-              summary.overallPercentage >= 80 ? "text-warning" :
-              "text-success",
-            )}>
+            <span
+              className={clsx(
+                "text-xs font-semibold tabular-nums",
+                summary.overallPercentage >= 100
+                  ? "text-error"
+                  : summary.overallPercentage >= 80
+                    ? "text-warning"
+                    : "text-success",
+              )}
+            >
               {summary.overallPercentage}% used
             </span>
           </div>
@@ -230,9 +238,11 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
             <div
               className={clsx(
                 "h-full rounded-full transition-all duration-500",
-                summary.overallPercentage >= 100 ? "bg-error" :
-                summary.overallPercentage >= 80 ? "bg-warning" :
-                "bg-success",
+                summary.overallPercentage >= 100
+                  ? "bg-error"
+                  : summary.overallPercentage >= 80
+                    ? "bg-warning"
+                    : "bg-success",
               )}
               style={{ width: `${Math.min(summary.overallPercentage, 100)}%` }}
             />
@@ -254,11 +264,15 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
             </div>
             <div className="text-center">
               <p className="text-[10px] text-text-muted uppercase tracking-wider">Remaining</p>
-              <p className={clsx(
-                "text-xs font-bold tabular-nums",
-                summary.totalRemaining >= 0 ? "text-success" : "text-error",
-              )}>
-                {summary.totalRemaining >= 0 ? formatCurrency(summary.totalRemaining) : `-${formatCurrency(Math.abs(summary.totalRemaining))}`}
+              <p
+                className={clsx(
+                  "text-xs font-bold tabular-nums",
+                  summary.totalRemaining >= 0 ? "text-success" : "text-error",
+                )}
+              >
+                {summary.totalRemaining >= 0
+                  ? formatCurrency(summary.totalRemaining)
+                  : `-${formatCurrency(Math.abs(summary.totalRemaining))}`}
               </p>
             </div>
           </div>
@@ -311,10 +325,12 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
                   {budget.categoryName}
                 </span>
               </div>
-              <span className={clsx(
-                "text-xs font-semibold tabular-nums",
-                getStatusColor(budget.status),
-              )}>
+              <span
+                className={clsx(
+                  "text-xs font-semibold tabular-nums",
+                  getStatusColor(budget.status),
+                )}
+              >
                 {budget.percentage}%
               </span>
             </div>
@@ -346,10 +362,12 @@ export const BudgetUsageChart = React.memo(function BudgetUsageChart() {
               </div>
               <div>
                 <p className="text-[10px] text-text-muted">Left</p>
-                <p className={clsx(
-                  "text-[11px] font-semibold tabular-nums",
-                  budget.remaining >= 0 ? "text-success" : "text-error",
-                )}>
+                <p
+                  className={clsx(
+                    "text-[11px] font-semibold tabular-nums",
+                    budget.remaining >= 0 ? "text-success" : "text-error",
+                  )}
+                >
                   {budget.remaining >= 0
                     ? formatCurrency(budget.remaining)
                     : `-${formatCurrency(Math.abs(budget.remaining))}`}

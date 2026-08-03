@@ -144,9 +144,7 @@ export const ResetPasswordPage: React.FC = () => {
         onChange={(e) => setConfirmPassword(e.target.value)}
         leftIcon={<Lock className="size-4" />}
         error={
-          confirmPassword && confirmPassword !== password
-            ? "Passwords do not match"
-            : undefined
+          confirmPassword && confirmPassword !== password ? "Passwords do not match" : undefined
         }
         autoComplete="new-password"
         name="confirmPassword"

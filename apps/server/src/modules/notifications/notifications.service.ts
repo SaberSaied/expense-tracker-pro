@@ -16,11 +16,10 @@ export const notificationService = {
    */
   async updatePreferences(
     userId: string,
-    input: NotificationPreferencesInput
+    input: NotificationPreferencesInput,
   ): Promise<NotificationPreferences> {
     return notificationRepository.updatePreferences(userId, input);
   },
-
 
   async findAll(
     userId: string,
@@ -29,7 +28,7 @@ export const notificationService = {
       limit?: number;
       read?: boolean;
       type?: string;
-    } = {}
+    } = {},
   ) {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
@@ -87,7 +86,7 @@ export const notificationService = {
    */
   async cleanupExpired(
     userId: string,
-    options: { olderThanDays?: number; readOnly?: boolean } = {}
+    options: { olderThanDays?: number; readOnly?: boolean } = {},
   ) {
     return notificationRepository.cleanupExpired({
       userId,

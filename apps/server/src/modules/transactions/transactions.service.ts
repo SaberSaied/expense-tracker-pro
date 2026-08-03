@@ -21,7 +21,7 @@ export const transactionService = {
       sortBy?: string;
       sortOrder?: "asc" | "desc";
       search?: string;
-    } = {}
+    } = {},
   ) {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
@@ -63,7 +63,7 @@ export const transactionService = {
       notes?: string;
       categoryId: string;
       paymentMethodId?: string | null;
-    }
+    },
   ) {
     // Validate amount
     if (data.amount <= 0) {
@@ -98,9 +98,7 @@ export const transactionService = {
       date: new Date(data.date),
       notes: data.notes ?? null,
       category: { connect: { id: data.categoryId } },
-      paymentMethod: data.paymentMethodId
-        ? { connect: { id: data.paymentMethodId } }
-        : undefined,
+      paymentMethod: data.paymentMethodId ? { connect: { id: data.paymentMethodId } } : undefined,
     };
 
     return transactionRepository.create(userId, createData);
@@ -170,9 +168,7 @@ export const transactionService = {
     const transactions = await transactionRepository.findManyByIds(ids);
 
     // Verify ownership of all transactions
-    const ownedIds = transactions
-      .filter((t) => t.userId === userId)
-      .map((t) => t.id);
+    const ownedIds = transactions.filter((t) => t.userId === userId).map((t) => t.id);
 
     if (ownedIds.length === 0) {
       throw new NotFoundError("No transactions found to delete");
@@ -195,7 +191,7 @@ export const transactionService = {
     data: {
       categoryId?: string;
       paymentMethodId?: string | null;
-    }
+    },
   ) {
     // Validate category ownership if updating
     if (data.categoryId) {
@@ -257,7 +253,7 @@ export const transactionService = {
       minAmount?: number;
       maxAmount?: number;
       search?: string;
-    } = {}
+    } = {},
   ) {
     return transactionRepository.getSummary(userId, {
       startDate: filters.startDate ? new Date(filters.startDate) : undefined,
