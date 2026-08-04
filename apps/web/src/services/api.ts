@@ -2,7 +2,7 @@
  * HTTP API client with automatic JWT token injection and error handling.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "https://expense-tracker-pro-api.vercel.app/api/v1";
 
 // ─── Token Management ─────────────────────────────────────────
 
