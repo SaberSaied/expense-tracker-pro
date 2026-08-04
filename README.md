@@ -1,7 +1,10 @@
 # Expense Tracker Pro
 
 > Production-grade, full-stack monorepo application for personal and small business financial management.
+>
+> 🚀 **Live Demo**: [https://expense-tracker-pro-ten-sandy.vercel.app/](https://expense-tracker-pro-ten-sandy.vercel.app/)
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-expense--tracker--pro-000000?style=flat-square&logo=vercel&logoColor=white)](https://expense-tracker-pro-ten-sandy.vercel.app/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb.svg?style=flat-square&logo=react)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express-5.0-000000.svg?style=flat-square&logo=express)](https://expressjs.com/)
@@ -410,6 +413,8 @@ pnpm dev:seed
 ## Deployment
 
 ### Vercel Unified Monorepo Deployment
+- **Live Production URL**: [https://expense-tracker-pro-ten-sandy.vercel.app/](https://expense-tracker-pro-ten-sandy.vercel.app/)
+
 The project is configured for serverless execution on **Vercel** out-of-the-box:
 
 1. Connect your repository to Vercel.

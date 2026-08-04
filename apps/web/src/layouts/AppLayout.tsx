@@ -15,7 +15,6 @@ import {
   Plus,
   Menu,
   X,
-  TrendingUp,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -219,9 +218,7 @@ export const AppLayout: React.FC = () => {
       >
         {/* Brand */}
         <div className="flex items-center gap-3 px-6 h-16 border-b border-border-card">
-          <div className="size-9 rounded-xl bg-primary/15 flex items-center justify-center">
-            <TrendingUp className="size-5 text-primary" />
-          </div>
+          <img src="/app-icon.png" alt="ExpenseTracker Pro logo" className="size-8 rounded-xl object-contain shadow-sm" />
           <span className="font-bold text-text-primary">
             Expense<span className="text-primary">Pro</span>
           </span>
