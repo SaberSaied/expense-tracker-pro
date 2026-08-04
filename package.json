@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "A full-stack expense tracking application",
+  "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "dev:web": "pnpm --filter web dev",
