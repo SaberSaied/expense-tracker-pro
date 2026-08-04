@@ -7,7 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load .env from project root (four levels up from src/config/ -> apps/server -> apps -> project root)
-config({ path: resolve(__dirname, "../../../../.env") });
+if (process.env.VERCEL !== "1") {
+  config({ path: resolve(__dirname, "../../../../.env") });
+}
 
 const envSchema = z.object({
   // ─── Server ────────────────────────────────────────────────
@@ -18,11 +20,6 @@ const envSchema = z.object({
 
   // ─── Database ──────────────────────────────────────────────
   DATABASE_URL: z.string().url(),
-  POSTGRES_USER: z.string().default("postgres"),
-  POSTGRES_PASSWORD: z.string().default("postgres"),
-  POSTGRES_HOST: z.string().default("localhost"),
-  POSTGRES_PORT: z.coerce.number().positive().default(5432),
-  POSTGRES_DB: z.string().default("postgres"),
 
   // ─── JWT ───────────────────────────────────────────────────
   JWT_SECRET: z
@@ -64,11 +61,11 @@ const envSchema = z.object({
   JOBS_TRIGGER_TOKEN: z.string().optional(),
 
   // ─── Email (optional) ──────────────────────────────────────
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.coerce.number().positive().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().email().default("noreply@expensetracker.com"),
+  // SMTP_HOST: z.string().optional(),
+  // SMTP_PORT: z.coerce.number().positive().optional(),
+  // SMTP_USER: z.string().optional(),
+  // SMTP_PASS: z.string().optional(),
+  // EMAIL_FROM: z.string().email().default("noreply@expensetracker.com"),
 });
 
 const DEFAULT_JWT_SECRET = "change-me-in-production-use-a-real-secret";
