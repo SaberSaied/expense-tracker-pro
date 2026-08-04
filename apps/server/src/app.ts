@@ -1,6 +1,6 @@
 import express, { type Application } from "express";
 import cors from "cors";
-import helmet from "helmet";
+import helmet, { type HelmetOptions } from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import compression from "compression";
@@ -32,7 +32,9 @@ export function createApp(): Application {
   );
 
   // ─── Security Middleware ──────────────────────────────────
-  app.use(helmet(helmetOptions));
+  app.use(
+    (helmet as unknown as (options?: HelmetOptions) => express.RequestHandler)(helmetOptions),
+  );
   app.use(cors(corsOptions));
 
   // ─── Static Files (uploads) ───────────────────────────────
