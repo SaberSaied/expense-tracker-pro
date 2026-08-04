@@ -24,13 +24,28 @@ function isLocalDevOrigin(origin: string | undefined): boolean {
   }
 }
 
+function isVercelOrRenderOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname.endsWith(".vercel.app") || hostname.endsWith(".onrender.com");
+  } catch {
+    return false;
+  }
+}
+
 export const corsOptions: CorsOptions = {
   origin(origin, callback) {
     // Requests without an Origin header (curl, server-to-server, same-origin) are allowed.
     if (!origin) return callback(null, true);
 
+    // Wildcard '*' explicitly configured allows any origin.
+    if (allowedOrigins.includes("*")) return callback(null, true);
+
     // Explicitly configured origins are always allowed.
     if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    // Allow Vercel and Render preview/production deployments.
+    if (isVercelOrRenderOrigin(origin)) return callback(null, true);
 
     // Any localhost origin is allowed during development (any port / IP).
     if (env.NODE_ENV !== "production" && isLocalDevOrigin(origin)) {
@@ -43,4 +58,5 @@ export const corsOptions: CorsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 204,
 };
